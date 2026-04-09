@@ -1,0 +1,7 @@
+# Common defaults: applies to all targets
+CONFIG_PARTITION_TABLE_CUSTOM=y
+CONFIG_ESP_MAIN_TASK_STACK_SIZE=65536
+# Disable all watchdogs for long-running inference
+CONFIG_ESP_TASK_WDT_EN=n
+CONFIG_ESP_INT_WDT=n
+CONFIG_BOOTLOADER_WDT_ENABLE=n

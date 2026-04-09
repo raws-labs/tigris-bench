@@ -1,0 +1,10 @@
+# Common defaults: custom partition table (15MB app for large models)
+CONFIG_PARTITION_TABLE_CUSTOM=y
+CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"
+CONFIG_ESP_MAIN_TASK_STACK_SIZE=32768
+# Disable watchdogs for long-running inference
+CONFIG_ESP_TASK_WDT_EN=n
+CONFIG_ESP_INT_WDT=n
+CONFIG_BOOTLOADER_WDT_ENABLE=n
+# C++ exceptions required by TFLM
+CONFIG_COMPILER_CXX_EXCEPTIONS=y

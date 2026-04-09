@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+venv/
+.venv/
+
+# Editor
+*.swp
+
+# Hide everything else starting with a dot, only whitelist intended ones
+.*
+!.gitignore
+!.github/

@@ -1,0 +1,6 @@
+onnx>=1.14
+onnxruntime>=1.16
+numpy>=1.24
+tensorflow>=2.15
+pyserial>=3.5
+esptool>=4.7
