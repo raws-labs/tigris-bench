@@ -1,0 +1,55 @@
+
+TiGrIS Cortex-M Benchmark (board=nucleo_f446re, kernel=cmsis_nn, 180 MHz)
+
+CLOCK_DIAG: stage=5 cr3=0003c000 csr1=00034000 d3cr=03048083 rcc_cr=0000940a cfgr=08002d08 idcode=10006421 flash_acr=00000705
+Model:   ts_matched
+Type:    int8
+Ops:     6
+Stages:  1
+Tensors: 7
+Budget:  32768 bytes
+
+Fast arena: 32 KB   Slow arena: 8 KB
+
+Warmup (3 runs)...
+  warmup[0]: 1.747 ms
+  warmup[1]: 1.747 ms
+  warmup[2]: 1.747 ms
+
+Benchmark (30 runs)...
+  run[0]: 1.747 ms (314375 cyc)
+  run[1]: 1.747 ms (314375 cyc)
+  run[2]: 1.747 ms (314375 cyc)
+  run[3]: 1.747 ms (314375 cyc)
+  run[4]: 1.747 ms (314375 cyc)
+  run[5]: 1.747 ms (314375 cyc)
+  run[6]: 1.747 ms (314375 cyc)
+  run[7]: 1.747 ms (314375 cyc)
+  run[8]: 1.747 ms (314375 cyc)
+  run[9]: 1.747 ms (314375 cyc)
+  run[10]: 1.747 ms (314375 cyc)
+  run[11]: 1.747 ms (314375 cyc)
+  run[12]: 1.747 ms (314375 cyc)
+  run[13]: 1.747 ms (314375 cyc)
+  run[14]: 1.747 ms (314375 cyc)
+  run[15]: 1.747 ms (314375 cyc)
+  run[16]: 1.747 ms (314375 cyc)
+  run[17]: 1.747 ms (314375 cyc)
+  run[18]: 1.747 ms (314375 cyc)
+  run[19]: 1.747 ms (314375 cyc)
+  run[20]: 1.747 ms (314375 cyc)
+  run[21]: 1.747 ms (314375 cyc)
+  run[22]: 1.747 ms (314375 cyc)
+  run[23]: 1.747 ms (314375 cyc)
+  run[24]: 1.747 ms (314375 cyc)
+  run[25]: 1.747 ms (314375 cyc)
+  run[26]: 1.747 ms (314375 cyc)
+  run[27]: 1.747 ms (314375 cyc)
+  run[28]: 1.747 ms (314375 cyc)
+  run[29]: 1.747 ms (314375 cyc)
+
+Output values:
+  OUTPUT_I8: -14 -15 -6 -20 -17 -9 -20 -11 -14 -19
+
+BENCH_RESULT:framework=tigris,kernel=cmsis_nn,dtype=int8,model=ts_matched,board=nucleo_f446re,cpu_mhz=180,status=ok,latency_mean_ms=1.747,latency_median_ms=1.747,latency_min_ms=1.747,latency_max_ms=1.747,latency_stdev_ms=0.000,latency_median_cycles=314375,latency_min_cycles=314375,latency_max_cycles=314375,sram_peak_bytes=1024,sram_budget_kb=32,sram_provisioned_kb=32,slow_peak_kb=0,plan_flash_kb=8,runs=30,stages_normal=1,stages_tiled=0,stages_chain=0,total_tiles=0
+BENCH_DONE

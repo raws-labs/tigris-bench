@@ -1,0 +1,55 @@
+
+TiGrIS Cortex-M Benchmark (board=nucleo_h753zi, kernel=s8_ref, 480 MHz)
+
+CLOCK_DIAG: stage=5 cr3=00000042 csr1=0000e000 d3cr=0000e000 rcc_cr=03004025 cfgr=0000001b idcode=20036450 flash_acr=00000034
+Model:   ds_cnn_matched
+Type:    int8
+Ops:     12
+Stages:  1
+Tensors: 13
+Budget:  65536 bytes
+
+Fast arena: 64 KB   Slow arena: 128 KB
+
+Warmup (3 runs)...
+  warmup[0]: 402.669 ms
+  warmup[1]: 402.662 ms
+  warmup[2]: 402.662 ms
+
+Benchmark (30 runs)...
+  run[0]: 402.662 ms (193277545 cyc)
+  run[1]: 402.660 ms (193276613 cyc)
+  run[2]: 402.662 ms (193277877 cyc)
+  run[3]: 402.660 ms (193276814 cyc)
+  run[4]: 402.662 ms (193277778 cyc)
+  run[5]: 402.660 ms (193276873 cyc)
+  run[6]: 402.662 ms (193277634 cyc)
+  run[7]: 402.662 ms (193277888 cyc)
+  run[8]: 402.661 ms (193277099 cyc)
+  run[9]: 402.662 ms (193277894 cyc)
+  run[10]: 402.661 ms (193277414 cyc)
+  run[11]: 402.660 ms (193276903 cyc)
+  run[12]: 402.659 ms (193276143 cyc)
+  run[13]: 402.663 ms (193278228 cyc)
+  run[14]: 402.661 ms (193277449 cyc)
+  run[15]: 402.662 ms (193277777 cyc)
+  run[16]: 402.662 ms (193277898 cyc)
+  run[17]: 402.662 ms (193277554 cyc)
+  run[18]: 402.661 ms (193277113 cyc)
+  run[19]: 402.660 ms (193276567 cyc)
+  run[20]: 402.663 ms (193278130 cyc)
+  run[21]: 402.660 ms (193276814 cyc)
+  run[22]: 402.660 ms (193276835 cyc)
+  run[23]: 402.662 ms (193277665 cyc)
+  run[24]: 402.664 ms (193278608 cyc)
+  run[25]: 402.661 ms (193277208 cyc)
+  run[26]: 402.662 ms (193277795 cyc)
+  run[27]: 402.660 ms (193277041 cyc)
+  run[28]: 402.663 ms (193278024 cyc)
+  run[29]: 402.665 ms (193279245 cyc)
+
+Output values:
+  OUTPUT_I8: 5 1 -4 -3 0 5 1 5 -3 1 5 1
+
+BENCH_RESULT:framework=tigris,kernel=s8_ref,dtype=int8,model=ds_cnn_matched,board=nucleo_h753zi,cpu_mhz=480,status=ok,latency_mean_ms=402.661,latency_median_ms=402.662,latency_min_ms=402.659,latency_max_ms=402.665,latency_stdev_ms=0.001,latency_median_cycles=193277549,latency_min_cycles=193276143,latency_max_cycles=193279245,sram_peak_bytes=16000,sram_budget_kb=64,sram_provisioned_kb=64,slow_peak_kb=0,plan_flash_kb=39,runs=30,stages_normal=1,stages_tiled=0,stages_chain=0,total_tiles=0
+BENCH_DONE

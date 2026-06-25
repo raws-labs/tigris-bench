@@ -1,0 +1,66 @@
+run[9]: 1850.319 ms (333057401 cyc)
+  run[10]: 1850.319 ms (333057401 cyc)
+  run[11]: 1850.319 ms (333057401 cyc)
+  run[12]: 1850.319 ms (333057401 cyc)
+  run[13]: 1850.319 ms (333057401 cyc)
+  run[14]: 1850.319 ms (333057401 cyc)
+  run[15]: 1850.319 ms (333057401 cyc)
+  run[16]: 1850.319 ms (333057401 cyc)
+  run[17]: 1850.319 ms (333057401 cyc)
+  run[18]: 1850.319 ms (333057401 cyc)
+  run[19]: 1850.319 ms (333057401 c
+
+TiGrIS Cortex-M Benchmark (board=nucleo_f446re, kernel=s8_ref, 180 MHz)
+
+CLOCK_DIAG: stage=5 cr3=0003c000 csr1=00034000 d3cr=03048083 rcc_cr=0000940a cfgr=08002d08 idcode=10006421 flash_acr=00000705
+Model:   ds_cnn_matched
+Type:    int8
+Ops:     12
+Stages:  1
+Tensors: 13
+Budget:  32768 bytes
+
+Fast arena: 32 KB   Slow arena: 8 KB
+
+Warmup (3 runs)...
+  warmup[0]: 1850.319 ms
+  warmup[1]: 1850.319 ms
+  warmup[2]: 1850.319 ms
+
+Benchmark (30 runs)...
+  run[0]: 1850.319 ms (333057401 cyc)
+  run[1]: 1850.319 ms (333057401 cyc)
+  run[2]: 1850.319 ms (333057401 cyc)
+  run[3]: 1850.319 ms (333057401 cyc)
+  run[4]: 1850.319 ms (333057401 cyc)
+  run[5]: 1850.319 ms (333057401 cyc)
+  run[6]: 1850.319 ms (333057401 cyc)
+  run[7]: 1850.319 ms (333057401 cyc)
+  run[8]: 1850.319 ms (333057401 cyc)
+  run[9]: 1850.319 ms (333057401 cyc)
+  run[10]: 1850.319 ms (333057401 cyc)
+  run[11]: 1850.319 ms (333057401 cyc)
+  run[12]: 1850.319 ms (333057401 cyc)
+  run[13]: 1850.319 ms (333057401 cyc)
+  run[14]: 1850.319 ms (333057401 cyc)
+  run[15]: 1850.319 ms (333057401 cyc)
+  run[16]: 1850.319 ms (333057401 cyc)
+  run[17]: 1850.319 ms (333057401 cyc)
+  run[18]: 1850.319 ms (333057401 cyc)
+  run[19]: 1850.319 ms (333057401 cyc)
+  run[20]: 1850.319 ms (333057401 cyc)
+  run[21]: 1850.319 ms (333057401 cyc)
+  run[22]: 1850.319 ms (333057401 cyc)
+  run[23]: 1850.319 ms (333057401 cyc)
+  run[24]: 1850.319 ms (333057401 cyc)
+  run[25]: 1850.319 ms (333057401 cyc)
+  run[26]: 1850.319 ms (333057401 cyc)
+  run[27]: 1850.319 ms (333057401 cyc)
+  run[28]: 1850.319 ms (333057401 cyc)
+  run[29]: 1850.319 ms (333057401 cyc)
+
+Output values:
+  OUTPUT_I8: 5 1 -4 -3 0 5 1 5 -3 1 5 1
+
+BENCH_RESULT:framework=tigris,kernel=s8_ref,dtype=int8,model=ds_cnn_matched,board=nucleo_f446re,cpu_mhz=180,status=ok,latency_mean_ms=1850.319,latency_median_ms=1850.319,latency_min_ms=1850.319,latency_max_ms=1850.319,latency_stdev_ms=0.000,latency_median_cycles=333057401,latency_min_cycles=333057401,latency_max_cycles=333057401,sram_peak_bytes=16000,sram_budget_kb=32,sram_provisioned_kb=32,slow_peak_kb=0,plan_flash_kb=39,runs=30,stages_normal=1,stages_tiled=0,stages_chain=0,total_tiles=0
+BENCH_DONE
