@@ -1,0 +1,15 @@
+# Build output
+build/
+
+# Vendored sources (fetched by third_party/fetch.sh, pinned there)
+third_party/CMSIS-NN/
+third_party/CMSIS_6/
+third_party/cmsis-device-h7/
+third_party/cmsis-device-f4/
+
+# python
+__pycache__/
+*.pyc
+
+# TFLM (built by the user; see BUILD.md)
+third_party/tflite-micro/
