@@ -7,7 +7,9 @@ CMSIS-NN, on the SAME board, comparing the int8 OUTPUT_I8 vectors the devices
 actually produced. The host ORT / tflite interpreter is NOT a valid baseline (it
 uses different kernels and differs from on-device CMSIS-NN by ~1 LSB).
 
-This reads the captured serial logs, groups them by (board, model), and checks:
+This reads results/summary.json (the tracked artifact, which carries each cell's
+OUTPUT_I8 vector, so parity is verifiable from a clone without the raw serial
+logs), or a directory of raw *.log captures. It groups by (board, model) and checks:
   - tigris/cmsis_nn  vs  tflm/cmsis_nn   the headline device-to-device parity
                                          (must be bit-exact: same CMSIS-NN kernels,
                                          same int8 weights via the matched plan)
@@ -18,8 +20,8 @@ A pair is only checked when both members are present; a missing TFLM baseline fo
 a (board, model) is reported as INCOMPLETE, not silently passed.
 
 Usage:
-    python validate_accuracy.py results/raw/
-    python validate_accuracy.py results/raw/ --tol 0 --self-tol 1
+    python validate_accuracy.py                 # reads results/summary.json
+    python validate_accuracy.py results/raw/    # or a dir of raw logs
 """
 
 from __future__ import annotations
@@ -73,17 +75,37 @@ def compare(a: dict, b: dict, tol: int) -> tuple[str, str]:
     return ("pass" if max_abs <= tol else "fail"), msg
 
 
+def records_from_summary(path: Path) -> list[dict]:
+    """Build records from a results.py summary.json so parity is verifiable from a
+    clone (the tracked artifact carries each cell's OUTPUT_I8), no raw logs needed."""
+    import json
+    recs = []
+    for c in json.loads(path.read_text()).get("configs", []):
+        model = c.get("model", "?")
+        recs.append({
+            "log": path.name, "framework": c.get("framework", "?"),
+            "kernel": c.get("kernel", "?"), "board": c.get("board", "?"),
+            "model": model, "model_base": model.removesuffix("_matched"),
+            "status": c.get("status", "?"),
+            "output": (c.get("output_values") or {}).get("i8", []),
+        })
+    return recs
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description="device-to-device parity")
-    ap.add_argument("raw", type=Path, nargs="?", default=Path("results/raw"),
-                    help="dir of captured *.log files (default results/raw/)")
+    ap.add_argument("src", type=Path, nargs="?", default=Path("results/summary.json"),
+                    help="results.py summary.json (default) or a dir of captured *.log files")
     ap.add_argument("--tol", type=int, default=0,
                     help="max allowed abs diff for tigris-cmsis vs tflm (default 0, bit-exact)")
     ap.add_argument("--self-tol", type=int, default=1,
                     help="max allowed abs diff for s8 vs cmsis (default 1, requant nudge)")
     args = ap.parse_args()
 
-    logs = [r for p in sorted(args.raw.glob("*.log")) if (r := parse_log(p))]
+    if args.src.is_dir():
+        logs = [r for p in sorted(args.src.glob("*.log")) if (r := parse_log(p))]
+    else:
+        logs = records_from_summary(args.src)
     # Group by (board, model) -> {(framework, kernel): record}. Last log wins per cell.
     groups: dict[tuple[str, str], dict[tuple[str, str], dict]] = {}
     for r in logs:

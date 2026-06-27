@@ -1,6 +1,11 @@
 # Build output
 build/
 
+# Captured serial logs: regenerable via scripts/rig_regen.py. The distilled,
+# citable artifact is results/summary.json (tracked), which carries the per-cell
+# OUTPUT_I8 parity vectors. Don't track the verbose per-run captures.
+results/raw/
+
 # Vendored sources (fetched by third_party/fetch.sh, pinned there)
 third_party/CMSIS-NN/
 third_party/CMSIS_6/
