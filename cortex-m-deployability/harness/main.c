@@ -164,15 +164,37 @@ static void sort_u32(uint32_t *a, int n)
 
 static void emit_failed(const char *model, const char *status)
 {
+    /* Still report the verified clock: a failure here is after platform_init,
+     * so cpu_mhz is real and should pass the clock guard. */
     printf("\nBENCH_RESULT:framework=tigris,kernel=%s,dtype=int8,model=%s,"
-           "board=%s,status=%s,runs=0\n",
-           kernel_name(), model, platform_board_name(), status);
+           "board=%s,cpu_mhz=%lu,status=%s,runs=0\n",
+           kernel_name(), model, platform_board_name(),
+           (unsigned long)(platform_cpu_hz() / 1000000u), status);
     printf("BENCH_DONE\n");
+}
+
+/* Stay silent for a short window at boot. When a remote rig flashes the board,
+ * the host discards serial bytes received during the flash-completion handshake
+ * before it arms its capture; a fast model can otherwise boot, run, and print
+ * BENCH_DONE inside that window and be missed. Spinning on the cycle counter
+ * (not measured latency) lets the host flush + arm read-until before we speak. */
+#ifndef BENCH_STARTUP_QUIET_MS
+#define BENCH_STARTUP_QUIET_MS 1500u
+#endif
+static void startup_quiet(void)
+{
+    uint32_t target = (uint32_t)((uint64_t)platform_cpu_hz() *
+                                 BENCH_STARTUP_QUIET_MS / 1000u);
+    uint32_t start = platform_cycles();
+    while ((uint32_t)(platform_cycles() - start) < target) {
+        /* spin */
+    }
 }
 
 int main(void)
 {
     platform_init();
+    startup_quiet();
 
     printf("\nTiGrIS Cortex-M Benchmark (board=%s, kernel=%s, %lu MHz)\n\n",
            platform_board_name(), kernel_name(),

@@ -68,15 +68,34 @@ static void sort_u32(uint32_t *a, int n)
 
 static void emit_failed(const char *status)
 {
+    /* Still report the verified clock: a failure here (e.g. ARENA_TOO_SMALL) is
+     * after platform_init, so cpu_mhz is real and should pass the clock guard. */
     printf("\nBENCH_RESULT:framework=tflm,kernel=cmsis_nn,dtype=int8,model="
-           TFLM_MODEL_NAME ",board=%s,status=%s,runs=0\n",
-           platform_board_name(), status);
+           TFLM_MODEL_NAME ",board=%s,cpu_mhz=%lu,status=%s,runs=0\n",
+           platform_board_name(), (unsigned long)(platform_cpu_hz() / 1000000u),
+           status);
     printf("BENCH_DONE\n");
+}
+
+/* See harness/main.c: stay silent briefly at boot so a remote rig host can
+ * flush + arm its serial capture before a fast model prints BENCH_DONE. */
+#ifndef BENCH_STARTUP_QUIET_MS
+#define BENCH_STARTUP_QUIET_MS 1500u
+#endif
+static void startup_quiet(void)
+{
+    uint32_t target = (uint32_t)((uint64_t)platform_cpu_hz() *
+                                 BENCH_STARTUP_QUIET_MS / 1000u);
+    uint32_t start = platform_cycles();
+    while ((uint32_t)(platform_cycles() - start) < target) {
+        /* spin */
+    }
 }
 
 int main(void)
 {
     platform_init();
+    startup_quiet();
     printf("\nTFLM Cortex-M Benchmark (board=%s, %lu MHz)\n\n",
            platform_board_name(), (unsigned long)(platform_cpu_hz() / 1000000u));
 
@@ -88,10 +107,12 @@ int main(void)
         platform_halt();
     }
 
-    /* DS-CNN op set (CMSIS-NN optimized kernels selected at lib build time). */
+    /* Op set covering every benchmark model (CMSIS-NN optimized kernels selected
+     * at lib build time). MobileNetV2 adds ADD for its inverted-residual skips. */
     static tflite::MicroMutableOpResolver<10> resolver;
     resolver.AddConv2D();
     resolver.AddDepthwiseConv2D();
+    resolver.AddAdd();             /* MobileNetV2 inverted-residual skip add */
     resolver.AddFullyConnected();
     resolver.AddReshape();
     resolver.AddMean();            /* GlobalAveragePool lowers to Mean */
