@@ -10,26 +10,31 @@ TFLite Micro, bit-exact device-to-device. See `README.md` for the results table.
 ## Prerequisites (host)
 
 ```bash
-# ARM cross toolchain + flashing/serial tools (need sudo - run yourself)
+# ARM cross toolchain (need sudo - run yourself)
 sudo apt install gcc-arm-none-eabi binutils-arm-none-eabi
-# (openocd / stlink-tools are optional; drag-drop flashing needs no tool)
 
-# Python deps for the result scripts
-pip install pyserial numpy rich
+# Python deps: the SiliconRig SDK (remote flash + serial) + the result scripts
+pip install siliconrig          # or: pip install -e <path to srig-python>
+pip install numpy rich
 ```
 
-You are already in the `dialout` group, so `/dev/ttyACM0` is readable.
+`run_all.sh` flashes + captures on the SiliconRig remote lab, so it needs
+`SRIG_API_KEY` in the environment (and `SRIG_BASE_URL` if self-hosted). To
+reproduce on a locally-attached board instead, see "Manual steps" below.
 
-## One-shot: build, flash, capture, validate all configs
+## One-shot: build, flash, capture, validate the whole matrix
 
 ```bash
-scripts/run_all.sh                 # s8_ref and cmsis_nn
-scripts/run_all.sh cmsis_nn        # a single kernel
+export SRIG_API_KEY=...                    # SiliconRig auth
+scripts/run_all.sh                         # all 3 boards x all models x all configs
+scripts/run_all.sh h753                    # one board
+BENCH_MODELS=ds_cnn BENCH_CONFIGS=cmsis_nn scripts/run_all.sh f446   # one cell
 ```
 
-This vendors CMSIS (first run), builds each config, flashes over the ST-LINK
-drag-drop drive, captures serial until `BENCH_DONE`, then writes
-`results/summary.json` and validates against `ds_cnn_reference_i8.bin`.
+This vendors CMSIS (first run), builds each (board, model, config), flashes +
+captures each on the SiliconRig remote lab until `BENCH_DONE`, writes
+`results/summary.json`, and runs the device-to-device parity gate. Raw serial logs
+land in `results/raw/` (gitignored; `summary.json` is the tracked artifact).
 
 ## Manual steps
 
@@ -45,15 +50,16 @@ cmake -S . -B build/h753_cmsis_nn \
 cmake --build build/h753_cmsis_nn -j
 # -> build/h753_cmsis_nn/tigris_bench.bin  (+ a size report: code/rodata vs RAM)
 
-# 3. Flash (copies the .bin to the NOD_H753ZI drive)
-scripts/flash.sh build/h753_cmsis_nn/tigris_bench.bin
+# 3. Flash a locally-attached board (no extra tooling): copy the .bin to the
+#    ST-LINK mass-storage drive
+cp build/h753_cmsis_nn/tigris_bench.bin /media/$USER/NOD_H753ZI/
 
 # 4. Capture the run (board resets and prints over USART3 -> VCP)
-python3 scripts/capture_serial.py -o results/raw/h753_cmsis_nn.log
+cat /dev/ttyACM0 > results/raw/h753_cmsis_nn.log   # stop at BENCH_DONE (Ctrl-C)
 
 # 5. Table + parity
 python3 scripts/results.py results/raw/ -o results/summary.json
-python3 scripts/validate_accuracy.py results/summary.json ../tflm-esp32s3/models/output
+python3 scripts/validate_accuracy.py               # defaults to results/summary.json
 ```
 
 ## TFLM baseline lib (per core)
@@ -92,8 +98,9 @@ PICO_SDK_PATH=~/pico/pico-sdk cmake -S boards/pico2_rp2350 -B build/pico_ts_cmsi
   -Dpicotool_DIR=~/pico/picotool/install/lib/cmake/picotool \
   -DBENCH_KERNEL=cmsis_nn -DTIGRIS_PLAN=<abs path to a .tgrs>
 cmake --build build/pico_ts_cmsis -j            # -> tigris_pico_bench.uf2
-python3 scripts/flash_pico.py build/pico_ts_cmsis/tigris_pico_bench.uf2 \
-  results/raw/pico_ts_cmsis.log                 # 1200-baud-touch -> BOOTSEL -> UF2 -> capture
+# Flash a locally-attached Pico: reboot to BOOTSEL, load the UF2, then capture
+picotool load -f build/pico_ts_cmsis/tigris_pico_bench.uf2 && picotool reboot
+cat /dev/ttyACM0 > results/raw/pico_ts_cmsis.log   # stop at BENCH_DONE
 ```
 
 ## Knobs
@@ -130,9 +137,10 @@ python3 scripts/flash_pico.py build/pico_ts_cmsis/tigris_pico_bench.uf2 \
 - **Vendor pins** (`fetch.sh`): CMSIS-NN `6d9d61d8` (full SHA, asserted after
   checkout; matches TFLM's bundled pin), cmsis-device-h7 `master`, cmsis-device-f4
   `3c77349`. Override via `DEV_*_REF`.
-- **Parity** is checked device-to-device by `scripts/validate_accuracy.py
-  results/raw/`: it groups the captured logs by (board, model) and compares the
-  int8 `OUTPUT_I8` vectors of `tigris/cmsis_nn` vs `tflm/cmsis_nn` (bit-exact) and
-  `tigris/s8_ref` vs `tigris/cmsis_nn` (+-1 LSB requant nudge). A (board, model)
+- **Parity** is checked device-to-device by `scripts/validate_accuracy.py` (reads
+  `results/summary.json` by default, which carries each cell's `OUTPUT_I8`; pass a
+  `results/raw/` dir to read logs instead). It groups by (board, model) and compares
+  the int8 `OUTPUT_I8` vectors of `tigris/cmsis_nn` vs `tflm/cmsis_nn` (bit-exact)
+  and `tigris/s8_ref` vs `tigris/cmsis_nn` (+-1 LSB requant nudge). A (board, model)
   with no TFLM baseline is reported INCOMPLETE, never silently passed. The host
   ORT/tflite interpreter is NOT a valid baseline (different kernels).
