@@ -1,0 +1,318 @@
+#!/usr/bin/env python3
+"""Validate clone-local JSON artifacts without regenerating hardware results."""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+from provenance_validation import (
+    all_source_captures_present,
+    git_tracked_paths,
+    validate_provenance,
+)
+
+
+ROOT = Path(__file__).resolve().parents[1]
+CORTEX_SUMMARY = Path("cortex-m-deployability/results/summary.json")
+CORTEX_EXPECTED_MATRIX = Path(
+    "cortex-m-deployability/results/expected-matrix.json")
+CORTEX_PROVENANCE = Path("cortex-m-deployability/results/provenance.json")
+IDENTITY_FIELDS = ("board", "model", "framework", "kernel")
+EXPECTED_MHZ = {
+    "nucleo_h753zi": 480,
+    "nucleo_f446re": 180,
+    "pico2_rp2350": 150,
+}
+
+
+def reject_nonstandard_number(value: str) -> None:
+    raise ValueError(f"non-standard JSON number {value}")
+
+
+def format_identity(identity: tuple[str, ...]) -> str:
+    return "/".join(identity)
+
+
+def validate_expected_matrix(document: object) -> list[str]:
+    errors: list[str] = []
+    if not isinstance(document, dict):
+        return ["top level must be an object"]
+    if document.get("schema_version") != 1:
+        errors.append("schema_version must be 1")
+    if document.get("suite") != "cortex-m-deployability":
+        errors.append("suite must be 'cortex-m-deployability'")
+
+    cells = document.get("cells")
+    if not isinstance(cells, list):
+        return errors + ["cells must be a list"]
+    if not cells:
+        errors.append("cells must not be empty")
+
+    expected_fields = set(IDENTITY_FIELDS) | {"expected_status"}
+    seen: set[tuple[str, ...]] = set()
+    for index, cell in enumerate(cells):
+        tag = f"cells[{index}]"
+        if not isinstance(cell, dict):
+            errors.append(f"{tag} must be an object")
+            continue
+        if set(cell) != expected_fields:
+            errors.append(
+                f"{tag} fields={sorted(cell)}, expected {sorted(expected_fields)}")
+            continue
+        if any(not isinstance(cell[field], str) for field in expected_fields):
+            errors.append(f"{tag} fields must all be strings")
+            continue
+
+        identity = tuple(cell[field] for field in IDENTITY_FIELDS)
+        if identity in seen:
+            errors.append(f"{tag} duplicates matrix cell {format_identity(identity)}")
+        seen.add(identity)
+        if cell["expected_status"] not in {"ok", "ARENA_TOO_SMALL"}:
+            errors.append(
+                f"{tag} has unsupported expected_status "
+                f"{cell['expected_status']!r}")
+    return errors
+
+
+def tracked_json_paths(tracked_paths: set[Path]) -> list[Path]:
+    paths = {path for path in tracked_paths if path.suffix == ".json"}
+    # Include required artifacts while they are still untracked in a working
+    # tree; once committed, the set operation naturally de-duplicates them.
+    paths.update((CORTEX_SUMMARY, CORTEX_EXPECTED_MATRIX, CORTEX_PROVENANCE))
+    return sorted(paths)
+
+
+def collect_matrix_cells(
+        document: object,
+        collection_field: str,
+        status_field: str,
+        source: str,
+) -> tuple[dict[tuple[str, ...], str], list[str]]:
+    cells: dict[tuple[str, ...], str] = {}
+    errors: list[str] = []
+    if not isinstance(document, dict):
+        return cells, errors
+    records = document.get(collection_field)
+    if not isinstance(records, list):
+        return cells, errors
+
+    required = (*IDENTITY_FIELDS, status_field)
+    for index, record in enumerate(records):
+        if (not isinstance(record, dict)
+                or any(not isinstance(record.get(field), str)
+                       for field in required)):
+            continue
+        identity = tuple(record[field] for field in IDENTITY_FIELDS)
+        if identity in cells:
+            errors.append(
+                f"duplicate {source} cell {format_identity(identity)} "
+                f"at {collection_field}[{index}]")
+            continue
+        cells[identity] = record[status_field]
+    return cells, errors
+
+
+def validate_matrix_coverage(
+        summary: object, expected_matrix: object) -> list[str]:
+    actual, actual_errors = collect_matrix_cells(
+        summary, "configs", "status", "summary")
+    expected, expected_errors = collect_matrix_cells(
+        expected_matrix, "cells", "expected_status", "expected matrix")
+    errors = actual_errors + expected_errors
+
+    for identity in sorted(expected.keys() - actual.keys()):
+        errors.append(f"missing matrix cell {format_identity(identity)}")
+    for identity in sorted(actual.keys() - expected.keys()):
+        errors.append(f"unexpected matrix cell {format_identity(identity)}")
+    for identity in sorted(actual.keys() & expected.keys()):
+        if actual[identity] != expected[identity]:
+            errors.append(
+                f"matrix cell {format_identity(identity)} has status "
+                f"{actual[identity]!r}, expected {expected[identity]!r}")
+    return errors
+
+
+def validate_removal_mutation(
+        summary: object, expected_matrix: object) -> list[str]:
+    if not isinstance(summary, dict):
+        return ["removal mutation self-check requires an object summary"]
+    configs = summary.get("configs")
+    if not isinstance(configs, list) or not configs:
+        return ["removal mutation self-check requires at least one config"]
+
+    removed = configs[0]
+    if (not isinstance(removed, dict)
+            or any(not isinstance(removed.get(field), str)
+                   for field in IDENTITY_FIELDS)):
+        return ["removal mutation self-check could not identify removed config"]
+    removed_identity = tuple(removed[field] for field in IDENTITY_FIELDS)
+    mutated_summary = {**summary, "configs": configs[1:]}
+    expected_error = f"missing matrix cell {format_identity(removed_identity)}"
+    mutation_errors = validate_matrix_coverage(mutated_summary, expected_matrix)
+    if expected_error not in mutation_errors:
+        return [
+            "removal mutation self-check failed to reject removed cell "
+            f"{format_identity(removed_identity)}"
+        ]
+    return []
+
+
+def validate_cortex_summary(document: object) -> list[str]:
+    errors: list[str] = []
+    if not isinstance(document, dict):
+        return ["top level must be an object"]
+
+    configs = document.get("configs")
+    if not isinstance(configs, list):
+        return ["configs must be a list"]
+    if document.get("count") != len(configs):
+        errors.append(
+            f"count={document.get('count')!r}, actual configs={len(configs)}")
+    if not configs:
+        errors.append("configs must not be empty")
+
+    seen: set[tuple[object, ...]] = set()
+    ok_cells = 0
+    for index, config in enumerate(configs):
+        tag = f"configs[{index}]"
+        if not isinstance(config, dict):
+            errors.append(f"{tag} must be an object")
+            continue
+
+        required = ("board", "model", "framework", "kernel", "dtype", "status")
+        missing = [field for field in required if field not in config]
+        if missing:
+            errors.append(f"{tag} missing fields: {', '.join(missing)}")
+            continue
+        non_strings = [field for field in required
+                       if not isinstance(config[field], str)]
+        if non_strings:
+            errors.append(
+                f"{tag} fields must be strings: {', '.join(non_strings)}")
+            continue
+
+        identity = tuple(config[field] for field in IDENTITY_FIELDS)
+        if identity in seen:
+            errors.append(
+                f"{tag} duplicates cell identity {format_identity(identity)}")
+        seen.add(identity)
+
+        if config["dtype"] != "int8":
+            errors.append(f"{tag} dtype={config['dtype']!r}, expected 'int8'")
+
+        board = config["board"]
+        expected_mhz = EXPECTED_MHZ.get(board)
+        if expected_mhz is None:
+            errors.append(f"{tag} has unknown board {board!r}")
+        elif config.get("cpu_mhz") != expected_mhz:
+            errors.append(
+                f"{tag} cpu_mhz={config.get('cpu_mhz')!r}, expected {expected_mhz}")
+        clock_stage = config.get("clock_stage")
+        if clock_stage is not None and clock_stage != 5:
+            errors.append(f"{tag} clock_stage={clock_stage!r}, expected 5")
+
+        status = config["status"]
+        if status == "ARENA_TOO_SMALL":
+            if config.get("output_values"):
+                errors.append(f"{tag} OOM cell must not contain output values")
+            continue
+        if status != "ok":
+            errors.append(f"{tag} has unexpected status {status!r}")
+            continue
+
+        ok_cells += 1
+        runs = config.get("runs")
+        if not isinstance(runs, int) or runs < 30:
+            errors.append(f"{tag} runs={runs!r}, expected at least 30")
+        for field in ("latency_median_ms", "latency_median_cycles", "sram_peak_bytes"):
+            value = config.get(field)
+            if (not isinstance(value, (int, float)) or isinstance(value, bool)
+                    or value <= 0):
+                errors.append(f"{tag} {field} must be a positive number")
+
+        output = (config.get("output_values") or {}).get("i8")
+        if not isinstance(output, list) or not output:
+            errors.append(f"{tag} must contain a non-empty OUTPUT_I8 vector")
+        elif any(
+                not isinstance(value, int) or isinstance(value, bool)
+                or value < -128 or value > 127
+                for value in output):
+            errors.append(f"{tag} OUTPUT_I8 must contain integers in [-128, 127]")
+
+    if ok_cells == 0:
+        errors.append("summary contains no successful cells")
+    return errors
+
+
+def main() -> None:
+    tracked_paths = git_tracked_paths(ROOT)
+    paths = tracked_json_paths(tracked_paths)
+    errors: list[str] = []
+    documents: dict[Path, object] = {}
+    for relative in paths:
+        path = ROOT / relative
+        try:
+            document = json.loads(
+                path.read_text(), parse_constant=reject_nonstandard_number)
+        except (OSError, UnicodeError, ValueError) as exc:
+            errors.append(f"{relative}: invalid JSON: {exc}")
+            continue
+        documents[relative] = document
+
+    summary = documents.get(CORTEX_SUMMARY)
+    expected_matrix = documents.get(CORTEX_EXPECTED_MATRIX)
+    provenance = documents.get(CORTEX_PROVENANCE)
+    summary_errors = (
+        validate_cortex_summary(summary)
+        if CORTEX_SUMMARY in documents else [])
+    expected_errors = (
+        validate_expected_matrix(expected_matrix)
+        if CORTEX_EXPECTED_MATRIX in documents else [])
+    errors.extend(
+        f"{CORTEX_SUMMARY}: {problem}" for problem in summary_errors)
+    errors.extend(
+        f"{CORTEX_EXPECTED_MATRIX}: {problem}"
+        for problem in expected_errors)
+    provenance_errors: list[str] = []
+    reconstruction_checked = False
+    if CORTEX_PROVENANCE in documents:
+        provenance_errors = validate_provenance(
+            provenance, ROOT, tracked_paths)
+        errors.extend(
+            f"{CORTEX_PROVENANCE}: {problem}"
+            for problem in provenance_errors)
+        reconstruction_checked = (
+            not provenance_errors
+            and all_source_captures_present(provenance, ROOT)
+        )
+
+    mutation_checked = False
+    if (CORTEX_SUMMARY in documents
+            and CORTEX_EXPECTED_MATRIX in documents
+            and not summary_errors
+            and not expected_errors):
+        coverage_errors = validate_matrix_coverage(summary, expected_matrix)
+        errors.extend(
+            f"Cortex matrix contract: {problem}"
+            for problem in coverage_errors)
+        if not coverage_errors:
+            mutation_errors = validate_removal_mutation(summary, expected_matrix)
+            errors.extend(
+                f"Cortex matrix contract: {problem}"
+                for problem in mutation_errors)
+            mutation_checked = not mutation_errors
+
+    if errors:
+        for error in errors:
+            print(f"ERROR: {error}")
+        raise SystemExit(1)
+    if mutation_checked:
+        print("Verified that removing an expected Cortex matrix cell fails.")
+    if reconstruction_checked:
+        print("Rebuilt the Cortex summary byte-for-byte from 27 source captures.")
+    print(f"Validated {len(paths)} JSON artifact(s).")
+
+
+if __name__ == "__main__":
+    main()

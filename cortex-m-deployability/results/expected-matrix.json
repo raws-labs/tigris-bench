@@ -1,0 +1,195 @@
+{
+  "schema_version": 1,
+  "suite": "cortex-m-deployability",
+  "cells": [
+    {
+      "board": "nucleo_f446re",
+      "model": "ad_matched",
+      "framework": "tigris",
+      "kernel": "cmsis_nn",
+      "expected_status": "ok"
+    },
+    {
+      "board": "nucleo_f446re",
+      "model": "ad_matched",
+      "framework": "tigris",
+      "kernel": "s8_ref",
+      "expected_status": "ok"
+    },
+    {
+      "board": "nucleo_f446re",
+      "model": "ad",
+      "framework": "tflm",
+      "kernel": "cmsis_nn",
+      "expected_status": "ok"
+    },
+    {
+      "board": "nucleo_f446re",
+      "model": "ds_cnn_matched",
+      "framework": "tigris",
+      "kernel": "cmsis_nn",
+      "expected_status": "ok"
+    },
+    {
+      "board": "nucleo_f446re",
+      "model": "ds_cnn_matched",
+      "framework": "tigris",
+      "kernel": "s8_ref",
+      "expected_status": "ok"
+    },
+    {
+      "board": "nucleo_f446re",
+      "model": "ds_cnn",
+      "framework": "tflm",
+      "kernel": "cmsis_nn",
+      "expected_status": "ok"
+    },
+    {
+      "board": "nucleo_f446re",
+      "model": "ts_matched",
+      "framework": "tigris",
+      "kernel": "cmsis_nn",
+      "expected_status": "ok"
+    },
+    {
+      "board": "nucleo_f446re",
+      "model": "ts_matched",
+      "framework": "tigris",
+      "kernel": "s8_ref",
+      "expected_status": "ok"
+    },
+    {
+      "board": "nucleo_f446re",
+      "model": "ts",
+      "framework": "tflm",
+      "kernel": "cmsis_nn",
+      "expected_status": "ok"
+    },
+    {
+      "board": "nucleo_h753zi",
+      "model": "ad_matched",
+      "framework": "tigris",
+      "kernel": "cmsis_nn",
+      "expected_status": "ok"
+    },
+    {
+      "board": "nucleo_h753zi",
+      "model": "ad_matched",
+      "framework": "tigris",
+      "kernel": "s8_ref",
+      "expected_status": "ok"
+    },
+    {
+      "board": "nucleo_h753zi",
+      "model": "ad",
+      "framework": "tflm",
+      "kernel": "cmsis_nn",
+      "expected_status": "ok"
+    },
+    {
+      "board": "nucleo_h753zi",
+      "model": "ds_cnn_matched",
+      "framework": "tigris",
+      "kernel": "cmsis_nn",
+      "expected_status": "ok"
+    },
+    {
+      "board": "nucleo_h753zi",
+      "model": "ds_cnn_matched",
+      "framework": "tigris",
+      "kernel": "s8_ref",
+      "expected_status": "ok"
+    },
+    {
+      "board": "nucleo_h753zi",
+      "model": "ds_cnn",
+      "framework": "tflm",
+      "kernel": "cmsis_nn",
+      "expected_status": "ok"
+    },
+    {
+      "board": "nucleo_h753zi",
+      "model": "mbv2_a35_r224_matched",
+      "framework": "tigris",
+      "kernel": "cmsis_nn",
+      "expected_status": "ok"
+    },
+    {
+      "board": "nucleo_h753zi",
+      "model": "mbv2",
+      "framework": "tflm",
+      "kernel": "cmsis_nn",
+      "expected_status": "ARENA_TOO_SMALL"
+    },
+    {
+      "board": "nucleo_h753zi",
+      "model": "ts_matched",
+      "framework": "tigris",
+      "kernel": "cmsis_nn",
+      "expected_status": "ok"
+    },
+    {
+      "board": "nucleo_h753zi",
+      "model": "ts_matched",
+      "framework": "tigris",
+      "kernel": "s8_ref",
+      "expected_status": "ok"
+    },
+    {
+      "board": "nucleo_h753zi",
+      "model": "ts",
+      "framework": "tflm",
+      "kernel": "cmsis_nn",
+      "expected_status": "ok"
+    },
+    {
+      "board": "pico2_rp2350",
+      "model": "ad_matched",
+      "framework": "tigris",
+      "kernel": "cmsis_nn",
+      "expected_status": "ok"
+    },
+    {
+      "board": "pico2_rp2350",
+      "model": "ad_matched",
+      "framework": "tigris",
+      "kernel": "s8_ref",
+      "expected_status": "ok"
+    },
+    {
+      "board": "pico2_rp2350",
+      "model": "ds_cnn_matched",
+      "framework": "tigris",
+      "kernel": "cmsis_nn",
+      "expected_status": "ok"
+    },
+    {
+      "board": "pico2_rp2350",
+      "model": "ds_cnn_matched",
+      "framework": "tigris",
+      "kernel": "s8_ref",
+      "expected_status": "ok"
+    },
+    {
+      "board": "pico2_rp2350",
+      "model": "mbv2_a35_r224_matched",
+      "framework": "tigris",
+      "kernel": "cmsis_nn",
+      "expected_status": "ok"
+    },
+    {
+      "board": "pico2_rp2350",
+      "model": "ts_matched",
+      "framework": "tigris",
+      "kernel": "cmsis_nn",
+      "expected_status": "ok"
+    },
+    {
+      "board": "pico2_rp2350",
+      "model": "ts_matched",
+      "framework": "tigris",
+      "kernel": "s8_ref",
+      "expected_status": "ok"
+    }
+  ]
+}

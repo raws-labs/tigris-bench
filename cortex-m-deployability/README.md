@@ -121,3 +121,15 @@ on the SiliconRig lab, aggregates, and runs the parity gate. Raw serial logs lan
 in `results/raw/` (gitignored); the tracked artifact is `results/summary.json`,
 which carries each cell's numbers and `OUTPUT_I8` vector. See `BUILD.md` for the
 build knobs and a locally-attached-board (no-rig) path.
+
+`results/provenance.json` binds that summary and its collector/validator to
+SHA-256 digests, records the paths and hashes of all 27 source captures, and
+distinguishes declared dependency pins from unavailable execution provenance.
+The captures are not shipped in a clone, but their hashes are retained so an
+obtained capture set can be checked. Fields marked `unknown` are intentionally
+unresolved rather than reconstructed from commit dates or current sibling
+checkouts. Host validation always checks tracked artifact/tool hashes and also
+checks source-capture hashes when those gitignored files are present. When the
+complete capture set is available, it reruns the collector in a temporary
+directory and requires byte-identical `summary.json` output; a clean clone
+skips that reconstruction and does not report it as verified.
