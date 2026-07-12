@@ -17,6 +17,8 @@ from pathlib import Path
 from rich.console import Console
 from rich.table import Table
 
+from benchmark_matrix import BenchmarkDataError, EXPECTED_CELLS, validate_matrix
+
 
 def parse_bench_result(line: str) -> dict | None:
     m = re.search(r"BENCH_RESULT:(.*)", line)
@@ -25,10 +27,14 @@ def parse_bench_result(line: str) -> dict | None:
     result: dict = {}
     for pair in m.group(1).strip().split(","):
         if "=" not in pair:
-            continue
+            raise BenchmarkDataError(f"malformed BENCH_RESULT field: {pair!r}")
         key, val = (s.strip() for s in pair.split("=", 1))
+        if not key or not val:
+            raise BenchmarkDataError(f"empty BENCH_RESULT key/value: {pair!r}")
+        if key in result:
+            raise BenchmarkDataError(f"duplicate BENCH_RESULT field: {key}")
         try:
-            result[key] = float(val) if "." in val else int(val)
+            result[key] = float(val) if any(c in val for c in ".eE") else int(val)
         except ValueError:
             result[key] = val
     return result or None
@@ -38,29 +44,73 @@ def parse_output_values(lines: list[str]) -> dict:
     outputs: dict = {}
     for line in lines:
         if "OUTPUT_F32:" in line:
-            outputs["f32"] = [float(v) for v in line.split("OUTPUT_F32:")[1].split()]
+            if "f32" in outputs:
+                raise BenchmarkDataError("duplicate OUTPUT_F32 line")
+            try:
+                outputs["f32"] = [
+                    float(v) for v in line.split("OUTPUT_F32:", 1)[1].split()]
+            except ValueError as exc:
+                raise BenchmarkDataError(f"malformed OUTPUT_F32 line: {line!r}") from exc
         elif "OUTPUT_I8:" in line:
-            outputs["i8"] = [int(v) for v in line.split("OUTPUT_I8:")[1].split()]
+            if "i8" in outputs:
+                raise BenchmarkDataError("duplicate OUTPUT_I8 line")
+            try:
+                values = [int(v) for v in line.split("OUTPUT_I8:", 1)[1].split()]
+            except ValueError as exc:
+                raise BenchmarkDataError(f"malformed OUTPUT_I8 line: {line!r}") from exc
+            if any(v < -128 or v > 127 for v in values):
+                raise BenchmarkDataError("OUTPUT_I8 contains a value outside [-128, 127]")
+            outputs["i8"] = values
     return outputs
 
 
-def parse_log(path: Path) -> dict | None:
-    lines = path.read_text().splitlines()
-    result = next((r for line in lines if (r := parse_bench_result(line))), None)
-    if result is None:
-        return None
-    outputs = parse_output_values(lines)
+def parse_log(path: Path) -> dict:
+    lines = path.read_text(errors="replace").splitlines()
+    result_lines = [i for i, line in enumerate(lines) if "BENCH_RESULT:" in line]
+    done_lines = [i for i, line in enumerate(lines) if line.strip() == "BENCH_DONE"]
+    if len(result_lines) != 1:
+        raise BenchmarkDataError(
+            f"{path.name}: expected exactly one BENCH_RESULT, found {len(result_lines)}")
+    if len(done_lines) != 1:
+        raise BenchmarkDataError(
+            f"{path.name}: expected exactly one BENCH_DONE, found {len(done_lines)}")
+    if result_lines[0] > done_lines[0]:
+        raise BenchmarkDataError(f"{path.name}: BENCH_RESULT appears after BENCH_DONE")
+
+    try:
+        result = parse_bench_result(lines[result_lines[0]])
+    except BenchmarkDataError as exc:
+        raise BenchmarkDataError(f"{path.name}: {exc}") from exc
+    if result is None:  # Kept for the type checker; result_lines proves otherwise.
+        raise BenchmarkDataError(f"{path.name}: empty BENCH_RESULT")
+    try:
+        outputs = parse_output_values(lines)
+    except BenchmarkDataError as exc:
+        raise BenchmarkDataError(f"{path.name}: {exc}") from exc
     if outputs:
         result["output_values"] = outputs
     result["log_file"] = path.name
     return result
 
 
-def collect(path: Path) -> list[dict]:
+def collect(path: Path, require_complete: bool | None = None) -> list[dict]:
+    if not path.exists():
+        raise BenchmarkDataError(f"input path does not exist: {path}")
     if path.is_dir():
-        return [r for p in sorted(path.glob("*.log")) if (r := parse_log(p))]
-    r = parse_log(path)
-    return [r] if r else []
+        log_paths = sorted(path.glob("*.log"))
+        names = {p.name for p in log_paths}
+        unexpected = sorted(names - set(EXPECTED_CELLS))
+        if unexpected:
+            raise BenchmarkDataError("unexpected log files: " + ", ".join(unexpected))
+        configs = [parse_log(p) for p in log_paths]
+        validate_matrix(
+            configs, require_complete=True if require_complete is None else require_complete)
+        return configs
+
+    result = parse_log(path)
+    validate_matrix(
+        [result], require_complete=False if require_complete is None else require_complete)
+    return [result]
 
 
 def render_table(configs: list[dict]) -> Table:
@@ -80,7 +130,8 @@ def render_table(configs: list[dict]) -> Table:
         model = c.get("model", "")
         base = model.removesuffix("_i8") or "?"
         name = f"{framework} {base} {dtype} ({kernel})"
-        sram = c.get("sram_kb", c.get("arena_kb", "?"))
+        sram = c.get(
+            "sram_budget_kb", c.get("sram_kb", c.get("arena_kb", "?")))
         flash = c.get("plan_flash_kb", c.get("model_flash_kb", "?"))
 
         if c.get("status") == "ARENA_TOO_SMALL":
@@ -111,14 +162,21 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Parse benchmark logs and print a results table")
     parser.add_argument("path", type=Path, help="Directory of .log files or a single log file")
     parser.add_argument("-o", "--output", type=Path, help="Also write summary JSON to this path")
+    parser.add_argument(
+        "--allow-partial", action="store_true",
+        help="Allow missing canonical cells when collecting a directory (unexpected or malformed "
+             "cells still fail).")
     args = parser.parse_args()
 
-    configs = collect(args.path)
     console = Console()
-
-    if not configs:
-        console.print("[yellow]No BENCH_RESULT lines found.[/yellow]")
-        return
+    try:
+        require_complete = args.path.is_dir() and not args.allow_partial
+        configs = collect(args.path, require_complete=require_complete)
+    except BenchmarkDataError as exc:
+        console.print("[bold red]RESULT GATE FAILED[/bold red]")
+        for line in str(exc).splitlines():
+            console.print(f"  [red]x[/red] {line}")
+        raise SystemExit(1) from exc
 
     console.print(render_table(configs))
 

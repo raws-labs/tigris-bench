@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Compare device output values against ORT reference to validate accuracy.
+"""Validate every successful ESP32-S3 result against its model reference.
+
+INT8 references are raw int8 vectors, not float32 ORT output. Reference names
+are selected by canonical matrix cell so DS-CNN and MobileNet can never be
+silently compared to one another, and TFLM's independently generated DS-CNN is
+checked against a reference produced from its own TFLite model.
 
 Usage:
     python validate_accuracy.py results/summary.json models/output/
@@ -9,109 +14,159 @@ from __future__ import annotations
 
 import argparse
 import json
-import struct
 from pathlib import Path
 
 import numpy as np
 
+from benchmark_matrix import (
+    BenchmarkDataError,
+    EXPECTED_CELLS,
+    validate_matrix,
+)
+
 
 def load_reference(ref_path: Path, dtype: str) -> np.ndarray:
-    """Load raw binary reference output."""
-    data = ref_path.read_bytes()
-    if dtype == "f32":
-        return np.frombuffer(data, dtype=np.float32)
-    else:
-        # i8 reference is still stored as f32 (ORT output)
-        return np.frombuffer(data, dtype=np.float32)
+    """Load a raw reference vector using the dtype written by model preparation."""
+    if not ref_path.is_file():
+        raise BenchmarkDataError(f"reference file not found: {ref_path}")
+    np_dtype = np.float32 if dtype == "f32" else np.int8
+    payload = ref_path.read_bytes()
+    if dtype == "f32" and len(payload) % np.dtype(np.float32).itemsize:
+        raise BenchmarkDataError(
+            f"float32 reference byte length is not divisible by 4: {ref_path}")
+    data = np.frombuffer(payload, dtype=np_dtype)
+    if data.size == 0:
+        raise BenchmarkDataError(f"reference file is empty: {ref_path}")
+    return data
 
 
-def validate_config(config: dict, models_dir: Path) -> dict:
-    """Validate one benchmark config against reference."""
-    framework = config.get("framework", "?")
-    dtype = config.get("dtype", "f32")
-    kernel = config.get("kernel", "?")
-    name = f"{framework}_{dtype}_{kernel}"
+def validate_config(
+        config: dict,
+        models_dir: Path,
+        *,
+        f32_atol: float = 0.01,
+        int8_atol: int = 1,
+) -> dict:
+    """Validate one structurally valid canonical matrix cell."""
+    log_file = config["log_file"]
+    spec = EXPECTED_CELLS[log_file]
+    name = f"{log_file.removesuffix('.log')} ({spec.model})"
 
-    result = {"name": name, "status": "skip", "message": ""}
+    if spec.expected_status != "ok":
+        return {
+            "name": name,
+            "status": "pass",
+            "message": f"expected status={spec.expected_status}",
+        }
 
-    outputs = config.get("output_values", {})
-    if not outputs:
-        result["message"] = "no output values in log"
-        return result
+    if spec.reference_file is None or spec.output_key is None:
+        return {
+            "name": name,
+            "status": "fail",
+            "message": "successful cell has no reference mapping",
+        }
 
-    # Determine reference file
-    if dtype == "int8":
-        ref_file = models_dir / "ds_cnn_reference_i8.bin"
-        device_vals = outputs.get("i8")
-    else:
-        ref_file = models_dir / "ds_cnn_reference_f32.bin"
-        device_vals = outputs.get("f32")
+    ref_path = models_dir / spec.reference_file
+    try:
+        reference = load_reference(ref_path, spec.dtype)
+    except BenchmarkDataError as exc:
+        return {"name": name, "status": "fail", "message": str(exc)}
 
-    if device_vals is None:
-        result["message"] = f"no output_{dtype} values in log"
-        return result
+    values = config["output_values"][spec.output_key]
+    device_dtype = np.float32 if spec.dtype == "f32" else np.int8
+    device = np.asarray(values, dtype=device_dtype)
 
-    if not ref_file.exists():
-        result["message"] = f"reference file not found: {ref_file}"
-        return result
+    if reference.size != device.size:
+        return {
+            "name": name,
+            "status": "fail",
+            "message": f"length mismatch: reference={reference.size}, device={device.size}",
+        }
 
-    ref = load_reference(ref_file, dtype)
-    device = np.array(device_vals, dtype=np.float32 if dtype == "f32" else np.int8)
+    if spec.dtype == "f32":
+        diff = np.abs(reference.astype(np.float64) - device.astype(np.float64))
+        max_abs = float(diff.max(initial=0.0))
+        passed = bool(np.allclose(reference, device, rtol=1e-4, atol=f32_atol))
+        return {
+            "name": name,
+            "status": "pass" if passed else "fail",
+            "message": f"max_abs_diff={max_abs:.6f}, atol={f32_atol:g}",
+        }
 
-    if len(ref) != len(device):
-        result["status"] = "fail"
-        result["message"] = f"length mismatch: ref={len(ref)}, device={len(device)}"
-        return result
-
-    if dtype == "f32":
-        # f32: check relative + absolute tolerance
-        # TiGrIS should match ORT closely; TFLM may differ due to different
-        # weight initialization (Keras vs ONNX), so we mainly check for crashes
-        max_abs_diff = float(np.max(np.abs(ref - device)))
-        if max_abs_diff < 0.01:
-            result["status"] = "pass"
-            result["message"] = f"max_abs_diff={max_abs_diff:.6f}"
-        elif framework == "tflm":
-            result["status"] = "warn"
-            result["message"] = (f"max_abs_diff={max_abs_diff:.6f} "
-                                 "(expected: TFLM uses different weights)")
-        else:
-            result["status"] = "fail"
-            result["message"] = f"max_abs_diff={max_abs_diff:.6f} exceeds tolerance"
-    else:
-        # i8: check exact match for TiGrIS, allow some diff for TFLM
-        ref_i8 = ref.astype(np.float32)  # reference is f32 from ORT
-        # For int8, we can only do a rough comparison
-        result["status"] = "info"
-        result["message"] = f"device_argmax={np.argmax(device)}, ref_argmax={np.argmax(ref_i8)}"
-
-    return result
+    diff = np.abs(reference.astype(np.int16) - device.astype(np.int16))
+    max_abs = int(diff.max(initial=0))
+    n_diff = int(np.count_nonzero(diff))
+    passed = max_abs <= int8_atol
+    return {
+        "name": name,
+        "status": "pass" if passed else "fail",
+        "message": (
+            f"max_abs_diff={max_abs}, differing={n_diff}/{device.size}, "
+            f"atol={int8_atol}"
+        ),
+    }
 
 
-def main():
-    parser = argparse.ArgumentParser(description="Validate device output vs ORT reference")
+def validate_summary(
+        summary: dict,
+        models_dir: Path,
+        *,
+        f32_atol: float = 0.01,
+        int8_atol: int = 1,
+) -> list[dict]:
+    configs = summary.get("configs")
+    if not isinstance(configs, list):
+        raise BenchmarkDataError("summary must contain a configs list")
+    if summary.get("count") != len(configs):
+        raise BenchmarkDataError(
+            f"summary count={summary.get('count')!r}, actual configs={len(configs)}")
+    validate_matrix(configs, require_complete=True)
+    return [
+        validate_config(
+            config, models_dir, f32_atol=f32_atol, int8_atol=int8_atol)
+        for config in configs
+    ]
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Validate the complete ESP32-S3 matrix against model-specific references")
     parser.add_argument("summary", type=Path, help="summary.json from results.py")
-    parser.add_argument("models_dir", type=Path, help="models/output/ directory with reference files")
+    parser.add_argument("models_dir", type=Path, help="models/output directory")
+    parser.add_argument(
+        "--f32-atol", type=float, default=0.01,
+        help="absolute tolerance for float32 output (default: 0.01)")
+    parser.add_argument(
+        "--int8-atol", type=int, default=1,
+        help="maximum elementwise INT8 difference (default: 1 LSB)")
     args = parser.parse_args()
 
-    summary = json.loads(args.summary.read_text())
+    if args.f32_atol < 0 or args.int8_atol < 0:
+        parser.error("tolerances must be non-negative")
+
+    try:
+        summary = json.loads(args.summary.read_text())
+        results = validate_summary(
+            summary,
+            args.models_dir,
+            f32_atol=args.f32_atol,
+            int8_atol=args.int8_atol,
+        )
+    except (OSError, json.JSONDecodeError, BenchmarkDataError) as exc:
+        print(f"Accuracy gate failed: {exc}")
+        raise SystemExit(1) from exc
 
     print("Accuracy Validation\n")
-    all_pass = True
-    for config in summary["configs"]:
-        result = validate_config(config, args.models_dir)
-        status_icon = {"pass": "OK", "fail": "FAIL", "warn": "WARN",
-                       "info": "INFO", "skip": "SKIP"}[result["status"]]
-        print(f"  [{status_icon}] {result['name']}: {result['message']}")
-        if result["status"] == "fail":
-            all_pass = False
+    for result in results:
+        marker = "OK" if result["status"] == "pass" else "FAIL"
+        print(f"  [{marker}] {result['name']}: {result['message']}")
 
+    failures = [result for result in results if result["status"] != "pass"]
     print()
-    if all_pass:
-        print("All validations passed.")
-    else:
-        print("Some validations FAILED. Check results above.")
-        exit(1)
+    if failures:
+        print(f"Accuracy gate FAILED: {len(failures)} cell(s) did not match.")
+        raise SystemExit(1)
+    print("All validations passed.")
 
 
 if __name__ == "__main__":

@@ -55,13 +55,18 @@ pip install tigris-ml
 python models/prepare.py
 ```
 
-This generates ONNX, TiGrIS plans, TFLite models, C headers, and ORT reference outputs under `models/output/`.
+This generates ONNX, TiGrIS plans, TFLite models, C headers, and ONNX Runtime/TFLite reference outputs under `models/output/`.
 
 ### 2. Run all benchmarks (device)
 
 ```bash
 ./scripts/run_all.sh /dev/ttyUSB0
 ```
+
+`run_all.sh` now accepts a result only after all 10 canonical cells were
+captured through `BENCH_DONE`, aggregated, and checked against their
+model-specific references. A timeout, missing or extra cell, unexpected status,
+or numerical mismatch makes the command fail.
 
 Or run individual configs:
 
@@ -84,14 +89,24 @@ cd tflm-esp && idf.py fullclean && idf.py set-target esp32s3
 idf.py build -DBENCH_INT8=1 && idf.py flash
 ```
 
-### 3. Collect results
+### 3. Re-run the result gates manually
 
 ```bash
 python scripts/results.py results/raw/ -o results/summary.json
 python scripts/validate_accuracy.py results/summary.json models/output/
 ```
 
-`results.py` parses the serial logs and prints a pretty table; with `-o` it also writes a machine-parseable `summary.json`. `validate_accuracy.py` compares device outputs against the ORT reference and rejects the run if the numbers drift beyond tolerance.
+`results.py` parses the serial logs and prints a pretty table; with `-o` it also writes a machine-parseable `summary.json`. `validate_accuracy.py` compares device outputs against the corresponding ONNX Runtime or TFLite reference and rejects the run if the numbers drift beyond tolerance.
+
+INT8 references are raw int8 vectors. TiGrIS cells use the reference generated
+from their ONNX model; TFLM DS-CNN cells use references generated from the exact
+TFLite model embedded in the firmware (the ONNX and Keras models in this suite
+are independently initialized). The MobileNet TFLM cell is required to report
+the expected `ARENA_TOO_SMALL` status.
+
+For an intentional development run containing only some canonical cells, pass
+`--allow-partial` to `results.py`. This never permits unknown filenames,
+malformed/truncated logs, or invalid cell contents.
 
 ## Project structure
 
@@ -102,6 +117,20 @@ tflm-esp/                     # ESP-IDF project: TFLite Micro benchmark harness
 scripts/run_all.sh            # Orchestrate all configs end-to-end
 scripts/results.py            # Parse logs, print table, optionally emit JSON
 scripts/validate_accuracy.py  # Compare device output against ORT reference
+scripts/benchmark_matrix.py   # Canonical 10-cell matrix and structural gate
+tests/test_validation.py      # Self-contained result/accuracy fixtures
+```
+
+Run the host-only gate tests with:
+
+```bash
+python -m unittest discover -s tests -v
+```
+
+To run the same post-capture gates without building or touching hardware:
+
+```bash
+BENCH_VALIDATE_ONLY=1 ./scripts/run_all.sh
 ```
 
 ## Dependencies

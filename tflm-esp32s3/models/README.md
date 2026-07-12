@@ -21,6 +21,10 @@ in the TiGrIS test fixtures (`tigris/src/tigris/cli/fixtures.py:build_ds_cnn`).
 | `ds_cnn_i8.tgrs` | TiGrIS | int8 | Compiled with `-m 256K` |
 | `ds_cnn.tflite` | TFLite | f32 | Keras conversion |
 | `ds_cnn_i8.tflite` | TFLite | int8 | Full integer quantization |
+| `ds_cnn_reference_f32.bin` | raw vector | f32 | ONNX Runtime reference for TiGrIS |
+| `ds_cnn_reference_i8.bin` | raw vector | int8 | ONNX Runtime reference for TiGrIS |
+| `ds_cnn_tflite_reference_f32.bin` | raw vector | f32 | TFLite reference for TFLM |
+| `ds_cnn_tflite_reference_i8.bin` | raw vector | int8 | TFLite reference for TFLM |
 
 ## Regeneration
 

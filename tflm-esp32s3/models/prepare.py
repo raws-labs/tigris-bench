@@ -10,6 +10,8 @@ Outputs go to models/output/:
   ds_cnn_i8.tflite         TFLite int8 model
   ds_cnn_reference_f32.bin ORT reference output (f32, np.ones input)
   ds_cnn_reference_i8.bin  ORT reference output (i8, np.ones input)
+  ds_cnn_tflite_reference_f32.bin TFLite reference output (f32, ones input)
+  ds_cnn_tflite_reference_i8.bin  TFLite reference output (i8, ones input)
   ds_cnn_tflite.h          C array for TFLM (f32)
   ds_cnn_tflite_i8.h       C array for TFLM (int8)
 """
@@ -267,6 +269,29 @@ def generate_reference(onnx_path: Path, output_path: Path):
         print(f"  Reference: {output_path} ({len(ref_data)} bytes, {len(ref_data)//4} floats)")
 
 
+def generate_tflite_reference(tflite_path: Path, output_path: Path):
+    """Run a TFLite model with an all-ones input and write its native output.
+
+    The ONNX and Keras/TFLite models are independently initialized in this
+    suite, so TFLM must be checked against a reference produced from the exact
+    TFLite model embedded in its firmware rather than against the ONNX output.
+    """
+    import tensorflow as tf
+
+    interpreter = tf.lite.Interpreter(model_path=str(tflite_path))
+    interpreter.allocate_tensors()
+    input_info = interpreter.get_input_details()[0]
+    output_info = interpreter.get_output_details()[0]
+    input_data = np.ones(input_info["shape"], dtype=input_info["dtype"])
+    interpreter.set_tensor(input_info["index"], input_data)
+    interpreter.invoke()
+    output = interpreter.get_tensor(output_info["index"]).flatten()
+    output_path.write_bytes(output.tobytes())
+    print(
+        f"  TFLite reference: {output_path} ({output.size} values, "
+        f"dtype={output.dtype})")
+
+
 class _CalibrationDataReader:
     """Feeds calibration data for onnxruntime quantization."""
 
@@ -451,6 +476,10 @@ def main():
         tflm_main = Path(__file__).parent.parent / "tflm-esp" / "main"
         generate_c_header(out / "ds_cnn.tflite", tflm_main / "ds_cnn_tflite.h", "ds_cnn_tflite")
         generate_c_header(out / "ds_cnn_i8.tflite", tflm_main / "ds_cnn_tflite_i8.h", "ds_cnn_tflite_i8")
+        generate_tflite_reference(
+            out / "ds_cnn.tflite", out / "ds_cnn_tflite_reference_f32.bin")
+        generate_tflite_reference(
+            out / "ds_cnn_i8.tflite", out / "ds_cnn_tflite_reference_i8.bin")
     else:
         print("\n[7/12] Skipping TFLite conversion (tensorflow not installed)")
         print("[8/12] Skipping C header generation (no .tflite files)")
