@@ -32,11 +32,11 @@ EXPECTED_CELLS: dict[str, CellSpec] = {
         "tigris", "f32_ref", "f32", "ds_cnn", 256,
         "f32", "ds_cnn_reference_f32.bin"),
     "tigris_i8_ref.log": CellSpec(
-        "tigris", "s8_ref", "int8", "ds_cnn_i8", 256,
-        "i8", "ds_cnn_reference_i8.bin"),
+        "tigris", "s8_ref", "int8", "ds_cnn_matched", 256,
+        "i8", "ds_cnn_matched_ref.bin"),
     "tigris_i8_espnn.log": CellSpec(
-        "tigris", "esp_nn", "int8", "ds_cnn_i8", 256,
-        "i8", "ds_cnn_reference_i8.bin"),
+        "tigris", "esp_nn", "int8", "ds_cnn_matched", 256,
+        "i8", "ds_cnn_matched_ref.bin"),
     "tflm_f32.log": CellSpec(
         "tflm", "default", "f32", "ds_cnn", 256,
         "f32", "ds_cnn_tflite_reference_f32.bin"),
@@ -44,19 +44,19 @@ EXPECTED_CELLS: dict[str, CellSpec] = {
         "tflm", "default", "int8", "ds_cnn", 256,
         "i8", "ds_cnn_tflite_reference_i8.bin"),
     "tigris_mbv1_i8_espnn.log": CellSpec(
-        "tigris", "esp_nn", "int8", "mobilenet_v1_i8", 256,
+        "tigris", "esp_nn", "int8", "mobilenet_v1_matched", 256,
         "i8", "mobilenet_v1_reference_i8.bin"),
     "tflm_mbv1_i8.log": CellSpec(
         "tflm", "default", "int8", "mobilenet_v1", 256,
         None, None, expected_status="ARENA_TOO_SMALL"),
     "tigris_mbv1_i8_espnn_128k.log": CellSpec(
-        "tigris", "esp_nn", "int8", "mobilenet_v1_i8", 128,
+        "tigris", "esp_nn", "int8", "mobilenet_v1_matched", 128,
         "i8", "mobilenet_v1_reference_i8.bin"),
     "tigris_mbv1_i8_espnn_64k.log": CellSpec(
-        "tigris", "esp_nn", "int8", "mobilenet_v1_i8", 64,
+        "tigris", "esp_nn", "int8", "mobilenet_v1_matched", 64,
         "i8", "mobilenet_v1_reference_i8.bin"),
     "tigris_mbv1_i8_espnn_32k.log": CellSpec(
-        "tigris", "esp_nn", "int8", "mobilenet_v1_i8", 32,
+        "tigris", "esp_nn", "int8", "mobilenet_v1_matched", 32,
         "i8", "mobilenet_v1_reference_i8.bin"),
 }
 

@@ -17,6 +17,7 @@ Outputs go to models/output/:
 from __future__ import annotations
 
 import struct
+import subprocess
 import sys
 import tempfile
 from pathlib import Path
@@ -412,6 +413,12 @@ def generate_c_header(tflite_path: Path, header_path: Path, array_name: str):
     print(f"  C header: {header_path} ({len(data)} bytes model)")
 
 
+def reconstruct_matched_onnx(tflite_path: Path, output_path: Path):
+    """Derive a fully-int8 TiGrIS source from the exact TFLite model."""
+    tool = Path(__file__).parents[2] / "cortex-m-deployability/tools/tflite_to_qdq_onnx.py"
+    subprocess.run([sys.executable, str(tool), str(tflite_path), str(output_path)], check=True)
+
+
 def main():
     out = Path(__file__).parent / "output"
     out.mkdir(exist_ok=True)
@@ -459,6 +466,9 @@ def main():
             out / "ds_cnn.tflite", out / "ds_cnn_tflite_reference_f32.bin")
         generate_tflite_reference(
             out / "ds_cnn_i8.tflite", out / "ds_cnn_tflite_reference_i8.bin")
+        reconstruct_matched_onnx(out / "ds_cnn_i8.tflite", out / "ds_cnn_matched.onnx")
+        generate_tflite_reference(
+            out / "ds_cnn_i8.tflite", out / "ds_cnn_matched_ref.bin")
     else:
         print("\n[5/9] Skipping TFLite conversion (tensorflow not installed)")
         print("[6/9] Skipping C header generation (no .tflite files)")
@@ -484,6 +494,8 @@ def main():
         tflm_main = Path(__file__).parent.parent / "tflm-esp" / "main"
         generate_c_header(out / "mobilenet_v1_i8.tflite",
                           tflm_main / "mobilenet_v1_tflite_i8.h", "mobilenet_v1_tflite_i8")
+        reconstruct_matched_onnx(out / "mobilenet_v1_i8.tflite",
+                                 out / "mobilenet_v1_matched.onnx")
 
     print(f"\nDone. All outputs in {out}/")
 

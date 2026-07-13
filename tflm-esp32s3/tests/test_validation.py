@@ -26,6 +26,7 @@ REFERENCE_VALUES: dict[str, list[int] | list[float]] = {
     "ds_cnn_reference_f32.bin": [0.25, -0.5],
     "ds_cnn_tflite_reference_f32.bin": [0.125, -0.25],
     "ds_cnn_reference_i8.bin": [1, -2, 3],
+    "ds_cnn_matched_ref.bin": [1, -2, 3],
     "ds_cnn_tflite_reference_i8.bin": [7, 0, -7],
     "mobilenet_v1_reference_i8.bin": [4, -5],
 }
