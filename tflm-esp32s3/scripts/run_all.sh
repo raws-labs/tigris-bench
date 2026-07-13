@@ -12,6 +12,8 @@ BENCH_DIR="$(dirname "$SCRIPT_DIR")"
 RAW_DIR="${BENCH_RAW_DIR:-$BENCH_DIR/results/raw}"
 MODELS="${BENCH_MODELS_DIR:-$BENCH_DIR/models/output}"
 SUMMARY="${BENCH_SUMMARY:-$BENCH_DIR/results/summary.json}"
+PLAN_DIR="${TIGRIS_PLAN_DIR:-$BENCH_DIR/build/plans}"
+TIGRIS_COMPILER="${TIGRIS_COMPILER:-$BENCH_DIR/../../tigris/.venv/bin/tigris}"
 
 mkdir -p "$RAW_DIR" "$(dirname "$SUMMARY")"
 
@@ -145,18 +147,23 @@ if [ "${BENCH_VALIDATE_ONLY:-0}" = 1 ]; then
     exit 0
 fi
 
+echo "Compiling current TiGrIS plans..."
+"$PYTHON" "$SCRIPT_DIR/prepare_tigris_plans.py" \
+    --compiler "$TIGRIS_COMPILER" --models-dir "$MODELS" \
+    --output-dir "$PLAN_DIR"
+
 echo "TiGrIS vs TFLM Benchmark Suite"
 echo "Port: $PORT"
 echo "Output: $RAW_DIR/"
 
 # Config 1: TiGrIS f32 (ref kernel)
-run_tigris_config "tigris_f32_ref" "$MODELS/ds_cnn.tgrs" "f32"
+run_tigris_config "tigris_f32_ref" "$PLAN_DIR/ds_cnn.tgrs" "f32"
 
 # Config 2: TiGrIS i8 (ref kernel)
-run_tigris_config "tigris_i8_ref" "$MODELS/ds_cnn_i8.tgrs" "s8"
+run_tigris_config "tigris_i8_ref" "$PLAN_DIR/ds_cnn_i8.tgrs" "s8"
 
 # Config 3: TiGrIS i8 (ESP-NN kernel)
-run_tigris_config "tigris_i8_espnn" "$MODELS/ds_cnn_i8.tgrs" "esp_nn"
+run_tigris_config "tigris_i8_espnn" "$PLAN_DIR/ds_cnn_i8.tgrs" "esp_nn"
 
 # Config 4: TFLM f32
 run_tflm_config "tflm_f32" ""
@@ -167,7 +174,7 @@ run_tflm_config "tflm_i8" "-DBENCH_INT8=1"
 # Case A: "Doesn't Fit" (MobileNetV1)
 
 # Config 6: TiGrIS MobileNetV1 i8 (ESP-NN)
-run_tigris_config "tigris_mbv1_i8_espnn" "$MODELS/mobilenet_v1_i8.tgrs" "esp_nn"
+run_tigris_config "tigris_mbv1_i8_espnn" "$PLAN_DIR/mobilenet_v1_i8.tgrs" "esp_nn"
 
 # Config 7: TFLM MobileNetV1 i8 (expected: ARENA_TOO_SMALL)
 run_tflm_config "tflm_mbv1_i8" "-DBENCH_WIDE=1"
@@ -175,7 +182,7 @@ run_tflm_config "tflm_mbv1_i8" "-DBENCH_WIDE=1"
 # Case B: Tiling overhead sweep (MobileNetV1, varied budgets)
 
 for budget in 128k 64k 32k; do
-    run_tigris_config "tigris_mbv1_i8_espnn_${budget}" "$MODELS/mobilenet_v1_i8_${budget}.tgrs" "esp_nn"
+    run_tigris_config "tigris_mbv1_i8_espnn_${budget}" "$PLAN_DIR/mobilenet_v1_i8_${budget}.tgrs" "esp_nn"
 done
 
 collect_and_validate

@@ -55,7 +55,7 @@ pip install tigris-ml
 python models/prepare.py
 ```
 
-This generates ONNX, TiGrIS plans, TFLite models, C headers, and ONNX Runtime/TFLite reference outputs under `models/output/`.
+This generates ONNX source models, TFLite models, C headers, and ONNX Runtime/TFLite reference outputs under `models/output/`. `run_all.sh` compiles the TiGrIS plans afresh into ignored `build/plans/`, using the active local compiler, before it touches hardware. It never benchmarks a pre-existing `.tgrs` artifact.
 
 ### 2. Run all benchmarks (device)
 
@@ -73,13 +73,15 @@ Or run individual configs:
 ```bash
 # TiGrIS f32
 cd tigris-esp && idf.py set-target esp32s3 && idf.py build && idf.py flash
-# Flash the .tgrs plan to the "plan" partition
-python -m esptool --port /dev/ttyUSB0 write_flash 0x210000 ../models/output/ds_cnn.tgrs
+# Compile the current plan, then flash it to the "plan" partition
+python ../scripts/prepare_tigris_plans.py --compiler ../../../tigris/.venv/bin/tigris \
+  --models-dir ../models/output --output-dir ../build/plans
+python -m esptool --port /dev/ttyUSB0 write_flash 0x210000 ../build/plans/ds_cnn.tgrs
 
 # TiGrIS i8 + ESP-NN
 cd tigris-esp && idf.py fullclean && idf.py set-target esp32s3
 idf.py build -DBENCH_KERNEL=esp_nn && idf.py flash
-python -m esptool --port /dev/ttyUSB0 write_flash 0x210000 ../models/output/ds_cnn_i8.tgrs
+python -m esptool --port /dev/ttyUSB0 write_flash 0x210000 ../build/plans/ds_cnn_i8.tgrs
 
 # TFLM f32
 cd tflm-esp && idf.py set-target esp32s3 && idf.py build && idf.py flash
@@ -111,7 +113,8 @@ malformed/truncated logs, or invalid cell contents.
 ## Project structure
 
 ```
-models/prepare.py             # Build, quantize, compile all model variants
+models/prepare.py             # Build and quantize ONNX/TFLite source artifacts
+scripts/prepare_tigris_plans.py # Compile current TiGrIS plans into ignored build output
 tigris-esp/                   # ESP-IDF project: TiGrIS benchmark harness
 tflm-esp/                     # ESP-IDF project: TFLite Micro benchmark harness
 scripts/run_all.sh            # Orchestrate all configs end-to-end

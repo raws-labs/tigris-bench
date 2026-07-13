@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
-"""Build DS-CNN model, quantize, compile TiGrIS plans, convert TFLite.
+"""Build and quantize ONNX models, convert TFLite, and generate references.
 
 Outputs go to models/output/:
   ds_cnn.onnx              f32 ONNX model
   ds_cnn_i8.onnx           int8 quantized ONNX model
-  ds_cnn.tgrs              TiGrIS plan (f32)
-  ds_cnn_i8.tgrs           TiGrIS plan (int8)
   ds_cnn.tflite            TFLite f32 model
   ds_cnn_i8.tflite         TFLite int8 model
   ds_cnn_reference_f32.bin ORT reference output (f32, np.ones input)
@@ -333,18 +331,6 @@ def quantize_onnx(f32_path: Path, i8_path: Path):
     print(f"  Quantized: {i8_path} ({i8_path.stat().st_size} bytes)")
 
 
-def compile_tigris_plan(onnx_path: Path, plan_path: Path, budget: str = "256K"):
-    """Compile ONNX model to TiGrIS binary plan via the public CLI."""
-    import subprocess
-
-    plan_path.parent.mkdir(parents=True, exist_ok=True)
-    subprocess.run(
-        ["tigris", "compile", str(onnx_path), "-m", budget, "-o", str(plan_path)],
-        check=True,
-    )
-    print(f"  TiGrIS plan: {plan_path} ({plan_path.stat().st_size} bytes)")
-
-
 def build_keras_ds_cnn(channels: int = 64):
     """Build the same DS-CNN architecture in Keras for TFLite conversion."""
     import tensorflow as tf
@@ -452,14 +438,7 @@ def main():
     print("\n[4/12] Generating ORT reference (i8)...")
     generate_reference(onnx_i8, out / "ds_cnn_reference_i8.bin")
 
-    # 5. Compile TiGrIS plans
-    print("\n[5/12] Compiling TiGrIS plan (f32)...")
-    compile_tigris_plan(onnx_f32, out / "ds_cnn.tgrs", "256K")
-
-    print("\n[6/12] Compiling TiGrIS plan (i8)...")
-    compile_tigris_plan(onnx_i8, out / "ds_cnn_i8.tgrs", "256K")
-
-    # 7. Convert TFLite
+    # 5. Convert TFLite
     try:
         import tensorflow  # noqa: F401
         has_tf = True
@@ -467,12 +446,12 @@ def main():
         has_tf = False
 
     if has_tf:
-        print("\n[7/12] Converting to TFLite...")
+        print("\n[5/9] Converting to TFLite...")
         keras_model = convert_tflite_f32(out / "ds_cnn.tflite")
         convert_tflite_i8(keras_model, out / "ds_cnn_i8.tflite")
 
-        # 8. Generate C headers for TFLM (into tflm-esp/main/ for the build)
-        print("\n[8/12] Generating C headers for TFLM...")
+        # 6. Generate C headers for TFLM (into tflm-esp/main/ for the build)
+        print("\n[6/9] Generating C headers for TFLM...")
         tflm_main = Path(__file__).parent.parent / "tflm-esp" / "main"
         generate_c_header(out / "ds_cnn.tflite", tflm_main / "ds_cnn_tflite.h", "ds_cnn_tflite")
         generate_c_header(out / "ds_cnn_i8.tflite", tflm_main / "ds_cnn_tflite_i8.h", "ds_cnn_tflite_i8")
@@ -481,23 +460,22 @@ def main():
         generate_tflite_reference(
             out / "ds_cnn_i8.tflite", out / "ds_cnn_tflite_reference_i8.bin")
     else:
-        print("\n[7/12] Skipping TFLite conversion (tensorflow not installed)")
-        print("[8/12] Skipping C header generation (no .tflite files)")
+        print("\n[5/9] Skipping TFLite conversion (tensorflow not installed)")
+        print("[6/9] Skipping C header generation (no .tflite files)")
 
     # MobileNetV1 (alpha=1.0, 128x128 input)
-    print("\n[9/12] Building MobileNetV1 ONNX (f32)...")
+    print("\n[7/9] Building MobileNetV1 ONNX (f32)...")
     mbv1_model = build_mobilenet_v1()
     mbv1_f32 = out / "mobilenet_v1.onnx"
     onnx.save(mbv1_model, str(mbv1_f32))
     print(f"  Saved: {mbv1_f32} ({mbv1_f32.stat().st_size} bytes)")
 
-    print("\n[10/12] Quantizing MobileNetV1...")
+    print("\n[8/9] Quantizing MobileNetV1...")
     mbv1_i8 = out / "mobilenet_v1_i8.onnx"
     quantize_onnx(mbv1_f32, mbv1_i8)
 
-    print("\n[11/12] Compiling TiGrIS plan + reference (MobileNetV1)...")
+    print("\n[9/9] Generating MobileNetV1 reference...")
     generate_reference(mbv1_i8, out / "mobilenet_v1_reference_i8.bin")
-    compile_tigris_plan(mbv1_i8, out / "mobilenet_v1_i8.tgrs", "256K")
 
     # TFLite + C header for MobileNetV1 (if TF available)
     if has_tf:
@@ -506,18 +484,6 @@ def main():
         tflm_main = Path(__file__).parent.parent / "tflm-esp" / "main"
         generate_c_header(out / "mobilenet_v1_i8.tflite",
                           tflm_main / "mobilenet_v1_tflite_i8.h", "mobilenet_v1_tflite_i8")
-
-    # Tiling sweep (DS-CNN i8, varied budgets)
-    print("\n[12/13] Compiling tiling sweep plans (DS-CNN)...")
-    for budget in ["128K", "64K", "32K"]:
-        plan_name = f"ds_cnn_i8_{budget.lower()}.tgrs"
-        compile_tigris_plan(onnx_i8, out / plan_name, budget)
-
-    # Tiling overhead sweep (MobileNetV1 i8, varied budgets)
-    print("\n[13/13] Compiling tiling sweep plans (MobileNetV1)...")
-    for budget in ["128K", "64K", "32K"]:
-        plan_name = f"mobilenet_v1_i8_{budget.lower()}.tgrs"
-        compile_tigris_plan(mbv1_i8, out / plan_name, budget)
 
     print(f"\nDone. All outputs in {out}/")
 
