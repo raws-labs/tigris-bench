@@ -14,14 +14,17 @@
 #
 # Needs: arm-none-eabi-gcc, cmake, the pico-sdk (RP2350), the release_with_logs
 # TFLM libs (see BUILD.md), and python3 with the `siliconrig` SDK + numpy / rich.
-# Plans + TFLM headers come from ../tflm-esp32s3/models/output (models/prepare_*.py).
+# TFLM headers come from ../tflm-esp32s3/models/output. TiGrIS plans are
+# compiled fresh from its matched ONNX sources into build/plans for each run.
 set -euo pipefail
 
 : "${SRIG_API_KEY:?set SRIG_API_KEY (SiliconRig auth) before running}"
 
 HERE="$(cd "$(dirname "$0")/.." && pwd)"
 TC="$(cd "$HERE/../../tigris-runtime" && pwd)/cmake/arm-none-eabi.cmake"
-OUT="$(cd "$HERE/../tflm-esp32s3/models/output" && pwd)"
+MODELS_DIR="$(cd "$HERE/../tflm-esp32s3/models/output" && pwd)"
+PLAN_DIR="${TIGRIS_PLAN_DIR:-$HERE/build/plans}"
+TIGRIS_COMPILER="${TIGRIS_COMPILER:-$HERE/../../tigris/.venv/bin/tigris}"
 RAW="$HERE/results/raw"
 PICO_SDK="${PICO_SDK_PATH:-$HOME/pico/pico-sdk}"
 PICOTOOL="${PICOTOOL_DIR:-$HOME/pico/picotool/install/lib/cmake/picotool}"
@@ -37,6 +40,11 @@ declare -A TB=(  [h753]=nucleo_h753zi [f446]=nucleo_f446re )
 mkdir -p "$RAW"
 "$HERE/third_party/fetch.sh"          # vendor CMSIS-NN / CMSIS_6 / device headers if missing
 
+echo "Compiling current TiGrIS plans..."
+python3 "$HERE/scripts/prepare_tigris_plans.py" \
+    --compiler "$TIGRIS_COMPILER" --models-dir "$MODELS_DIR" \
+    --output-dir "$PLAN_DIR" "${MODELS[@]}"
+
 MANIFEST="$(mktemp)"; trap 'rm -f "$MANIFEST"' EXIT
 emit() { printf '%s\t%s\t%s\t%s\n' "$1" "$2" "$3" "$4" >> "$MANIFEST"; }  # rigtype fw logname timeout
 
@@ -50,8 +58,8 @@ build_cell() {   # board model config
     local bd="$HERE/build/${board}_${model}_${cfg}"
     local to=180; [ "$cfg" = s8_ref ] && to=300; [ "$model" = mbv2 ] && to=600
     local plan fast=32768 slow=8192
-    if [ "$model" = mbv2 ]; then plan="$OUT/mbv2_a35_128k.tgrs"; fast=163840; slow=327680
-    else plan="$OUT/${model}_matched_32k.tgrs"; fi
+    if [ "$model" = mbv2 ]; then plan="$PLAN_DIR/mbv2_a35_128k.tgrs"; fast=163840; slow=327680
+    else plan="$PLAN_DIR/${model}_matched_32k.tgrs"; fi
 
     if [ "$board" = rp2350 ]; then
         PICO_SDK_PATH="$PICO_SDK" cmake -S "$HERE/boards/pico2_rp2350" -B "$bd" \

@@ -294,13 +294,38 @@ int main(void)
     tigris_kernel_fn dispatch = select_kernel();
 
 #if defined(BENCH_KERNEL_CMSIS_NN)
-    /* Reserve CMSIS-NN kernel scratch from the arena top (no stack VLAs). Must
-     * run after mem_init and before any inference; reduces mem.fast_size. */
+    /* Exercise the backend ownership contract on the target before inference:
+     * preparation must be idempotent for this arena, deinit must restore it,
+     * and a subsequent prepare must work.  This leaves the final reservation
+     * in place for the benchmark itself. */
+    uint32_t fast_before_cmsis = mem.fast_size;
     if (tigris_cmsis_nn_prepare(&plan, &mem) != 0) {
         printf("cmsis_nn prepare failed (arena too small for scratch)\n");
         emit_failed(model_name, "SCRATCH_TOO_SMALL");
         platform_halt();
     }
+    uint32_t fast_reserved_cmsis = mem.fast_size;
+    int cmsis_lifecycle_ok =
+        tigris_cmsis_nn_prepare(&plan, &mem) == 0 &&
+        mem.fast_size == fast_reserved_cmsis;
+    if (fast_reserved_cmsis == fast_before_cmsis) {
+        /* No routed op needs CMSIS scratch. prepare is still idempotent, but
+         * there is no owned reservation for deinit to release. */
+        cmsis_lifecycle_ok = cmsis_lifecycle_ok &&
+            tigris_cmsis_nn_deinit(&mem) == -1;
+    } else {
+        cmsis_lifecycle_ok = cmsis_lifecycle_ok &&
+            tigris_cmsis_nn_deinit(&mem) == 0 &&
+            mem.fast_size == fast_before_cmsis;
+    }
+    if (!cmsis_lifecycle_ok || tigris_cmsis_nn_prepare(&plan, &mem) != 0) {
+        printf("cmsis_nn lifecycle failed\n");
+        emit_failed(model_name, "CMSIS_LIFECYCLE_FAILED");
+        platform_halt();
+    }
+    printf("CMSIS_LIFECYCLE: PASS before=%lu reserved=%lu\n",
+           (unsigned long)fast_before_cmsis,
+           (unsigned long)fast_reserved_cmsis);
 #endif
 
 #ifdef BENCH_PROFILE_OPS
