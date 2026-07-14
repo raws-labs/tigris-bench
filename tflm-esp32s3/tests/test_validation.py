@@ -29,6 +29,7 @@ REFERENCE_VALUES: dict[str, list[int] | list[float]] = {
     "ds_cnn_matched_ref.bin": [1, -2, 3],
     "ds_cnn_tflite_reference_i8.bin": [7, 0, -7],
     "mobilenet_v1_reference_i8.bin": [4, -5],
+    "mobilenet_v1_matched_ref.bin": [8, -9],
 }
 
 
@@ -109,9 +110,9 @@ class ValidationFixture(unittest.TestCase):
         ds_ref = validate_accuracy.load_reference(
             self.models / "ds_cnn_reference_i8.bin", "int8")
         mb_ref = validate_accuracy.load_reference(
-            self.models / "mobilenet_v1_reference_i8.bin", "int8")
+            self.models / "mobilenet_v1_matched_ref.bin", "int8")
         self.assertEqual(ds_ref.tolist(), [1, -2, 3])
-        self.assertEqual(mb_ref.tolist(), [4, -5])
+        self.assertEqual(mb_ref.tolist(), [8, -9])
 
     def test_missing_cell_is_fatal(self) -> None:
         (self.raw / "tigris_i8_ref.log").unlink()
@@ -183,7 +184,7 @@ class ValidationFixture(unittest.TestCase):
         self.assertEqual(gated.returncode, 0, gated.stdout + gated.stderr)
         accepted_summary = run_all_summary.read_bytes()
 
-        (self.models / "mobilenet_v1_reference_i8.bin").write_bytes(
+        (self.models / "mobilenet_v1_matched_ref.bin").write_bytes(
             struct.pack("<2b", 12, -5))
         rejected = subprocess.run(
             [sys.executable, str(SCRIPTS_DIR / "validate_accuracy.py"),

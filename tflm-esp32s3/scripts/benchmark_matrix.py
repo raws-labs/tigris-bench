@@ -45,19 +45,19 @@ EXPECTED_CELLS: dict[str, CellSpec] = {
         "i8", "ds_cnn_tflite_reference_i8.bin"),
     "tigris_mbv1_i8_espnn.log": CellSpec(
         "tigris", "esp_nn", "int8", "mobilenet_v1_matched", 256,
-        "i8", "mobilenet_v1_reference_i8.bin"),
+        "i8", "mobilenet_v1_matched_ref.bin"),
     "tflm_mbv1_i8.log": CellSpec(
         "tflm", "default", "int8", "mobilenet_v1", 256,
         None, None, expected_status="ARENA_TOO_SMALL"),
     "tigris_mbv1_i8_espnn_128k.log": CellSpec(
         "tigris", "esp_nn", "int8", "mobilenet_v1_matched", 128,
-        "i8", "mobilenet_v1_reference_i8.bin"),
+        "i8", "mobilenet_v1_matched_ref.bin"),
     "tigris_mbv1_i8_espnn_64k.log": CellSpec(
         "tigris", "esp_nn", "int8", "mobilenet_v1_matched", 64,
-        "i8", "mobilenet_v1_reference_i8.bin"),
+        "i8", "mobilenet_v1_matched_ref.bin"),
     "tigris_mbv1_i8_espnn_32k.log": CellSpec(
         "tigris", "esp_nn", "int8", "mobilenet_v1_matched", 32,
-        "i8", "mobilenet_v1_reference_i8.bin"),
+        "i8", "mobilenet_v1_matched_ref.bin"),
 }
 
 

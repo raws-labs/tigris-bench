@@ -134,7 +134,7 @@ for ref in \
     ds_cnn_reference_i8.bin \
     ds_cnn_tflite_reference_f32.bin \
     ds_cnn_tflite_reference_i8.bin \
-    mobilenet_v1_reference_i8.bin; do
+    mobilenet_v1_matched_ref.bin; do
     if [ ! -f "$MODELS/$ref" ]; then
         echo "ERROR: missing $MODELS/$ref; run: python models/prepare.py" >&2
         exit 1

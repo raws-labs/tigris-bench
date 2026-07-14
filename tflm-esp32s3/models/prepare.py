@@ -496,6 +496,11 @@ def main():
                           tflm_main / "mobilenet_v1_tflite_i8.h", "mobilenet_v1_tflite_i8")
         reconstruct_matched_onnx(out / "mobilenet_v1_i8.tflite",
                                  out / "mobilenet_v1_matched.onnx")
+        # TiGrIS executes this TFLite-reconstructed QDQ graph, so its accuracy
+        # gate must use a reference from the same graph rather than the
+        # separately ONNX-quantized MobileNet above.
+        generate_reference(out / "mobilenet_v1_matched.onnx",
+                           out / "mobilenet_v1_matched_ref.bin")
 
     print(f"\nDone. All outputs in {out}/")
 
