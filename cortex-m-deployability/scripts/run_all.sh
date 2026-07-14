@@ -64,6 +64,7 @@ build_cell() {   # board model config
     if [ "$board" = rp2350 ]; then
         PICO_SDK_PATH="$PICO_SDK" cmake -S "$HERE/boards/pico2_rp2350" -B "$bd" \
             -Dpicotool_DIR="$PICOTOOL" -DBENCH_KERNEL="$cfg" -DTIGRIS_PLAN="$plan" \
+            -DTIGRIS_CODEGEN="$TIGRIS_COMPILER" \
             -DTIGRIS_FAST_ARENA_BYTES=$fast -DTIGRIS_SLOW_ARENA_BYTES=$slow >/dev/null
         PICO_SDK_PATH="$PICO_SDK" cmake --build "$bd" -j"$NPROC" >/dev/null
         emit "${RIG[$board]}" "$bd/tigris_pico_bench.uf2" "${board}_${model}_${cfg}" "$to"
@@ -77,6 +78,7 @@ build_cell() {   # board model config
         cmake --build "$bd" -j"$NPROC" >/dev/null
         emit "${RIG[$board]}" "$bd/tflm_bench.bin" "${board}_${model}_${cfg}" "$to"
     elif cmake "${common[@]}" -DBENCH_KERNEL="$cfg" -DTIGRIS_PLAN="$plan" \
+              -DTIGRIS_CODEGEN="$TIGRIS_COMPILER" \
               -DTIGRIS_FAST_ARENA_BYTES=$fast -DTIGRIS_SLOW_ARENA_BYTES=$slow >/dev/null 2>&1 \
          && cmake --build "$bd" -j"$NPROC" >/dev/null 2>&1; then
         emit "${RIG[$board]}" "$bd/tigris_bench.bin" "${board}_${model}_${cfg}" "$to"

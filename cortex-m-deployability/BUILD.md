@@ -112,6 +112,7 @@ cat /dev/ttyACM0 > results/raw/pico_ts_cmsis.log   # stop at BENCH_DONE
 | `BENCH_KERNEL` | `cmsis_nn` | TiGrIS backend: `cmsis_nn` or `s8_ref` |
 | `BENCH_OPT_LEVEL` | `-O2` | optimization for ALL benchmark code; consistent across boards + matches TFLM's `-O2` kernels (the clean-CMake default would otherwise be `-O0`) |
 | `TIGRIS_PLAN` | `ds_cnn_i8.tgrs` | the `.tgrs` plan embedded in flash (compile at a budget that fits the board) |
+| `TIGRIS_CODEGEN` | sibling TiGrIS venv CLI | `tigris` executable used to generate the backend deployment core during the build |
 | `TIGRIS_FAST_ARENA_BYTES` | `131072` | static fast arena backing store; the harness provisions only a tight slice of it (`peak + align`) so the compactor engages and the measured RAM is the true minimum |
 | `TIGRIS_SLOW_ARENA_BYTES` | `262144` | slow arena backing store; use `8192` on the F446 |
 | `TFLM_MODEL` | `ds_cnn` | TFLM model: `<name>_tflite_i8.h` in `MODELS_DIR` |

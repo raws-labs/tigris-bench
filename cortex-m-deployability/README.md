@@ -27,6 +27,13 @@ M7/M4, hardware `time_us` on M33). RAM is the activation working set: TiGrIS
 TFLM `arena_used`; weights live in flash and are excluded, as is stack. Captured
 remotely on a SiliconRig hardware-in-the-loop lab via `scripts/run_all.sh`.
 
+For each TiGrIS cell, CMake runs `tigris codegen <plan> --backend
+{cmsis-nn|reference} --format core`. The generated, backend-specific deployment
+core loads the embedded plan, resets runtime memory, prepares the backend, and
+selects/executes its dispatcher. The benchmark harness supplies only the
+board entry point, statically sized arenas, benchmark input pattern, timing, and
+machine-parseable reporting.
+
 Three INT8 models are used: DS-CNN (keyword spotting, conv/depthwise, 92 KB
 params), an anomaly-detection dense autoencoder (264 KB params, 10 FC layers),
 and a 1D-signal timeseries CNN (3 strided convs + global-average + Dense, 5.5 KB

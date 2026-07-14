@@ -30,6 +30,8 @@ set(BENCH_KERNEL "cmsis_nn" CACHE STRING "TiGrIS backend: cmsis_nn | s8_ref")
 set(TIGRIS_PLAN  "" CACHE FILEPATH "the .tgrs plan embedded in flash")
 set(TIGRIS_FAST_ARENA_BYTES "65536" CACHE STRING "fast arena (RP2350 has 520 KB SRAM)")
 set(TIGRIS_SLOW_ARENA_BYTES "131072" CACHE STRING "slow arena")
+set(TIGRIS_CODEGEN "${BENCH_ROOT}/../../tigris/.venv/bin/tigris"
+    CACHE FILEPATH "TiGrIS codegen executable")
 set(WARMUP_RUNS "3" CACHE STRING "warmup runs (reduce for slow tiled models)")
 set(BENCH_RUNS "30" CACHE STRING "timed runs (reduce for slow tiled models)")
 
@@ -45,20 +47,37 @@ file(GLOB_RECURSE NN_SRC ${NN_DIR}/Source/*.c)
 
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
 set(PLAN_BLOB ${CMAKE_BINARY_DIR}/model_blob.c)
+set(CODEGEN_CORE ${CMAKE_BINARY_DIR}/tigris_codegen_core.c)
+set(CODEGEN_HEADER ${CMAKE_BINARY_DIR}/tigris_codegen_core.h)
 add_custom_command(
     OUTPUT ${PLAN_BLOB}
     COMMAND ${Python3_EXECUTABLE} ${BENCH_ROOT}/tools/bin2c.py
             ${TIGRIS_PLAN} ${PLAN_BLOB} --symbol g_tigris_plan
     DEPENDS ${TIGRIS_PLAN} ${BENCH_ROOT}/tools/bin2c.py)
+if(BENCH_KERNEL STREQUAL "cmsis_nn")
+    set(CODEGEN_BACKEND cmsis-nn)
+elseif(BENCH_KERNEL STREQUAL "s8_ref")
+    set(CODEGEN_BACKEND reference)
+else()
+    message(FATAL_ERROR "BENCH_KERNEL must be cmsis_nn or s8_ref")
+endif()
+add_custom_command(
+    OUTPUT ${CODEGEN_CORE} ${CODEGEN_HEADER}
+    COMMAND ${TIGRIS_CODEGEN} codegen ${TIGRIS_PLAN}
+            --backend ${CODEGEN_BACKEND} --format core
+            --output ${CODEGEN_CORE} --header ${CODEGEN_HEADER}
+    DEPENDS ${TIGRIS_PLAN} ${TIGRIS_CODEGEN}
+    COMMENT "Generating TiGrIS ${CODEGEN_BACKEND} deployment core")
 
 add_executable(tigris_pico_bench
     ${BENCH_ROOT}/harness/main.c
     ${CMAKE_CURRENT_LIST_DIR}/platform_pico.c
-    ${PLAN_BLOB}
+    ${PLAN_BLOB} ${CODEGEN_CORE}
     ${RT_SRC} ${NN_SRC})
 
 target_include_directories(tigris_pico_bench PRIVATE
     ${BENCH_ROOT}/harness
+    ${CMAKE_BINARY_DIR}
     ${RT_DIR}/include
     ${NN_DIR}/Include)
 

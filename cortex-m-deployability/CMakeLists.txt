@@ -11,6 +11,8 @@ set(TIGRIS_PLAN
     CACHE FILEPATH "the .tgrs plan to embed in flash")
 set(TIGRIS_FAST_ARENA_BYTES "131072" CACHE STRING "fast arena size (bytes)")
 set(TIGRIS_SLOW_ARENA_BYTES "262144" CACHE STRING "slow arena size (bytes)")
+set(TIGRIS_CODEGEN "${CMAKE_CURRENT_SOURCE_DIR}/../../tigris/.venv/bin/tigris"
+    CACHE FILEPATH "TiGrIS codegen executable")
 # Optimization level for ALL benchmark code (TiGrIS runtime, CMSIS-NN, harness, TFLM
 # glue). MUST be consistent across boards and frameworks for a fair comparison: TFLM's
 # own kernels build at -O2, and without this the clean-CMake path defaults to -O0 (no
@@ -53,25 +55,36 @@ if(BENCH_FRAMEWORK STREQUAL "tigris")
 
     if(BENCH_KERNEL STREQUAL "cmsis_nn")
         set(KERNEL_DEFINE BENCH_KERNEL_CMSIS_NN)
+        set(CODEGEN_BACKEND cmsis-nn)
     elseif(BENCH_KERNEL STREQUAL "s8_ref")
         set(KERNEL_DEFINE BENCH_KERNEL_S8)
+        set(CODEGEN_BACKEND reference)
     else()
         message(FATAL_ERROR "BENCH_KERNEL must be 'cmsis_nn' or 's8_ref'")
     endif()
 
     set(PLAN_BLOB ${CMAKE_BINARY_DIR}/model_blob.c)
+    set(CODEGEN_CORE ${CMAKE_BINARY_DIR}/tigris_codegen_core.c)
+    set(CODEGEN_HEADER ${CMAKE_BINARY_DIR}/tigris_codegen_core.h)
     add_custom_command(
         OUTPUT ${PLAN_BLOB}
         COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tools/bin2c.py
                 ${TIGRIS_PLAN} ${PLAN_BLOB} --symbol g_tigris_plan
         DEPENDS ${TIGRIS_PLAN} ${CMAKE_CURRENT_SOURCE_DIR}/tools/bin2c.py
         COMMENT "Embedding plan: ${TIGRIS_PLAN}")
+    add_custom_command(
+        OUTPUT ${CODEGEN_CORE} ${CODEGEN_HEADER}
+        COMMAND ${TIGRIS_CODEGEN} codegen ${TIGRIS_PLAN}
+                --backend ${CODEGEN_BACKEND} --format core
+                --output ${CODEGEN_CORE} --header ${CODEGEN_HEADER}
+        DEPENDS ${TIGRIS_PLAN} ${TIGRIS_CODEGEN}
+        COMMENT "Generating TiGrIS ${CODEGEN_BACKEND} deployment core")
 
     add_executable(tigris_bench
-        harness/main.c ${PLAN_BLOB}
+        harness/main.c ${PLAN_BLOB} ${CODEGEN_CORE}
         ${BOARD_BSP} ${BOARD_SYSTEM} ${BOARD_STARTUP})
     target_include_directories(tigris_bench PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/harness ${BOARD_INCLUDES})
+        ${CMAKE_CURRENT_SOURCE_DIR}/harness ${CMAKE_BINARY_DIR} ${BOARD_INCLUDES})
     target_compile_definitions(tigris_bench PRIVATE
         ${KERNEL_DEFINE} ${BOARD_DEFINES}
         TIGRIS_FAST_ARENA_BYTES=${TIGRIS_FAST_ARENA_BYTES}

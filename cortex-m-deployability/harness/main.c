@@ -35,6 +35,7 @@
 #if defined(BENCH_KERNEL_CMSIS_NN)
 #include "tigris_kernels_cmsis_nn.h"
 #endif
+#include "tigris_codegen_core.h"
 
 /* Embedded plan blob (generated from the .tgrs by tools/bin2c.py). */
 extern const unsigned char g_tigris_plan[];
@@ -72,15 +73,6 @@ static const char *kernel_name(void)
 #endif
 }
 
-static tigris_kernel_fn select_kernel(void)
-{
-#if defined(BENCH_KERNEL_CMSIS_NN)
-    return tigris_dispatch_kernel_cmsis_nn;
-#else
-    return tigris_dispatch_kernel_s8;
-#endif
-}
-
 #ifdef BENCH_PROFILE_OPS
 /* Per-op cycle profiling: wraps the real dispatch, times each op with the cycle
  * counter and accumulates per op index. No I/O inside the timed region. */
@@ -111,30 +103,38 @@ static float cycles_to_ms(uint32_t cycles)
     return (float)((double)cycles * 1000.0 / (double)platform_cpu_hz());
 }
 
+/* Model inputs are benchmark data, not a codegen policy.  The generated core
+ * allocates them and calls this hook on every warmup/timed reset. */
+static void fill_benchmark_input(void *data, uint32_t size_bytes,
+                                 uint16_t tensor_index, void *user_ctx)
+{
+    (void)tensor_index;
+    (void)user_ctx;
+    memset(data, 1, size_bytes);  /* matches prepare.py's reference input */
+}
+
 /* Run one inference. Re-inits the arena state, refills inputs, returns the
  * DWT cycle count for the tigris_run() call. Sets *ok to 0 on failure. */
 static uint32_t run_once(tigris_plan_t *plan, tigris_mem_t *mem,
                          tigris_kernel_fn dispatch,
                          tigris_exec_stats_t *out_stats, int *ok)
 {
-    tigris_mem_init(mem, mem->tensor_ptrs, mem->num_tensors,
-                    mem->fast_base, mem->fast_size,
-                    mem->slow_base, mem->slow_size);
-
-    for (uint8_t i = 0; i < plan->header->num_model_inputs; i++) {
-        uint16_t tidx = plan->model_inputs[i];
-        uint32_t sz = plan->tensors[tidx].size_bytes;
-        if (tigris_mem_alloc_slow(mem, tidx, sz) != TIGRIS_MEM_OK) {
-            *ok = 0;
-            return 0;
-        }
-        /* int8 value 1 - matches prepare.py's reference input generator. */
-        memset(mem->tensor_ptrs[tidx], 1, sz);
+    tigris_mem_error_t merr = tigris_codegen_reset(
+        plan, mem, fill_benchmark_input, NULL);
+    if (merr != TIGRIS_MEM_OK) {
+        printf("generated setup failed: %s\n", tigris_mem_error_str(merr));
+        *ok = 0;
+        return 0;
     }
 
     tigris_exec_stats_t stats;
     uint32_t c0 = platform_cycles();
+#ifdef BENCH_PROFILE_OPS
     tigris_exec_error_t err = tigris_run(plan, mem, dispatch, NULL, &stats);
+#else
+    (void)dispatch;  /* generated core owns the normal dispatch call. */
+    tigris_exec_error_t err = tigris_codegen_run(plan, mem, &stats);
+#endif
     uint32_t c1 = platform_cycles();
 
     if (err != TIGRIS_EXEC_OK) {
@@ -212,7 +212,8 @@ int main(void)
 
     /* 1. Load the embedded plan. */
     tigris_plan_t plan;
-    tigris_error_t perr = tigris_plan_load(g_tigris_plan, g_tigris_plan_len, &plan);
+    tigris_error_t perr = tigris_codegen_load_plan(
+        g_tigris_plan, g_tigris_plan_len, &plan);
     if (perr != TIGRIS_OK) {
         printf("plan load failed: %s\n", tigris_error_str(perr));
         emit_failed("unknown", "PLAN_LOAD_FAILED");
@@ -282,51 +283,17 @@ int main(void)
     uint32_t slow_size = sizeof(s_slow_arena);
 
     tigris_mem_t mem;
-    tigris_mem_error_t merr = tigris_mem_init(
-        &mem, s_tensor_ptrs, plan.header->num_tensors,
-        s_fast_arena, fast_size, s_slow_arena, slow_size);
+    tigris_mem_error_t merr = tigris_codegen_init(
+        &plan, &mem, s_tensor_ptrs, BENCH_MAX_TENSORS,
+        s_fast_arena, fast_size, s_slow_arena, slow_size,
+        fill_benchmark_input, NULL);
     if (merr != TIGRIS_MEM_OK) {
         printf("mem init failed: %s\n", tigris_mem_error_str(merr));
         emit_failed(model_name, "MEM_INIT_FAILED");
         platform_halt();
     }
 
-    tigris_kernel_fn dispatch = select_kernel();
-
-#if defined(BENCH_KERNEL_CMSIS_NN)
-    /* Exercise the backend ownership contract on the target before inference:
-     * preparation must be idempotent for this arena, deinit must restore it,
-     * and a subsequent prepare must work.  This leaves the final reservation
-     * in place for the benchmark itself. */
-    uint32_t fast_before_cmsis = mem.fast_size;
-    if (tigris_cmsis_nn_prepare(&plan, &mem) != 0) {
-        printf("cmsis_nn prepare failed (arena too small for scratch)\n");
-        emit_failed(model_name, "SCRATCH_TOO_SMALL");
-        platform_halt();
-    }
-    uint32_t fast_reserved_cmsis = mem.fast_size;
-    int cmsis_lifecycle_ok =
-        tigris_cmsis_nn_prepare(&plan, &mem) == 0 &&
-        mem.fast_size == fast_reserved_cmsis;
-    if (fast_reserved_cmsis == fast_before_cmsis) {
-        /* No routed op needs CMSIS scratch. prepare is still idempotent, but
-         * there is no owned reservation for deinit to release. */
-        cmsis_lifecycle_ok = cmsis_lifecycle_ok &&
-            tigris_cmsis_nn_deinit(&mem) == -1;
-    } else {
-        cmsis_lifecycle_ok = cmsis_lifecycle_ok &&
-            tigris_cmsis_nn_deinit(&mem) == 0 &&
-            mem.fast_size == fast_before_cmsis;
-    }
-    if (!cmsis_lifecycle_ok || tigris_cmsis_nn_prepare(&plan, &mem) != 0) {
-        printf("cmsis_nn lifecycle failed\n");
-        emit_failed(model_name, "CMSIS_LIFECYCLE_FAILED");
-        platform_halt();
-    }
-    printf("CMSIS_LIFECYCLE: PASS before=%lu reserved=%lu\n",
-           (unsigned long)fast_before_cmsis,
-           (unsigned long)fast_reserved_cmsis);
-#endif
+    tigris_kernel_fn dispatch = tigris_codegen_dispatch();
 
 #ifdef BENCH_PROFILE_OPS
     s_prof_inner = dispatch;
