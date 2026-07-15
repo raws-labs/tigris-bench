@@ -7,6 +7,13 @@
 
 Each benchmark suite is self-contained and lives in its own subdirectory: model preparation on the host, a device harness, and scripts that collect machine-parseable results. Anyone with the matching hardware should be able to reproduce any number end-to-end.
 
+Canonical device runs use the exact compiler and runtime commits recorded in
+[`core-versions.json`](core-versions.json). Both hardware orchestrators verify
+the sibling checkouts, accepted plan schema, and clean tracked state before
+building or flashing. A development-only run may set
+`TIGRIS_ALLOW_UNPINNED_CORE=1`, but results from that override are not canonical
+until their exact revisions are recorded and validated.
+
 ## How it is organized
 
 Every suite follows the same three-step shape:
@@ -20,8 +27,8 @@ Suites are grouped by what they are measuring (e.g. latency against a peer frame
 ## Quick start
 
 ```bash
-# Install the TiGrIS toolchain (used by every suite's model preparation)
-pip install tigris-ml
+# Prepare sibling compiler/runtime checkouts at the commits in core-versions.json
+python scripts/check_core_versions.py
 
 # Enter the suite you want to run, then follow its README
 cd <suite>/

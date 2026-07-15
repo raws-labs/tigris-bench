@@ -21,14 +21,25 @@ set -euo pipefail
 : "${SRIG_API_KEY:?set SRIG_API_KEY (SiliconRig auth) before running}"
 
 HERE="$(cd "$(dirname "$0")/.." && pwd)"
-TC="$(cd "$HERE/../../tigris-runtime" && pwd)/cmake/arm-none-eabi.cmake"
+TIGRIS_COMPILER_ROOT="${TIGRIS_COMPILER_ROOT:-$(cd "$HERE/../../tigris" && pwd)}"
+TIGRIS_RUNTIME_ROOT="${TIGRIS_RUNTIME_ROOT:-$(cd "$HERE/../../tigris-runtime" && pwd)}"
+TC="$TIGRIS_RUNTIME_ROOT/cmake/arm-none-eabi.cmake"
 MODELS_DIR="$(cd "$HERE/../tflm-esp32s3/models/output" && pwd)"
 PLAN_DIR="${TIGRIS_PLAN_DIR:-$HERE/build/plans}"
-TIGRIS_COMPILER="${TIGRIS_COMPILER:-$HERE/../../tigris/.venv/bin/tigris}"
+TIGRIS_COMPILER="${TIGRIS_COMPILER:-$TIGRIS_COMPILER_ROOT/.venv/bin/tigris}"
 RAW="$HERE/results/raw"
 PICO_SDK="${PICO_SDK_PATH:-$HOME/pico/pico-sdk}"
 PICOTOOL="${PICOTOOL_DIR:-$HOME/pico/picotool/install/lib/cmake/picotool}"
 NPROC="$(nproc)"
+
+CORE_CHECK_ARGS=(
+    --compiler-root "$TIGRIS_COMPILER_ROOT"
+    --runtime-root "$TIGRIS_RUNTIME_ROOT"
+)
+if [ "${TIGRIS_ALLOW_UNPINNED_CORE:-0}" = 1 ]; then
+    CORE_CHECK_ARGS+=(--allow-unpinned)
+fi
+python3 "$HERE/../scripts/check_core_versions.py" "${CORE_CHECK_ARGS[@]}"
 
 BOARDS=("$@"); [ "${#BOARDS[@]}" -eq 0 ] && BOARDS=(h753 f446 rp2350)
 read -r -a MODELS  <<< "${BENCH_MODELS:-ds_cnn ad ts mbv2}"

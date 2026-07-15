@@ -39,11 +39,16 @@ ESP32-S3-DevKitC-1 (N16R8): dual Xtensa LX7 at 240 MHz, 512 KB SRAM, 8 MB PSRAM,
 Before running the device builds, you also need the TiGrIS C runtime source tree next to this repo. The ESP-IDF components pull headers and source files from it at build time:
 
 ```bash
-# From the directory that contains tigris-bench
-git clone https://github.com/raws-labs/tigris-runtime
+# From the directory that contains tigris-bench, check out the exact compiler
+# and runtime commits recorded in ../tigris-bench/core-versions.json
+python tigris-bench/scripts/check_core_versions.py
 ```
 
 By default the build looks for `tigris-runtime/` as a sibling of `tigris-bench/`. Override with `-DTIGRIS_RUNTIME_DIR=/path/to/tigris-runtime` on the `idf.py build` invocation if you keep it elsewhere.
+
+The orchestration script refuses mismatched or modified compiler/runtime
+checkouts before flashing. `TIGRIS_ALLOW_UNPINNED_CORE=1` is available only for
+non-canonical development runs.
 
 ## Quick start
 

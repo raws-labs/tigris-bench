@@ -13,7 +13,6 @@ RAW_DIR="${BENCH_RAW_DIR:-$BENCH_DIR/results/raw}"
 MODELS="${BENCH_MODELS_DIR:-$BENCH_DIR/models/output}"
 SUMMARY="${BENCH_SUMMARY:-$BENCH_DIR/results/summary.json}"
 PLAN_DIR="${TIGRIS_PLAN_DIR:-$BENCH_DIR/build/plans}"
-TIGRIS_COMPILER="${TIGRIS_COMPILER:-$BENCH_DIR/../../tigris/.venv/bin/tigris}"
 
 mkdir -p "$RAW_DIR" "$(dirname "$SUMMARY")"
 
@@ -146,6 +145,18 @@ if [ "${BENCH_VALIDATE_ONLY:-0}" = 1 ]; then
     collect_and_validate
     exit 0
 fi
+
+TIGRIS_COMPILER_ROOT="${TIGRIS_COMPILER_ROOT:-$(cd "$BENCH_DIR/../../tigris" && pwd)}"
+TIGRIS_RUNTIME_ROOT="${TIGRIS_RUNTIME_ROOT:-$(cd "$BENCH_DIR/../../tigris-runtime" && pwd)}"
+TIGRIS_COMPILER="${TIGRIS_COMPILER:-$TIGRIS_COMPILER_ROOT/.venv/bin/tigris}"
+CORE_CHECK_ARGS=(
+    --compiler-root "$TIGRIS_COMPILER_ROOT"
+    --runtime-root "$TIGRIS_RUNTIME_ROOT"
+)
+if [ "${TIGRIS_ALLOW_UNPINNED_CORE:-0}" = 1 ]; then
+    CORE_CHECK_ARGS+=(--allow-unpinned)
+fi
+"$PYTHON" "$BENCH_DIR/../scripts/check_core_versions.py" "${CORE_CHECK_ARGS[@]}"
 
 echo "Compiling current TiGrIS plans..."
 "$PYTHON" "$SCRIPT_DIR/prepare_tigris_plans.py" \

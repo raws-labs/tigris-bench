@@ -22,6 +22,11 @@ pip install numpy rich
 `SRIG_API_KEY` in the environment (and `SRIG_BASE_URL` if self-hosted). To
 reproduce on a locally-attached board instead, see "Manual steps" below.
 
+The compiler and runtime must be sibling checkouts at the exact commits in
+`../core-versions.json`. `run_all.sh` checks them before building. Set
+`TIGRIS_ALLOW_UNPINNED_CORE=1` only for an explicitly non-canonical development
+run; the resulting revisions must be pinned before any summary is promoted.
+
 ## One-shot: build, flash, capture, validate the whole matrix
 
 ```bash

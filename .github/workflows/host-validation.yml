@@ -62,6 +62,9 @@ jobs:
       - name: Validate tracked JSON artifacts
         run: python -W error tests/validate_tracked_json.py
 
+      - name: Validate exact TiGrIS core pins
+        run: python -W error scripts/check_core_versions.py --manifest-only
+
       - name: Validate tracked Cortex-M output parity
         working-directory: cortex-m-deployability
         run: >-
