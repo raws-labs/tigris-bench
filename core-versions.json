@@ -1,0 +1,22 @@
+{
+  "format_version": 1,
+  "profile": "coordinated-develop-2026-07-15",
+  "plan_schema": 4,
+  "compatibility_manifest": {
+    "repository": "https://github.com/raws-labs/tigris.git",
+    "path": "compatibility.json",
+    "commit": "f8a188d5bbf0d9a7f6dc9b1bf35836b4b9bffaf1"
+  },
+  "compiler": {
+    "repository": "https://github.com/raws-labs/tigris.git",
+    "branch": "develop",
+    "commit": "f8a188d5bbf0d9a7f6dc9b1bf35836b4b9bffaf1",
+    "emits_schema": 4
+  },
+  "runtime": {
+    "repository": "https://github.com/raws-labs/tigris-runtime.git",
+    "branch": "develop",
+    "commit": "89170124df0b67a57d9c4322645b92bd4e79c387",
+    "accepts_schemas": [2, 3, 4]
+  }
+}
