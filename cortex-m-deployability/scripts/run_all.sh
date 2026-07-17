@@ -30,6 +30,7 @@ TIGRIS_COMPILER="${TIGRIS_COMPILER:-$TIGRIS_COMPILER_ROOT/.venv/bin/tigris}"
 RAW="$HERE/results/raw"
 PICO_SDK="${PICO_SDK_PATH:-$HOME/pico/pico-sdk}"
 PICOTOOL="${PICOTOOL_DIR:-$HOME/pico/picotool/install/lib/cmake/picotool}"
+PICO_SDK_COMMIT="a1438dff1d38bd9c65dbd693f0e5db4b9ae91779"
 NPROC="$(nproc)"
 
 CORE_CHECK_ARGS=(
@@ -41,12 +42,26 @@ if [ "${TIGRIS_ALLOW_UNPINNED_CORE:-0}" = 1 ]; then
 fi
 python3 "$HERE/../scripts/check_core_versions.py" "${CORE_CHECK_ARGS[@]}"
 
+CANONICAL_RUN=0
+if [ "$#" -eq 0 ] \
+        && [ -z "${BENCH_MODELS+x}" ] \
+        && [ -z "${BENCH_CONFIGS+x}" ]; then
+    CANONICAL_RUN=1
+fi
 BOARDS=("$@"); [ "${#BOARDS[@]}" -eq 0 ] && BOARDS=(h753 f446 rp2350)
 read -r -a MODELS  <<< "${BENCH_MODELS:-ds_cnn ad ts mbv2}"
 read -r -a CONFIGS <<< "${BENCH_CONFIGS:-cmsis_nn s8_ref tflm}"
 
 declare -A RIG=( [h753]=stm32-h753 [f446]=stm32-f446 [rp2350]=rp2350 )
 declare -A TB=(  [h753]=nucleo_h753zi [f446]=nucleo_f446re )
+
+if [[ " ${BOARDS[*]} " == *" rp2350 "* ]]; then
+    actual_pico_sdk="$(git -C "$PICO_SDK" rev-parse HEAD)"
+    if [ "$actual_pico_sdk" != "$PICO_SDK_COMMIT" ]; then
+        echo "[error] pico-sdk HEAD $actual_pico_sdk != pinned $PICO_SDK_COMMIT" >&2
+        exit 1
+    fi
+fi
 
 mkdir -p "$RAW"
 "$HERE/third_party/fetch.sh"          # vendor CMSIS-NN / CMSIS_6 / device headers if missing
@@ -56,8 +71,13 @@ python3 "$HERE/scripts/prepare_tigris_plans.py" \
     --compiler "$TIGRIS_COMPILER" --models-dir "$MODELS_DIR" \
     --output-dir "$PLAN_DIR" "${MODELS[@]}"
 
-MANIFEST="$(mktemp)"; trap 'rm -f "$MANIFEST"' EXIT
-emit() { printf '%s\t%s\t%s\t%s\n' "$1" "$2" "$3" "$4" >> "$MANIFEST"; }  # rigtype fw logname timeout
+MANIFEST="$(mktemp)"
+RUN_RAW="$(mktemp -d)"
+COLLECTED_SUMMARY="$(mktemp)"
+trap 'rm -f "$MANIFEST" "$COLLECTED_SUMMARY"; rm -rf "$RUN_RAW"' EXIT
+# rigtype, firmware, log name, timeout, embedded model, exact CMake invocation
+emit() { printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$1" "$2" "$3" "$4" "$5" "$6" >> "$MANIFEST"; }
+command_string() { printf -v REPLY '%q ' "$@"; REPLY="${REPLY% }"; }
 
 build_cell() {   # board model config
     local board=$1 model=$2 cfg=$3
@@ -68,35 +88,58 @@ build_cell() {   # board model config
 
     local bd="$HERE/build/${board}_${model}_${cfg}"
     local to=180; [ "$cfg" = s8_ref ] && to=300; [ "$model" = mbv2 ] && to=600
-    local plan fast=32768 slow=8192
-    if [ "$model" = mbv2 ]; then plan="$PLAN_DIR/mbv2_a35_128k.tgrs"; fast=163840; slow=327680
-    else plan="$PLAN_DIR/${model}_matched_32k.tgrs"; fi
+    # The 32 KiB plan budget excludes backend scratch. Keep enough physical
+    # backing for the budget plus the exact CMSIS-NN reservation computed by
+    # the runtime; reported RAM uses measured high-water, not this capacity.
+    local plan fast=65536 slow=8192
+    if [ "$model" = mbv2 ]; then
+        plan="$PLAN_DIR/mbv2_a35.tgrs"; fast=163840; slow=327680
+    else
+        plan="$PLAN_DIR/${model}_matched.tgrs"
+    fi
 
     if [ "$board" = rp2350 ]; then
-        PICO_SDK_PATH="$PICO_SDK" cmake -S "$HERE/boards/pico2_rp2350" -B "$bd" \
+        local -a configure=(cmake -S "$HERE/boards/pico2_rp2350" -B "$bd"
             -Dpicotool_DIR="$PICOTOOL" -DBENCH_KERNEL="$cfg" -DTIGRIS_PLAN="$plan" \
             -DTIGRIS_CODEGEN="$TIGRIS_COMPILER" \
-            -DTIGRIS_FAST_ARENA_BYTES=$fast -DTIGRIS_SLOW_ARENA_BYTES=$slow >/dev/null
+            -DTIGRIS_RUNTIME_ROOT="$TIGRIS_RUNTIME_ROOT" \
+            -DTIGRIS_FAST_ARENA_BYTES=$fast -DTIGRIS_SLOW_ARENA_BYTES=$slow)
+        command_string "${configure[@]}"; local configure_command="$REPLY"
+        PICO_SDK_PATH="$PICO_SDK" "${configure[@]}" >/dev/null
         PICO_SDK_PATH="$PICO_SDK" cmake --build "$bd" -j"$NPROC" >/dev/null
-        emit "${RIG[$board]}" "$bd/tigris_pico_bench.uf2" "${board}_${model}_${cfg}" "$to"
+        emit "${RIG[$board]}" "$bd/tigris_pico_bench.uf2" \
+             "${board}_${model}_${cfg}" "$to" "$plan" "$configure_command"
         return 0
     fi
 
-    local common=(-S "$HERE" -B "$bd" -DCMAKE_TOOLCHAIN_FILE="$TC" -DTIGRIS_BOARD="${TB[$board]}")
+    local common=(-S "$HERE" -B "$bd" -DCMAKE_TOOLCHAIN_FILE="$TC"
+                  -DTIGRIS_RUNTIME_ROOT="$TIGRIS_RUNTIME_ROOT"
+                  -DTIGRIS_BOARD="${TB[$board]}")
     if [ "$cfg" = tflm ]; then
         local arena=32768; [ "$model" = mbv2 ] && arena=491520   # ~480 KB: most of the H753 SRAM, still OOMs
-        cmake "${common[@]}" -DBENCH_FRAMEWORK=tflm -DTFLM_MODEL="$model" -DTFLM_ARENA_BYTES=$arena >/dev/null
+        local -a configure=(cmake "${common[@]}" -DBENCH_FRAMEWORK=tflm
+                            -DTFLM_MODEL="$model" -DTFLM_ARENA_BYTES=$arena)
+        command_string "${configure[@]}"; local configure_command="$REPLY"
+        "${configure[@]}" >/dev/null
         cmake --build "$bd" -j"$NPROC" >/dev/null
-        emit "${RIG[$board]}" "$bd/tflm_bench.bin" "${board}_${model}_${cfg}" "$to"
-    elif cmake "${common[@]}" -DBENCH_KERNEL="$cfg" -DTIGRIS_PLAN="$plan" \
-              -DTIGRIS_CODEGEN="$TIGRIS_COMPILER" \
-              -DTIGRIS_FAST_ARENA_BYTES=$fast -DTIGRIS_SLOW_ARENA_BYTES=$slow >/dev/null 2>&1 \
-         && cmake --build "$bd" -j"$NPROC" >/dev/null 2>&1; then
-        emit "${RIG[$board]}" "$bd/tigris_bench.bin" "${board}_${model}_${cfg}" "$to"
+        emit "${RIG[$board]}" "$bd/tflm_bench.bin" \
+             "${board}_${model}_${cfg}" "$to" \
+             "$MODELS_DIR/${model}_tflite_i8.h" "$configure_command"
     else
-        # mbv2 on F446: 591 KB plan > 512 KB flash and 301 KB working set > 128 KB
-        # SRAM. The link overflow IS the result (the flash/RAM barrier), not flashed.
-        echo "  BARRIER: ${board}/${model}/${cfg} does not fit (link overflow) - expected"
+        local -a configure=(cmake "${common[@]}" -DBENCH_KERNEL="$cfg"
+                            -DTIGRIS_PLAN="$plan" -DTIGRIS_CODEGEN="$TIGRIS_COMPILER"
+                            -DTIGRIS_FAST_ARENA_BYTES=$fast
+                            -DTIGRIS_SLOW_ARENA_BYTES=$slow)
+        command_string "${configure[@]}"; local configure_command="$REPLY"
+        if "${configure[@]}" >/dev/null 2>&1 \
+         && cmake --build "$bd" -j"$NPROC" >/dev/null 2>&1; then
+            emit "${RIG[$board]}" "$bd/tigris_bench.bin" \
+                 "${board}_${model}_${cfg}" "$to" "$plan" "$configure_command"
+        else
+            # mbv2 on F446: 591 KB plan > 512 KB flash and 301 KB working set > 128 KB
+            # SRAM. The link overflow IS the result (the flash/RAM barrier), not flashed.
+            echo "  BARRIER: ${board}/${model}/${cfg} does not fit (link overflow) - expected"
+        fi
     fi
 }
 
@@ -111,31 +154,161 @@ for board in "${BOARDS[@]}"; do
 done
 
 echo "Flashing + capturing on SiliconRig..."
-python3 - "$MANIFEST" "$RAW" <<'PY'
-import sys, collections
+python3 - "$MANIFEST" "$RUN_RAW" "$HERE" "$TIGRIS_COMPILER_ROOT" \
+    "$TIGRIS_RUNTIME_ROOT" "$PICO_SDK" "$HERE/../tflm-esp32s3/requirements.txt" <<'PY'
+import collections
+import hashlib
+import importlib.metadata
+import json
+import subprocess
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
+
 from siliconrig import Client
 from siliconrig.serial import SerialTimeout
 
-manifest, raw = sys.argv[1], sys.argv[2]
+manifest, raw, bench_root, compiler_root, runtime_root, pico_sdk, requirements = map(
+    Path, sys.argv[1:])
+
+
+def sha256(path):
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def command(*args):
+    return subprocess.run(
+        args, check=True, capture_output=True, text=True).stdout.strip()
+
+
+def git_state(path):
+    if not (path / ".git").exists():
+        return None
+    return {
+        "revision": command("git", "-C", str(path), "rev-parse", "HEAD"),
+        "dirty": bool(command(
+            "git", "-C", str(path), "status", "--short",
+            "--untracked-files=no")),
+    }
+
+
+def artifact(path):
+    path = Path(path)
+    return {
+        "name": path.name,
+        "sha256": sha256(path),
+        "size_bytes": path.stat().st_size,
+    }
+
+
+def checked_python_environment(path):
+    model_packages = {"onnx", "onnxruntime", "numpy", "tensorflow"}
+    packages = {}
+    for raw_line in path.read_text().splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#"):
+            continue
+        if "==" not in line:
+            raise RuntimeError(f"mutable Python requirement is not allowed: {line}")
+        name, expected = line.split("==", 1)
+        if name not in model_packages:
+            continue
+        actual = importlib.metadata.version(name)
+        if actual != expected:
+            raise RuntimeError(
+                f"Python environment mismatch: {name}=={actual}, expected {expected}")
+        packages[name] = actual
+    return {"requirements_sha256": sha256(path), "packages": packages}
+
+
+repositories = {
+    "benchmark": git_state(bench_root.parent),
+    "tigris_compiler": git_state(compiler_root),
+    "tigris_runtime": git_state(runtime_root),
+    "tflite_micro": git_state(bench_root / "third_party/tflite-micro"),
+}
+for name in ("benchmark", "tigris_compiler", "tigris_runtime"):
+    if repositories[name] is None:
+        raise RuntimeError(f"{name} is not a Git checkout")
+
+dependency_dirs = {
+    "CMSIS-NN": "CMSIS-NN",
+    "CMSIS-Core": "CMSIS_6",
+    "cmsis-device-f4": "cmsis-device-f4",
+    "cmsis-device-h7": "cmsis-device-h7",
+}
+dependencies = {
+    name: command(
+        "git", "-C", str(bench_root / "third_party" / directory),
+        "rev-parse", "HEAD")
+    for name, directory in dependency_dirs.items()
+}
+tools = {
+    "arm_none_eabi_gcc": command("arm-none-eabi-gcc", "--version").splitlines()[0],
+    "cmake": command("cmake", "--version").splitlines()[0],
+    "pico_sdk_revision": (
+        git_state(pico_sdk)["revision"] if git_state(pico_sdk) else None),
+}
+common = {
+    "repositories": repositories,
+    "dependencies": dependencies,
+    "tools": tools,
+    "host_model_environment": checked_python_environment(requirements),
+    "siliconrig_sdk_version": importlib.metadata.version("siliconrig"),
+}
+
 cells = collections.defaultdict(list)
 for line in open(manifest):
-    bt, fw, name, to = line.rstrip("\n").split("\t")
-    cells[bt].append((fw, name, float(to)))
+    bt, fw, name, to, model, configure = line.rstrip("\n").split("\t")
+    cells[bt].append((fw, name, float(to), model, configure))
 
 c = Client()
 try:
     for bt, items in cells.items():
         print(f"-- {bt} ({len(items)} cells) --")
         with c.session(board=bt) as s:          # one session per board: avoids 503 on rapid realloc
-            for fw, name, to in items:
+            info = s.info()
+            specs = info.get("board_specs")
+            if isinstance(specs, str):
+                try:
+                    specs = json.loads(specs)
+                except json.JSONDecodeError:
+                    pass
+            board = {
+                "siliconrig_board_id": info.get("board_id"),
+                "board_type": info.get("board_type", bt),
+                "specs": specs,
+            }
+            if not board["siliconrig_board_id"]:
+                raise RuntimeError("SiliconRig did not report the allocated board ID")
+            for fw, name, to, model, configure in items:
                 log, status = "", "ok"
                 try:
-                    s.flash(fw)                  # the harness boot-quiets so this races cleanly
+                    s.flash(fw, timeout=300)     # bridge uploads can take ~2.5 minutes
                     log = s.serial.read_until("BENCH_DONE", timeout=to)
                 except SerialTimeout:
                     status = "TIMEOUT"
                 except Exception as e:
                     status = f"ERR:{type(e).__name__}"
+                provenance = {
+                    **common,
+                    "captured_at_utc": datetime.now(timezone.utc).isoformat().replace(
+                        "+00:00", "Z"),
+                    "build": {"configure_command": configure},
+                    "artifacts": {
+                        "model": artifact(model),
+                        "firmware": artifact(fw),
+                    },
+                    "board": board,
+                }
+                if log and not log.endswith("\n"):
+                    log += "\n"
+                log += "BENCH_PROVENANCE:" + json.dumps(
+                    provenance, sort_keys=True, separators=(",", ":")) + "\n"
                 with open(f"{raw}/{name}.log", "w") as f:
                     f.write(log)
                 rl = next((l for l in log.splitlines() if l.startswith("BENCH_RESULT")), f"status={status}")
@@ -146,5 +319,27 @@ PY
 
 echo ""
 echo "Collecting + validating..."
-python3 "$HERE/scripts/results.py" "$RAW" -o "$HERE/results/summary.json"
-python3 "$HERE/scripts/validate_accuracy.py" "$HERE/results/summary.json"
+python3 "$HERE/scripts/results.py" "$RUN_RAW" \
+    -o "$COLLECTED_SUMMARY" --require-provenance
+
+if [[ " ${CONFIGS[*]} " == *" cmsis_nn "* ]] \
+        && [[ " ${CONFIGS[*]} " == *" tflm "* ]]; then
+    python3 "$HERE/scripts/validate_accuracy.py" "$COLLECTED_SUMMARY"
+else
+    echo "Skipping cross-framework parity: this subset has no TFLM/CMSIS pair."
+fi
+
+# Promote only a completely collected invocation. A subset updates its selected
+# raw logs but cannot silently replace the canonical 27-cell summary.
+cp "$RUN_RAW"/*.log "$RAW"/
+SUMMARY_OUTPUT="${BENCH_SUMMARY_OUTPUT:-}"
+if [ "$CANONICAL_RUN" -eq 1 ]; then
+    SUMMARY_OUTPUT="${SUMMARY_OUTPUT:-$HERE/results/summary.json}"
+fi
+if [ -n "$SUMMARY_OUTPUT" ]; then
+    mkdir -p "$(dirname "$SUMMARY_OUTPUT")"
+    cp "$COLLECTED_SUMMARY" "$SUMMARY_OUTPUT"
+    echo "Promoted summary to $SUMMARY_OUTPUT"
+else
+    echo "Subset run complete; canonical summary left unchanged."
+fi

@@ -9,10 +9,12 @@ import subprocess
 
 
 PLAN_SPECS = {
-    "ds_cnn": ("ds_cnn_matched.onnx", "32K", "ds_cnn_matched_32k.tgrs"),
-    "ad": ("ad_matched.onnx", "32K", "ad_matched_32k.tgrs"),
-    "ts": ("ts_matched.onnx", "32K", "ts_matched_32k.tgrs"),
-    "mbv2": ("mbv2_a35_r224_matched.onnx", "128K", "mbv2_a35_128k.tgrs"),
+    # Non-tiled budgets are kept close to measured activation demand. A
+    # needlessly large budget suppresses compaction and inflates high-water RAM.
+    "ds_cnn": ("ds_cnn_matched.onnx", "20K", "ds_cnn_matched.tgrs"),
+    "ad": ("ad_matched.onnx", "2K", "ad_matched.tgrs"),
+    "ts": ("ts_matched.onnx", "2K", "ts_matched.tgrs"),
+    "mbv2": ("mbv2_a35_r224_matched.onnx", "128K", "mbv2_a35.tgrs"),
 }
 
 

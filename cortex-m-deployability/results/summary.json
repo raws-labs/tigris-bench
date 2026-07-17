@@ -13,18 +13,19 @@
       "latency_min_ms": 4.973,
       "latency_max_ms": 4.973,
       "latency_stdev_ms": 0.0,
-      "latency_median_cycles": 895051,
-      "latency_min_cycles": 895051,
-      "latency_max_cycles": 895051,
-      "sram_peak_bytes": 2748,
-      "sram_act_peak_bytes": 2704,
-      "sram_fast_peak_bytes": 1424,
+      "latency_median_cycles": 895178,
+      "latency_min_cycles": 895178,
+      "latency_max_cycles": 895178,
+      "sram_peak_bytes": 11900,
+      "sram_act_peak_bytes": 2960,
+      "sram_fast_peak_bytes": 1680,
       "sram_slow_peak_bytes": 1280,
       "sram_scratch_bytes": 0,
-      "sram_meta_bytes": 44,
+      "sram_meta_bytes": 8940,
+      "sram_executor_workspace_bytes": 8896,
       "plan_act_peak_bytes": 768,
-      "sram_budget_kb": 32,
-      "sram_provisioned_kb": 1,
+      "sram_budget_kb": 2,
+      "sram_provisioned_kb": 2,
       "slow_peak_kb": 1,
       "plan_flash_kb": 292,
       "runs": 30,
@@ -687,22 +688,23 @@
       "board": "nucleo_f446re",
       "cpu_mhz": 180,
       "status": "ok",
-      "latency_mean_ms": 15.111,
-      "latency_median_ms": 15.111,
-      "latency_min_ms": 15.111,
-      "latency_max_ms": 15.111,
+      "latency_mean_ms": 16.534,
+      "latency_median_ms": 16.534,
+      "latency_min_ms": 16.534,
+      "latency_max_ms": 16.534,
       "latency_stdev_ms": 0.0,
-      "latency_median_cycles": 2720005,
-      "latency_min_cycles": 2720005,
-      "latency_max_cycles": 2720005,
-      "sram_peak_bytes": 2748,
+      "latency_median_cycles": 2976153,
+      "latency_min_cycles": 2976153,
+      "latency_max_cycles": 2976153,
+      "sram_peak_bytes": 11644,
       "sram_act_peak_bytes": 2704,
       "sram_fast_peak_bytes": 1424,
       "sram_slow_peak_bytes": 1280,
       "sram_scratch_bytes": 0,
-      "sram_meta_bytes": 44,
+      "sram_meta_bytes": 8940,
+      "sram_executor_workspace_bytes": 8896,
       "plan_act_peak_bytes": 768,
-      "sram_budget_kb": 32,
+      "sram_budget_kb": 2,
       "sram_provisioned_kb": 1,
       "slow_peak_kb": 1,
       "plan_flash_kb": 292,
@@ -2030,23 +2032,24 @@
       "board": "nucleo_f446re",
       "cpu_mhz": 180,
       "status": "ok",
-      "latency_mean_ms": 59.9,
-      "latency_median_ms": 59.9,
-      "latency_min_ms": 59.9,
-      "latency_max_ms": 59.9,
+      "latency_mean_ms": 63.532,
+      "latency_median_ms": 63.532,
+      "latency_min_ms": 63.532,
+      "latency_max_ms": 63.532,
       "latency_stdev_ms": 0.0,
-      "latency_median_cycles": 10781968,
-      "latency_min_cycles": 10781968,
-      "latency_max_cycles": 10781968,
-      "sram_peak_bytes": 17220,
+      "latency_median_cycles": 11435824,
+      "latency_min_cycles": 11435824,
+      "latency_max_cycles": 11435824,
+      "sram_peak_bytes": 26116,
       "sram_act_peak_bytes": 17008,
       "sram_fast_peak_bytes": 16496,
       "sram_slow_peak_bytes": 512,
       "sram_scratch_bytes": 160,
-      "sram_meta_bytes": 52,
+      "sram_meta_bytes": 8948,
+      "sram_executor_workspace_bytes": 8896,
       "plan_act_peak_bytes": 16000,
-      "sram_budget_kb": 32,
-      "sram_provisioned_kb": 16,
+      "sram_budget_kb": 20,
+      "sram_provisioned_kb": 20,
       "slow_peak_kb": 0,
       "plan_flash_kb": 39,
       "runs": 30,
@@ -2081,22 +2084,23 @@
       "board": "nucleo_f446re",
       "cpu_mhz": 180,
       "status": "ok",
-      "latency_mean_ms": 513.197,
-      "latency_median_ms": 513.197,
-      "latency_min_ms": 513.197,
-      "latency_max_ms": 513.197,
+      "latency_mean_ms": 467.578,
+      "latency_median_ms": 467.578,
+      "latency_min_ms": 467.578,
+      "latency_max_ms": 467.578,
       "latency_stdev_ms": 0.0,
-      "latency_median_cycles": 92375435,
-      "latency_min_cycles": 92375435,
-      "latency_max_cycles": 92375435,
-      "sram_peak_bytes": 17060,
+      "latency_median_cycles": 84164007,
+      "latency_min_cycles": 84164007,
+      "latency_max_cycles": 84164007,
+      "sram_peak_bytes": 25956,
       "sram_act_peak_bytes": 17008,
       "sram_fast_peak_bytes": 16496,
       "sram_slow_peak_bytes": 512,
       "sram_scratch_bytes": 0,
-      "sram_meta_bytes": 52,
+      "sram_meta_bytes": 8948,
+      "sram_executor_workspace_bytes": 8896,
       "plan_act_peak_bytes": 16000,
-      "sram_budget_kb": 32,
+      "sram_budget_kb": 20,
       "sram_provisioned_kb": 16,
       "slow_peak_kb": 0,
       "plan_flash_kb": 39,
@@ -2168,23 +2172,24 @@
       "board": "nucleo_f446re",
       "cpu_mhz": 180,
       "status": "ok",
-      "latency_mean_ms": 1.562,
-      "latency_median_ms": 1.562,
-      "latency_min_ms": 1.562,
-      "latency_max_ms": 1.562,
+      "latency_mean_ms": 1.559,
+      "latency_median_ms": 1.559,
+      "latency_min_ms": 1.559,
+      "latency_max_ms": 1.559,
       "latency_stdev_ms": 0.0,
-      "latency_median_cycles": 281099,
-      "latency_min_cycles": 281099,
-      "latency_max_cycles": 281099,
-      "sram_peak_bytes": 1964,
-      "sram_act_peak_bytes": 1552,
-      "sram_fast_peak_bytes": 1024,
+      "latency_median_cycles": 280581,
+      "latency_min_cycles": 280581,
+      "latency_max_cycles": 280581,
+      "sram_peak_bytes": 11708,
+      "sram_act_peak_bytes": 2400,
+      "sram_fast_peak_bytes": 1872,
       "sram_slow_peak_bytes": 528,
       "sram_scratch_bytes": 384,
-      "sram_meta_bytes": 28,
+      "sram_meta_bytes": 8924,
+      "sram_executor_workspace_bytes": 8896,
       "plan_act_peak_bytes": 1024,
-      "sram_budget_kb": 32,
-      "sram_provisioned_kb": 1,
+      "sram_budget_kb": 2,
+      "sram_provisioned_kb": 2,
       "slow_peak_kb": 0,
       "plan_flash_kb": 8,
       "runs": 30,
@@ -2217,22 +2222,23 @@
       "board": "nucleo_f446re",
       "cpu_mhz": 180,
       "status": "ok",
-      "latency_mean_ms": 10.997,
-      "latency_median_ms": 10.997,
-      "latency_min_ms": 10.997,
-      "latency_max_ms": 10.997,
+      "latency_mean_ms": 8.407,
+      "latency_median_ms": 8.407,
+      "latency_min_ms": 8.407,
+      "latency_max_ms": 8.407,
       "latency_stdev_ms": 0.0,
-      "latency_median_cycles": 1979483,
-      "latency_min_cycles": 1979483,
-      "latency_max_cycles": 1979483,
-      "sram_peak_bytes": 2092,
+      "latency_median_cycles": 1513263,
+      "latency_min_cycles": 1513263,
+      "latency_max_cycles": 1513263,
+      "sram_peak_bytes": 10988,
       "sram_act_peak_bytes": 2064,
       "sram_fast_peak_bytes": 1536,
       "sram_slow_peak_bytes": 528,
       "sram_scratch_bytes": 0,
-      "sram_meta_bytes": 28,
+      "sram_meta_bytes": 8924,
+      "sram_executor_workspace_bytes": 8896,
       "plan_act_peak_bytes": 1024,
-      "sram_budget_kb": 32,
+      "sram_budget_kb": 2,
       "sram_provisioned_kb": 1,
       "slow_peak_kb": 0,
       "plan_flash_kb": 8,
@@ -2300,23 +2306,24 @@
       "board": "nucleo_h753zi",
       "cpu_mhz": 480,
       "status": "ok",
-      "latency_mean_ms": 1.185,
-      "latency_median_ms": 1.185,
-      "latency_min_ms": 1.184,
-      "latency_max_ms": 1.185,
+      "latency_mean_ms": 1.188,
+      "latency_median_ms": 1.188,
+      "latency_min_ms": 1.188,
+      "latency_max_ms": 1.188,
       "latency_stdev_ms": 0.0,
-      "latency_median_cycles": 568690,
-      "latency_min_cycles": 568216,
-      "latency_max_cycles": 568994,
-      "sram_peak_bytes": 2748,
-      "sram_act_peak_bytes": 2704,
-      "sram_fast_peak_bytes": 1424,
+      "latency_median_cycles": 570254,
+      "latency_min_cycles": 570011,
+      "latency_max_cycles": 570378,
+      "sram_peak_bytes": 11900,
+      "sram_act_peak_bytes": 2960,
+      "sram_fast_peak_bytes": 1680,
       "sram_slow_peak_bytes": 1280,
       "sram_scratch_bytes": 0,
-      "sram_meta_bytes": 44,
+      "sram_meta_bytes": 8940,
+      "sram_executor_workspace_bytes": 8896,
       "plan_act_peak_bytes": 768,
-      "sram_budget_kb": 32,
-      "sram_provisioned_kb": 1,
+      "sram_budget_kb": 2,
+      "sram_provisioned_kb": 2,
       "slow_peak_kb": 1,
       "plan_flash_kb": 292,
       "runs": 30,
@@ -2979,22 +2986,23 @@
       "board": "nucleo_h753zi",
       "cpu_mhz": 480,
       "status": "ok",
-      "latency_mean_ms": 3.017,
-      "latency_median_ms": 3.017,
-      "latency_min_ms": 3.015,
-      "latency_max_ms": 3.018,
-      "latency_stdev_ms": 0.001,
-      "latency_median_cycles": 1447948,
-      "latency_min_cycles": 1447432,
-      "latency_max_cycles": 1448462,
-      "sram_peak_bytes": 2748,
+      "latency_mean_ms": 3.047,
+      "latency_median_ms": 3.047,
+      "latency_min_ms": 3.046,
+      "latency_max_ms": 3.048,
+      "latency_stdev_ms": 0.0,
+      "latency_median_cycles": 1462525,
+      "latency_min_cycles": 1462084,
+      "latency_max_cycles": 1462832,
+      "sram_peak_bytes": 11644,
       "sram_act_peak_bytes": 2704,
       "sram_fast_peak_bytes": 1424,
       "sram_slow_peak_bytes": 1280,
       "sram_scratch_bytes": 0,
-      "sram_meta_bytes": 44,
+      "sram_meta_bytes": 8940,
+      "sram_executor_workspace_bytes": 8896,
       "plan_act_peak_bytes": 768,
-      "sram_budget_kb": 32,
+      "sram_budget_kb": 2,
       "sram_provisioned_kb": 1,
       "slow_peak_kb": 1,
       "plan_flash_kb": 292,
@@ -4322,23 +4330,24 @@
       "board": "nucleo_h753zi",
       "cpu_mhz": 480,
       "status": "ok",
-      "latency_mean_ms": 11.208,
-      "latency_median_ms": 11.207,
-      "latency_min_ms": 11.203,
-      "latency_max_ms": 11.213,
-      "latency_stdev_ms": 0.002,
-      "latency_median_cycles": 5379559,
-      "latency_min_cycles": 5377675,
-      "latency_max_cycles": 5382099,
-      "sram_peak_bytes": 17220,
+      "latency_mean_ms": 11.138,
+      "latency_median_ms": 11.138,
+      "latency_min_ms": 11.136,
+      "latency_max_ms": 11.141,
+      "latency_stdev_ms": 0.001,
+      "latency_median_cycles": 5346173,
+      "latency_min_cycles": 5345114,
+      "latency_max_cycles": 5347594,
+      "sram_peak_bytes": 26116,
       "sram_act_peak_bytes": 17008,
       "sram_fast_peak_bytes": 16496,
       "sram_slow_peak_bytes": 512,
       "sram_scratch_bytes": 160,
-      "sram_meta_bytes": 52,
+      "sram_meta_bytes": 8948,
+      "sram_executor_workspace_bytes": 8896,
       "plan_act_peak_bytes": 16000,
-      "sram_budget_kb": 32,
-      "sram_provisioned_kb": 16,
+      "sram_budget_kb": 20,
+      "sram_provisioned_kb": 20,
       "slow_peak_kb": 0,
       "plan_flash_kb": 39,
       "runs": 30,
@@ -4373,22 +4382,23 @@
       "board": "nucleo_h753zi",
       "cpu_mhz": 480,
       "status": "ok",
-      "latency_mean_ms": 63.115,
-      "latency_median_ms": 63.115,
-      "latency_min_ms": 63.111,
-      "latency_max_ms": 63.119,
-      "latency_stdev_ms": 0.002,
-      "latency_median_cycles": 30295415,
-      "latency_min_cycles": 30293371,
-      "latency_max_cycles": 30297023,
-      "sram_peak_bytes": 17060,
+      "latency_mean_ms": 81.964,
+      "latency_median_ms": 81.963,
+      "latency_min_ms": 81.962,
+      "latency_max_ms": 81.967,
+      "latency_stdev_ms": 0.001,
+      "latency_median_cycles": 39342337,
+      "latency_min_cycles": 39341550,
+      "latency_max_cycles": 39344004,
+      "sram_peak_bytes": 25956,
       "sram_act_peak_bytes": 17008,
       "sram_fast_peak_bytes": 16496,
       "sram_slow_peak_bytes": 512,
       "sram_scratch_bytes": 0,
-      "sram_meta_bytes": 52,
+      "sram_meta_bytes": 8948,
+      "sram_executor_workspace_bytes": 8896,
       "plan_act_peak_bytes": 16000,
-      "sram_budget_kb": 32,
+      "sram_budget_kb": 20,
       "sram_provisioned_kb": 16,
       "slow_peak_kb": 0,
       "plan_flash_kb": 39,
@@ -4460,23 +4470,24 @@
       "board": "nucleo_h753zi",
       "cpu_mhz": 480,
       "status": "ok",
-      "latency_mean_ms": 1241.125,
-      "latency_median_ms": 1241.127,
-      "latency_min_ms": 1241.049,
-      "latency_max_ms": 1241.177,
-      "latency_stdev_ms": 0.029,
-      "latency_median_cycles": 595740968,
-      "latency_min_cycles": 595703656,
-      "latency_max_cycles": 595765002,
-      "sram_peak_bytes": 307704,
-      "sram_act_peak_bytes": 307328,
-      "sram_fast_peak_bytes": 131712,
+      "latency_mean_ms": 1426.384,
+      "latency_median_ms": 1426.381,
+      "latency_min_ms": 1426.344,
+      "latency_max_ms": 1426.434,
+      "latency_stdev_ms": 0.019,
+      "latency_median_cycles": 684662905,
+      "latency_min_cycles": 684645293,
+      "latency_max_cycles": 684688200,
+      "sram_peak_bytes": 315064,
+      "sram_act_peak_bytes": 305792,
+      "sram_fast_peak_bytes": 130176,
       "sram_slow_peak_bytes": 175616,
       "sram_scratch_bytes": 112,
-      "sram_meta_bytes": 264,
+      "sram_meta_bytes": 9160,
+      "sram_executor_workspace_bytes": 8896,
       "plan_act_peak_bytes": 752640,
       "sram_budget_kb": 128,
-      "sram_provisioned_kb": 129,
+      "sram_provisioned_kb": 128,
       "slow_peak_kb": 171,
       "plan_flash_kb": 592,
       "runs": 30,
@@ -4520,23 +4531,24 @@
       "board": "nucleo_h753zi",
       "cpu_mhz": 480,
       "status": "ok",
-      "latency_mean_ms": 0.306,
-      "latency_median_ms": 0.306,
-      "latency_min_ms": 0.305,
-      "latency_max_ms": 0.307,
+      "latency_mean_ms": 0.298,
+      "latency_median_ms": 0.298,
+      "latency_min_ms": 0.297,
+      "latency_max_ms": 0.299,
       "latency_stdev_ms": 0.0,
-      "latency_median_cycles": 146884,
-      "latency_min_cycles": 146495,
-      "latency_max_cycles": 147278,
-      "sram_peak_bytes": 1964,
-      "sram_act_peak_bytes": 1552,
-      "sram_fast_peak_bytes": 1024,
+      "latency_median_cycles": 142912,
+      "latency_min_cycles": 142642,
+      "latency_max_cycles": 143508,
+      "sram_peak_bytes": 11708,
+      "sram_act_peak_bytes": 2400,
+      "sram_fast_peak_bytes": 1872,
       "sram_slow_peak_bytes": 528,
       "sram_scratch_bytes": 384,
-      "sram_meta_bytes": 28,
+      "sram_meta_bytes": 8924,
+      "sram_executor_workspace_bytes": 8896,
       "plan_act_peak_bytes": 1024,
-      "sram_budget_kb": 32,
-      "sram_provisioned_kb": 1,
+      "sram_budget_kb": 2,
+      "sram_provisioned_kb": 2,
       "slow_peak_kb": 0,
       "plan_flash_kb": 8,
       "runs": 30,
@@ -4569,22 +4581,23 @@
       "board": "nucleo_h753zi",
       "cpu_mhz": 480,
       "status": "ok",
-      "latency_mean_ms": 1.133,
-      "latency_median_ms": 1.133,
-      "latency_min_ms": 1.133,
-      "latency_max_ms": 1.134,
+      "latency_mean_ms": 1.613,
+      "latency_median_ms": 1.613,
+      "latency_min_ms": 1.613,
+      "latency_max_ms": 1.613,
       "latency_stdev_ms": 0.0,
-      "latency_median_cycles": 543884,
-      "latency_min_cycles": 543750,
-      "latency_max_cycles": 544110,
-      "sram_peak_bytes": 2092,
+      "latency_median_cycles": 774118,
+      "latency_min_cycles": 774017,
+      "latency_max_cycles": 774241,
+      "sram_peak_bytes": 10988,
       "sram_act_peak_bytes": 2064,
       "sram_fast_peak_bytes": 1536,
       "sram_slow_peak_bytes": 528,
       "sram_scratch_bytes": 0,
-      "sram_meta_bytes": 28,
+      "sram_meta_bytes": 8924,
+      "sram_executor_workspace_bytes": 8896,
       "plan_act_peak_bytes": 1024,
-      "sram_budget_kb": 32,
+      "sram_budget_kb": 2,
       "sram_provisioned_kb": 1,
       "slow_peak_kb": 0,
       "plan_flash_kb": 8,
@@ -4652,23 +4665,24 @@
       "board": "pico2_rp2350",
       "cpu_mhz": 150,
       "status": "ok",
-      "latency_mean_ms": 35.078,
-      "latency_median_ms": 35.075,
-      "latency_min_ms": 35.012,
-      "latency_max_ms": 35.194,
-      "latency_stdev_ms": 0.04,
-      "latency_median_cycles": 5261175,
-      "latency_min_cycles": 5251800,
-      "latency_max_cycles": 5279100,
-      "sram_peak_bytes": 2748,
-      "sram_act_peak_bytes": 2704,
-      "sram_fast_peak_bytes": 1424,
+      "latency_mean_ms": 35.013,
+      "latency_median_ms": 35.007,
+      "latency_min_ms": 34.936,
+      "latency_max_ms": 35.106,
+      "latency_stdev_ms": 0.036,
+      "latency_median_cycles": 5250975,
+      "latency_min_cycles": 5240400,
+      "latency_max_cycles": 5265900,
+      "sram_peak_bytes": 11900,
+      "sram_act_peak_bytes": 2960,
+      "sram_fast_peak_bytes": 1680,
       "sram_slow_peak_bytes": 1280,
       "sram_scratch_bytes": 0,
-      "sram_meta_bytes": 44,
+      "sram_meta_bytes": 8940,
+      "sram_executor_workspace_bytes": 8896,
       "plan_act_peak_bytes": 768,
-      "sram_budget_kb": 32,
-      "sram_provisioned_kb": 1,
+      "sram_budget_kb": 2,
+      "sram_provisioned_kb": 2,
       "slow_peak_kb": 1,
       "plan_flash_kb": 292,
       "runs": 30,
@@ -5331,22 +5345,23 @@
       "board": "pico2_rp2350",
       "cpu_mhz": 150,
       "status": "ok",
-      "latency_mean_ms": 44.524,
-      "latency_median_ms": 44.518,
-      "latency_min_ms": 44.427,
-      "latency_max_ms": 44.624,
-      "latency_stdev_ms": 0.038,
-      "latency_median_cycles": 6677700,
-      "latency_min_cycles": 6664050,
-      "latency_max_cycles": 6693600,
-      "sram_peak_bytes": 2748,
+      "latency_mean_ms": 44.558,
+      "latency_median_ms": 44.556,
+      "latency_min_ms": 44.506,
+      "latency_max_ms": 44.623,
+      "latency_stdev_ms": 0.027,
+      "latency_median_cycles": 6683325,
+      "latency_min_cycles": 6675900,
+      "latency_max_cycles": 6693450,
+      "sram_peak_bytes": 11644,
       "sram_act_peak_bytes": 2704,
       "sram_fast_peak_bytes": 1424,
       "sram_slow_peak_bytes": 1280,
       "sram_scratch_bytes": 0,
-      "sram_meta_bytes": 44,
+      "sram_meta_bytes": 8940,
+      "sram_executor_workspace_bytes": 8896,
       "plan_act_peak_bytes": 768,
-      "sram_budget_kb": 32,
+      "sram_budget_kb": 2,
       "sram_provisioned_kb": 1,
       "slow_peak_kb": 1,
       "plan_flash_kb": 292,
@@ -6010,23 +6025,24 @@
       "board": "pico2_rp2350",
       "cpu_mhz": 150,
       "status": "ok",
-      "latency_mean_ms": 62.958,
-      "latency_median_ms": 62.943,
-      "latency_min_ms": 62.894,
-      "latency_max_ms": 63.069,
-      "latency_stdev_ms": 0.043,
-      "latency_median_cycles": 9441375,
-      "latency_min_cycles": 9434100,
-      "latency_max_cycles": 9460350,
-      "sram_peak_bytes": 17220,
+      "latency_mean_ms": 67.826,
+      "latency_median_ms": 67.828,
+      "latency_min_ms": 67.704,
+      "latency_max_ms": 67.973,
+      "latency_stdev_ms": 0.061,
+      "latency_median_cycles": 10174275,
+      "latency_min_cycles": 10155600,
+      "latency_max_cycles": 10195950,
+      "sram_peak_bytes": 26116,
       "sram_act_peak_bytes": 17008,
       "sram_fast_peak_bytes": 16496,
       "sram_slow_peak_bytes": 512,
       "sram_scratch_bytes": 160,
-      "sram_meta_bytes": 52,
+      "sram_meta_bytes": 8948,
+      "sram_executor_workspace_bytes": 8896,
       "plan_act_peak_bytes": 16000,
-      "sram_budget_kb": 32,
-      "sram_provisioned_kb": 16,
+      "sram_budget_kb": 20,
+      "sram_provisioned_kb": 20,
       "slow_peak_kb": 0,
       "plan_flash_kb": 39,
       "runs": 30,
@@ -6061,22 +6077,23 @@
       "board": "pico2_rp2350",
       "cpu_mhz": 150,
       "status": "ok",
-      "latency_mean_ms": 412.785,
-      "latency_median_ms": 412.772,
-      "latency_min_ms": 412.633,
-      "latency_max_ms": 412.935,
-      "latency_stdev_ms": 0.075,
-      "latency_median_cycles": 61915875,
-      "latency_min_cycles": 61894950,
-      "latency_max_cycles": 61940250,
-      "sram_peak_bytes": 17060,
+      "latency_mean_ms": 412.069,
+      "latency_median_ms": 412.059,
+      "latency_min_ms": 411.983,
+      "latency_max_ms": 412.164,
+      "latency_stdev_ms": 0.053,
+      "latency_median_cycles": 61808775,
+      "latency_min_cycles": 61797450,
+      "latency_max_cycles": 61824600,
+      "sram_peak_bytes": 25956,
       "sram_act_peak_bytes": 17008,
       "sram_fast_peak_bytes": 16496,
       "sram_slow_peak_bytes": 512,
       "sram_scratch_bytes": 0,
-      "sram_meta_bytes": 52,
+      "sram_meta_bytes": 8948,
+      "sram_executor_workspace_bytes": 8896,
       "plan_act_peak_bytes": 16000,
-      "sram_budget_kb": 32,
+      "sram_budget_kb": 20,
       "sram_provisioned_kb": 16,
       "slow_peak_kb": 0,
       "plan_flash_kb": 39,
@@ -6112,23 +6129,24 @@
       "board": "pico2_rp2350",
       "cpu_mhz": 150,
       "status": "ok",
-      "latency_mean_ms": 6553.233,
-      "latency_median_ms": 6553.237,
-      "latency_min_ms": 6553.013,
-      "latency_max_ms": 6553.393,
-      "latency_stdev_ms": 0.086,
-      "latency_median_cycles": 982985625,
-      "latency_min_cycles": 982951950,
-      "latency_max_cycles": 983008950,
-      "sram_peak_bytes": 307704,
-      "sram_act_peak_bytes": 307328,
-      "sram_fast_peak_bytes": 131712,
+      "latency_mean_ms": 7033.41,
+      "latency_median_ms": 7033.421,
+      "latency_min_ms": 7033.053,
+      "latency_max_ms": 7033.767,
+      "latency_stdev_ms": 0.186,
+      "latency_median_cycles": 1055013225,
+      "latency_min_cycles": 1054957950,
+      "latency_max_cycles": 1055065050,
+      "sram_peak_bytes": 315064,
+      "sram_act_peak_bytes": 305792,
+      "sram_fast_peak_bytes": 130176,
       "sram_slow_peak_bytes": 175616,
       "sram_scratch_bytes": 112,
-      "sram_meta_bytes": 264,
+      "sram_meta_bytes": 9160,
+      "sram_executor_workspace_bytes": 8896,
       "plan_act_peak_bytes": 752640,
       "sram_budget_kb": 128,
-      "sram_provisioned_kb": 129,
+      "sram_provisioned_kb": 128,
       "slow_peak_kb": 171,
       "plan_flash_kb": 592,
       "runs": 30,
@@ -6161,23 +6179,24 @@
       "board": "pico2_rp2350",
       "cpu_mhz": 150,
       "status": "ok",
-      "latency_mean_ms": 2.727,
-      "latency_median_ms": 2.734,
-      "latency_min_ms": 2.634,
-      "latency_max_ms": 2.79,
-      "latency_stdev_ms": 0.039,
-      "latency_median_cycles": 410100,
-      "latency_min_cycles": 395100,
-      "latency_max_cycles": 418500,
-      "sram_peak_bytes": 1964,
-      "sram_act_peak_bytes": 1552,
-      "sram_fast_peak_bytes": 1024,
+      "latency_mean_ms": 2.673,
+      "latency_median_ms": 2.676,
+      "latency_min_ms": 2.55,
+      "latency_max_ms": 2.75,
+      "latency_stdev_ms": 0.043,
+      "latency_median_cycles": 401400,
+      "latency_min_cycles": 382500,
+      "latency_max_cycles": 412500,
+      "sram_peak_bytes": 11708,
+      "sram_act_peak_bytes": 2400,
+      "sram_fast_peak_bytes": 1872,
       "sram_slow_peak_bytes": 528,
       "sram_scratch_bytes": 384,
-      "sram_meta_bytes": 28,
+      "sram_meta_bytes": 8924,
+      "sram_executor_workspace_bytes": 8896,
       "plan_act_peak_bytes": 1024,
-      "sram_budget_kb": 32,
-      "sram_provisioned_kb": 1,
+      "sram_budget_kb": 2,
+      "sram_provisioned_kb": 2,
       "slow_peak_kb": 0,
       "plan_flash_kb": 8,
       "runs": 30,
@@ -6210,22 +6229,23 @@
       "board": "pico2_rp2350",
       "cpu_mhz": 150,
       "status": "ok",
-      "latency_mean_ms": 9.02,
-      "latency_median_ms": 9.021,
-      "latency_min_ms": 9.007,
-      "latency_max_ms": 9.036,
-      "latency_stdev_ms": 0.007,
-      "latency_median_cycles": 1353150,
-      "latency_min_cycles": 1351050,
-      "latency_max_cycles": 1355400,
-      "sram_peak_bytes": 2092,
+      "latency_mean_ms": 8.374,
+      "latency_median_ms": 8.372,
+      "latency_min_ms": 8.348,
+      "latency_max_ms": 8.407,
+      "latency_stdev_ms": 0.013,
+      "latency_median_cycles": 1255800,
+      "latency_min_cycles": 1252200,
+      "latency_max_cycles": 1261050,
+      "sram_peak_bytes": 10988,
       "sram_act_peak_bytes": 2064,
       "sram_fast_peak_bytes": 1536,
       "sram_slow_peak_bytes": 528,
       "sram_scratch_bytes": 0,
-      "sram_meta_bytes": 28,
+      "sram_meta_bytes": 8924,
+      "sram_executor_workspace_bytes": 8896,
       "plan_act_peak_bytes": 1024,
-      "sram_budget_kb": 32,
+      "sram_budget_kb": 2,
       "sram_provisioned_kb": 1,
       "slow_peak_kb": 0,
       "plan_flash_kb": 8,
@@ -6252,5 +6272,672 @@
       "log_file": "rp2350_ts_s8_ref.log"
     }
   ],
-  "count": 27
+  "count": 27,
+  "provenance": {
+    "source": "BENCH_PROVENANCE",
+    "common": {
+      "dependencies": {
+        "CMSIS-Core": "45dab712ad84f8cbbf2b7bfc089c19088507df6f",
+        "CMSIS-NN": "6d9d61d8a586c39160d0c1ba58f6948e4cf61ad0",
+        "cmsis-device-f4": "3c77349ce04c8af401454cc51f85ea9a50e34fc1",
+        "cmsis-device-h7": "de8243d2c15f87936f28a49fcd9e6f5ba10fc233"
+      },
+      "host_model_environment": {
+        "packages": {
+          "numpy": "2.3.5",
+          "onnx": "1.20.1",
+          "onnxruntime": "1.24.1",
+          "tensorflow": "2.20.0"
+        },
+        "requirements_sha256": "7a88c67502f9bd590d70bbff5a12d7f7f3544c801832ca1548b046fbfa74b1f9"
+      },
+      "repositories": {
+        "benchmark": {
+          "dirty": false,
+          "revision": "49c2337d46b5501ae8c477eeb3bc4ca3f85d17ea"
+        },
+        "tflite_micro": {
+          "dirty": false,
+          "revision": "074b75f8ec873cd6a8ebbd2d971b277e135e059e"
+        },
+        "tigris_compiler": {
+          "dirty": false,
+          "revision": "f8a188d5bbf0d9a7f6dc9b1bf35836b4b9bffaf1"
+        },
+        "tigris_runtime": {
+          "dirty": false,
+          "revision": "89170124df0b67a57d9c4322645b92bd4e79c387"
+        }
+      },
+      "siliconrig_sdk_version": "0.2.1.dev1+g75a6dc0f3",
+      "tools": {
+        "arm_none_eabi_gcc": "arm-none-eabi-gcc (15:13.2.rel1-2) 13.2.1 20231009",
+        "cmake": "cmake version 3.28.3",
+        "pico_sdk_revision": "a1438dff1d38bd9c65dbd693f0e5db4b9ae91779"
+      }
+    },
+    "cells": {
+      "f446_ad_cmsis_nn.log": {
+        "artifacts": {
+          "firmware": {
+            "name": "tigris_bench.bin",
+            "sha256": "247c318f39658e29366104c11a719c120f4d41a37876915e4ff82a1827132931",
+            "size_bytes": 382452
+          },
+          "model": {
+            "name": "ad_matched.tgrs",
+            "sha256": "b2c92ad248c1d40f68e6698430d64396d210acae5457b32c5e04a0a9a4033bd1",
+            "size_bytes": 299420
+          }
+        },
+        "board": {
+          "board_type": "stm32-f446",
+          "siliconrig_board_id": "board_c262b3eaa55542ad9284b47f",
+          "specs": null
+        },
+        "build": {
+          "configure_command": "cmake -S /home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability -B /home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability/build/f446_ad_cmsis_nn -DCMAKE_TOOLCHAIN_FILE=/tmp/tigris-runtime-provenance/cmake/arm-none-eabi.cmake -DTIGRIS_RUNTIME_ROOT=/tmp/tigris-runtime-provenance -DTIGRIS_BOARD=nucleo_f446re -DBENCH_KERNEL=cmsis_nn -DTIGRIS_PLAN=/home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability/build/plans/ad_matched.tgrs -DTIGRIS_CODEGEN=/tmp/tigris-compiler-provenance/.venv/bin/tigris -DTIGRIS_FAST_ARENA_BYTES=65536 -DTIGRIS_SLOW_ARENA_BYTES=8192"
+        },
+        "captured_at_utc": "2026-07-17T17:23:59.120153Z"
+      },
+      "f446_ad_s8_ref.log": {
+        "artifacts": {
+          "firmware": {
+            "name": "tigris_bench.bin",
+            "sha256": "84aef6c5909bbfa29b27d813c35feb09c062f72ea765a1fa660bdc2548fcd69c",
+            "size_bytes": 357188
+          },
+          "model": {
+            "name": "ad_matched.tgrs",
+            "sha256": "b2c92ad248c1d40f68e6698430d64396d210acae5457b32c5e04a0a9a4033bd1",
+            "size_bytes": 299420
+          }
+        },
+        "board": {
+          "board_type": "stm32-f446",
+          "siliconrig_board_id": "board_c262b3eaa55542ad9284b47f",
+          "specs": null
+        },
+        "build": {
+          "configure_command": "cmake -S /home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability -B /home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability/build/f446_ad_s8_ref -DCMAKE_TOOLCHAIN_FILE=/tmp/tigris-runtime-provenance/cmake/arm-none-eabi.cmake -DTIGRIS_RUNTIME_ROOT=/tmp/tigris-runtime-provenance -DTIGRIS_BOARD=nucleo_f446re -DBENCH_KERNEL=s8_ref -DTIGRIS_PLAN=/home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability/build/plans/ad_matched.tgrs -DTIGRIS_CODEGEN=/tmp/tigris-compiler-provenance/.venv/bin/tigris -DTIGRIS_FAST_ARENA_BYTES=65536 -DTIGRIS_SLOW_ARENA_BYTES=8192"
+        },
+        "captured_at_utc": "2026-07-17T17:24:21.279224Z"
+      },
+      "f446_ad_tflm.log": {
+        "artifacts": {
+          "firmware": {
+            "name": "tflm_bench.bin",
+            "sha256": "90725c192bad7de7c891a67851e0e8b2cc36ae444df91f00d6dfda7cdb31442f",
+            "size_bytes": 431056
+          },
+          "model": {
+            "name": "ad_tflite_i8.h",
+            "sha256": "e7d198caef92b0a5f4d8674c7ea5fb68c157ee9f2ad50617501257700429d44b",
+            "size_bytes": 1784725
+          }
+        },
+        "board": {
+          "board_type": "stm32-f446",
+          "siliconrig_board_id": "board_c262b3eaa55542ad9284b47f",
+          "specs": null
+        },
+        "build": {
+          "configure_command": "cmake -S /home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability -B /home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability/build/f446_ad_tflm -DCMAKE_TOOLCHAIN_FILE=/tmp/tigris-runtime-provenance/cmake/arm-none-eabi.cmake -DTIGRIS_RUNTIME_ROOT=/tmp/tigris-runtime-provenance -DTIGRIS_BOARD=nucleo_f446re -DBENCH_FRAMEWORK=tflm -DTFLM_MODEL=ad -DTFLM_ARENA_BYTES=32768"
+        },
+        "captured_at_utc": "2026-07-17T17:24:47.470863Z"
+      },
+      "f446_ds_cnn_cmsis_nn.log": {
+        "artifacts": {
+          "firmware": {
+            "name": "tigris_bench.bin",
+            "sha256": "4815cc662c5ea6a5a6ca50b0eb8d1920d6f3d9316096bc05bdd0c15c33e6a084",
+            "size_bytes": 123636
+          },
+          "model": {
+            "name": "ds_cnn_matched.tgrs",
+            "sha256": "6a8a39098401bacf2f0a44a3394c5816230d9fa01fa0e50272c45e7f5cc046b1",
+            "size_bytes": 40604
+          }
+        },
+        "board": {
+          "board_type": "stm32-f446",
+          "siliconrig_board_id": "board_c262b3eaa55542ad9284b47f",
+          "specs": null
+        },
+        "build": {
+          "configure_command": "cmake -S /home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability -B /home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability/build/f446_ds_cnn_cmsis_nn -DCMAKE_TOOLCHAIN_FILE=/tmp/tigris-runtime-provenance/cmake/arm-none-eabi.cmake -DTIGRIS_RUNTIME_ROOT=/tmp/tigris-runtime-provenance -DTIGRIS_BOARD=nucleo_f446re -DBENCH_KERNEL=cmsis_nn -DTIGRIS_PLAN=/home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability/build/plans/ds_cnn_matched.tgrs -DTIGRIS_CODEGEN=/tmp/tigris-compiler-provenance/.venv/bin/tigris -DTIGRIS_FAST_ARENA_BYTES=65536 -DTIGRIS_SLOW_ARENA_BYTES=8192"
+        },
+        "captured_at_utc": "2026-07-17T17:22:57.280348Z"
+      },
+      "f446_ds_cnn_s8_ref.log": {
+        "artifacts": {
+          "firmware": {
+            "name": "tigris_bench.bin",
+            "sha256": "463212d2c3a4f0886a1d3eb6af2b267b492b28283f2809726ec5fb6a55877190",
+            "size_bytes": 98372
+          },
+          "model": {
+            "name": "ds_cnn_matched.tgrs",
+            "sha256": "6a8a39098401bacf2f0a44a3394c5816230d9fa01fa0e50272c45e7f5cc046b1",
+            "size_bytes": 40604
+          }
+        },
+        "board": {
+          "board_type": "stm32-f446",
+          "siliconrig_board_id": "board_c262b3eaa55542ad9284b47f",
+          "specs": null
+        },
+        "build": {
+          "configure_command": "cmake -S /home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability -B /home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability/build/f446_ds_cnn_s8_ref -DCMAKE_TOOLCHAIN_FILE=/tmp/tigris-runtime-provenance/cmake/arm-none-eabi.cmake -DTIGRIS_RUNTIME_ROOT=/tmp/tigris-runtime-provenance -DTIGRIS_BOARD=nucleo_f446re -DBENCH_KERNEL=s8_ref -DTIGRIS_PLAN=/home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability/build/plans/ds_cnn_matched.tgrs -DTIGRIS_CODEGEN=/tmp/tigris-compiler-provenance/.venv/bin/tigris -DTIGRIS_FAST_ARENA_BYTES=65536 -DTIGRIS_SLOW_ARENA_BYTES=8192"
+        },
+        "captured_at_utc": "2026-07-17T17:23:20.908557Z"
+      },
+      "f446_ds_cnn_tflm.log": {
+        "artifacts": {
+          "firmware": {
+            "name": "tflm_bench.bin",
+            "sha256": "71c5c2363e5f7f04fbe272fca4fb177362f10bb0107efd82cb5ba780979da9eb",
+            "size_bytes": 183900
+          },
+          "model": {
+            "name": "ds_cnn_tflite_i8.h",
+            "sha256": "6e1238e0e3b7706a5b196ede6e433042202a65ab699e0a26700c36ec8fcfc183",
+            "size_bytes": 260534
+          }
+        },
+        "board": {
+          "board_type": "stm32-f446",
+          "siliconrig_board_id": "board_c262b3eaa55542ad9284b47f",
+          "specs": null
+        },
+        "build": {
+          "configure_command": "cmake -S /home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability -B /home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability/build/f446_ds_cnn_tflm -DCMAKE_TOOLCHAIN_FILE=/tmp/tigris-runtime-provenance/cmake/arm-none-eabi.cmake -DTIGRIS_RUNTIME_ROOT=/tmp/tigris-runtime-provenance -DTIGRIS_BOARD=nucleo_f446re -DBENCH_FRAMEWORK=tflm -DTFLM_MODEL=ds_cnn -DTFLM_ARENA_BYTES=32768"
+        },
+        "captured_at_utc": "2026-07-17T17:23:36.448398Z"
+      },
+      "f446_ts_cmsis_nn.log": {
+        "artifacts": {
+          "firmware": {
+            "name": "tigris_bench.bin",
+            "sha256": "7c6888e15914b4b65bc6cd0c567eac5140391079aca833c381012313c4cee9cd",
+            "size_bytes": 91972
+          },
+          "model": {
+            "name": "ts_matched.tgrs",
+            "sha256": "20fa4042c4272c216fea8daf86398013d20c20b280d1da6774f074da460d8e6a",
+            "size_bytes": 8940
+          }
+        },
+        "board": {
+          "board_type": "stm32-f446",
+          "siliconrig_board_id": "board_c262b3eaa55542ad9284b47f",
+          "specs": null
+        },
+        "build": {
+          "configure_command": "cmake -S /home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability -B /home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability/build/f446_ts_cmsis_nn -DCMAKE_TOOLCHAIN_FILE=/tmp/tigris-runtime-provenance/cmake/arm-none-eabi.cmake -DTIGRIS_RUNTIME_ROOT=/tmp/tigris-runtime-provenance -DTIGRIS_BOARD=nucleo_f446re -DBENCH_KERNEL=cmsis_nn -DTIGRIS_PLAN=/home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability/build/plans/ts_matched.tgrs -DTIGRIS_CODEGEN=/tmp/tigris-compiler-provenance/.venv/bin/tigris -DTIGRIS_FAST_ARENA_BYTES=65536 -DTIGRIS_SLOW_ARENA_BYTES=8192"
+        },
+        "captured_at_utc": "2026-07-17T17:24:55.804210Z"
+      },
+      "f446_ts_s8_ref.log": {
+        "artifacts": {
+          "firmware": {
+            "name": "tigris_bench.bin",
+            "sha256": "a9d3697dbde887a993c7f1d9fe94b4815492ff593641d30b7688c2c0ffb9a74b",
+            "size_bytes": 66708
+          },
+          "model": {
+            "name": "ts_matched.tgrs",
+            "sha256": "20fa4042c4272c216fea8daf86398013d20c20b280d1da6774f074da460d8e6a",
+            "size_bytes": 8940
+          }
+        },
+        "board": {
+          "board_type": "stm32-f446",
+          "siliconrig_board_id": "board_c262b3eaa55542ad9284b47f",
+          "specs": null
+        },
+        "build": {
+          "configure_command": "cmake -S /home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability -B /home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability/build/f446_ts_s8_ref -DCMAKE_TOOLCHAIN_FILE=/tmp/tigris-runtime-provenance/cmake/arm-none-eabi.cmake -DTIGRIS_RUNTIME_ROOT=/tmp/tigris-runtime-provenance -DTIGRIS_BOARD=nucleo_f446re -DBENCH_KERNEL=s8_ref -DTIGRIS_PLAN=/home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability/build/plans/ts_matched.tgrs -DTIGRIS_CODEGEN=/tmp/tigris-compiler-provenance/.venv/bin/tigris -DTIGRIS_FAST_ARENA_BYTES=65536 -DTIGRIS_SLOW_ARENA_BYTES=8192"
+        },
+        "captured_at_utc": "2026-07-17T17:25:03.429330Z"
+      },
+      "f446_ts_tflm.log": {
+        "artifacts": {
+          "firmware": {
+            "name": "tflm_bench.bin",
+            "sha256": "ea28e783d1d4804317df69d76910c277a869ef389b96530cf86bb99254d00644",
+            "size_bytes": 152168
+          },
+          "model": {
+            "name": "ts_tflite_i8.h",
+            "sha256": "7b837ddd1bc06917c224a72e3f60ed13ecf5c9c6a1ddf32a1a4d9411734b5da9",
+            "size_bytes": 64916
+          }
+        },
+        "board": {
+          "board_type": "stm32-f446",
+          "siliconrig_board_id": "board_c262b3eaa55542ad9284b47f",
+          "specs": null
+        },
+        "build": {
+          "configure_command": "cmake -S /home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability -B /home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability/build/f446_ts_tflm -DCMAKE_TOOLCHAIN_FILE=/tmp/tigris-runtime-provenance/cmake/arm-none-eabi.cmake -DTIGRIS_RUNTIME_ROOT=/tmp/tigris-runtime-provenance -DTIGRIS_BOARD=nucleo_f446re -DBENCH_FRAMEWORK=tflm -DTFLM_MODEL=ts -DTFLM_ARENA_BYTES=32768"
+        },
+        "captured_at_utc": "2026-07-17T17:25:15.722322Z"
+      },
+      "h753_ad_cmsis_nn.log": {
+        "artifacts": {
+          "firmware": {
+            "name": "tigris_bench.bin",
+            "sha256": "bdaad4fec151fa564f5d2dc6231d9c183113f195ed1bb1d020b247edcb9f8db7",
+            "size_bytes": 379092
+          },
+          "model": {
+            "name": "ad_matched.tgrs",
+            "sha256": "b2c92ad248c1d40f68e6698430d64396d210acae5457b32c5e04a0a9a4033bd1",
+            "size_bytes": 299420
+          }
+        },
+        "board": {
+          "board_type": "stm32-h753",
+          "siliconrig_board_id": "board_8db0ec102e42cdc85373b0c0",
+          "specs": null
+        },
+        "build": {
+          "configure_command": "cmake -S /home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability -B /home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability/build/h753_ad_cmsis_nn -DCMAKE_TOOLCHAIN_FILE=/tmp/tigris-runtime-provenance/cmake/arm-none-eabi.cmake -DTIGRIS_RUNTIME_ROOT=/tmp/tigris-runtime-provenance -DTIGRIS_BOARD=nucleo_h753zi -DBENCH_KERNEL=cmsis_nn -DTIGRIS_PLAN=/home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability/build/plans/ad_matched.tgrs -DTIGRIS_CODEGEN=/tmp/tigris-compiler-provenance/.venv/bin/tigris -DTIGRIS_FAST_ARENA_BYTES=65536 -DTIGRIS_SLOW_ARENA_BYTES=8192"
+        },
+        "captured_at_utc": "2026-07-17T17:19:25.864107Z"
+      },
+      "h753_ad_s8_ref.log": {
+        "artifacts": {
+          "firmware": {
+            "name": "tigris_bench.bin",
+            "sha256": "d28ed8d45dacc3c128f04abbabfe5c8c844cc6766781415744ac7477ed272d30",
+            "size_bytes": 353748
+          },
+          "model": {
+            "name": "ad_matched.tgrs",
+            "sha256": "b2c92ad248c1d40f68e6698430d64396d210acae5457b32c5e04a0a9a4033bd1",
+            "size_bytes": 299420
+          }
+        },
+        "board": {
+          "board_type": "stm32-h753",
+          "siliconrig_board_id": "board_8db0ec102e42cdc85373b0c0",
+          "specs": null
+        },
+        "build": {
+          "configure_command": "cmake -S /home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability -B /home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability/build/h753_ad_s8_ref -DCMAKE_TOOLCHAIN_FILE=/tmp/tigris-runtime-provenance/cmake/arm-none-eabi.cmake -DTIGRIS_RUNTIME_ROOT=/tmp/tigris-runtime-provenance -DTIGRIS_BOARD=nucleo_h753zi -DBENCH_KERNEL=s8_ref -DTIGRIS_PLAN=/home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability/build/plans/ad_matched.tgrs -DTIGRIS_CODEGEN=/tmp/tigris-compiler-provenance/.venv/bin/tigris -DTIGRIS_FAST_ARENA_BYTES=65536 -DTIGRIS_SLOW_ARENA_BYTES=8192"
+        },
+        "captured_at_utc": "2026-07-17T17:19:47.368642Z"
+      },
+      "h753_ad_tflm.log": {
+        "artifacts": {
+          "firmware": {
+            "name": "tflm_bench.bin",
+            "sha256": "4b4233eee934d3241b8c162be9d2dafd655e0ed9954ab6c8bae487cfb4e0b7ea",
+            "size_bytes": 427092
+          },
+          "model": {
+            "name": "ad_tflite_i8.h",
+            "sha256": "e7d198caef92b0a5f4d8674c7ea5fb68c157ee9f2ad50617501257700429d44b",
+            "size_bytes": 1784725
+          }
+        },
+        "board": {
+          "board_type": "stm32-h753",
+          "siliconrig_board_id": "board_8db0ec102e42cdc85373b0c0",
+          "specs": null
+        },
+        "build": {
+          "configure_command": "cmake -S /home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability -B /home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability/build/h753_ad_tflm -DCMAKE_TOOLCHAIN_FILE=/tmp/tigris-runtime-provenance/cmake/arm-none-eabi.cmake -DTIGRIS_RUNTIME_ROOT=/tmp/tigris-runtime-provenance -DTIGRIS_BOARD=nucleo_h753zi -DBENCH_FRAMEWORK=tflm -DTFLM_MODEL=ad -DTFLM_ARENA_BYTES=32768"
+        },
+        "captured_at_utc": "2026-07-17T17:20:12.870005Z"
+      },
+      "h753_ds_cnn_cmsis_nn.log": {
+        "artifacts": {
+          "firmware": {
+            "name": "tigris_bench.bin",
+            "sha256": "a0ec55d9b0e4abe7561f2c3f43284b88210359ce607ef830d5eb0f416d137d82",
+            "size_bytes": 120276
+          },
+          "model": {
+            "name": "ds_cnn_matched.tgrs",
+            "sha256": "6a8a39098401bacf2f0a44a3394c5816230d9fa01fa0e50272c45e7f5cc046b1",
+            "size_bytes": 40604
+          }
+        },
+        "board": {
+          "board_type": "stm32-h753",
+          "siliconrig_board_id": "board_8db0ec102e42cdc85373b0c0",
+          "specs": null
+        },
+        "build": {
+          "configure_command": "cmake -S /home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability -B /home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability/build/h753_ds_cnn_cmsis_nn -DCMAKE_TOOLCHAIN_FILE=/tmp/tigris-runtime-provenance/cmake/arm-none-eabi.cmake -DTIGRIS_RUNTIME_ROOT=/tmp/tigris-runtime-provenance -DTIGRIS_BOARD=nucleo_h753zi -DBENCH_KERNEL=cmsis_nn -DTIGRIS_PLAN=/home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability/build/plans/ds_cnn_matched.tgrs -DTIGRIS_CODEGEN=/tmp/tigris-compiler-provenance/.venv/bin/tigris -DTIGRIS_FAST_ARENA_BYTES=65536 -DTIGRIS_SLOW_ARENA_BYTES=8192"
+        },
+        "captured_at_utc": "2026-07-17T17:18:39.984511Z"
+      },
+      "h753_ds_cnn_s8_ref.log": {
+        "artifacts": {
+          "firmware": {
+            "name": "tigris_bench.bin",
+            "sha256": "16f73d905df247973385562c64688936773ce14b7ebef31b685a6444f1c8211f",
+            "size_bytes": 94932
+          },
+          "model": {
+            "name": "ds_cnn_matched.tgrs",
+            "sha256": "6a8a39098401bacf2f0a44a3394c5816230d9fa01fa0e50272c45e7f5cc046b1",
+            "size_bytes": 40604
+          }
+        },
+        "board": {
+          "board_type": "stm32-h753",
+          "siliconrig_board_id": "board_8db0ec102e42cdc85373b0c0",
+          "specs": null
+        },
+        "build": {
+          "configure_command": "cmake -S /home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability -B /home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability/build/h753_ds_cnn_s8_ref -DCMAKE_TOOLCHAIN_FILE=/tmp/tigris-runtime-provenance/cmake/arm-none-eabi.cmake -DTIGRIS_RUNTIME_ROOT=/tmp/tigris-runtime-provenance -DTIGRIS_BOARD=nucleo_h753zi -DBENCH_KERNEL=s8_ref -DTIGRIS_PLAN=/home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability/build/plans/ds_cnn_matched.tgrs -DTIGRIS_CODEGEN=/tmp/tigris-compiler-provenance/.venv/bin/tigris -DTIGRIS_FAST_ARENA_BYTES=65536 -DTIGRIS_SLOW_ARENA_BYTES=8192"
+        },
+        "captured_at_utc": "2026-07-17T17:18:50.388868Z"
+      },
+      "h753_ds_cnn_tflm.log": {
+        "artifacts": {
+          "firmware": {
+            "name": "tflm_bench.bin",
+            "sha256": "8b539589a80515c0f38e1c524afe737c8f616a933b80767b9f01c5fc46270e47",
+            "size_bytes": 179928
+          },
+          "model": {
+            "name": "ds_cnn_tflite_i8.h",
+            "sha256": "6e1238e0e3b7706a5b196ede6e433042202a65ab699e0a26700c36ec8fcfc183",
+            "size_bytes": 260534
+          }
+        },
+        "board": {
+          "board_type": "stm32-h753",
+          "siliconrig_board_id": "board_8db0ec102e42cdc85373b0c0",
+          "specs": null
+        },
+        "build": {
+          "configure_command": "cmake -S /home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability -B /home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability/build/h753_ds_cnn_tflm -DCMAKE_TOOLCHAIN_FILE=/tmp/tigris-runtime-provenance/cmake/arm-none-eabi.cmake -DTIGRIS_RUNTIME_ROOT=/tmp/tigris-runtime-provenance -DTIGRIS_BOARD=nucleo_h753zi -DBENCH_FRAMEWORK=tflm -DTFLM_MODEL=ds_cnn -DTFLM_ARENA_BYTES=32768"
+        },
+        "captured_at_utc": "2026-07-17T17:19:03.234615Z"
+      },
+      "h753_mbv2_cmsis_nn.log": {
+        "artifacts": {
+          "firmware": {
+            "name": "tigris_bench.bin",
+            "sha256": "57356217a36a66528505c1c660c51bae2f2ea8b5abf1e11a7fd108690ff0cb4c",
+            "size_bytes": 685956
+          },
+          "model": {
+            "name": "mbv2_a35.tgrs",
+            "sha256": "2e25516de8291022ddf6b223313276ecadacb90cf2adf796b9f4a71e37339bc9",
+            "size_bytes": 606284
+          }
+        },
+        "board": {
+          "board_type": "stm32-h753",
+          "siliconrig_board_id": "board_8db0ec102e42cdc85373b0c0",
+          "specs": null
+        },
+        "build": {
+          "configure_command": "cmake -S /home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability -B /home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability/build/h753_mbv2_cmsis_nn -DCMAKE_TOOLCHAIN_FILE=/tmp/tigris-runtime-provenance/cmake/arm-none-eabi.cmake -DTIGRIS_RUNTIME_ROOT=/tmp/tigris-runtime-provenance -DTIGRIS_BOARD=nucleo_h753zi -DBENCH_KERNEL=cmsis_nn -DTIGRIS_PLAN=/home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability/build/plans/mbv2_a35.tgrs -DTIGRIS_CODEGEN=/tmp/tigris-compiler-provenance/.venv/bin/tigris -DTIGRIS_FAST_ARENA_BYTES=163840 -DTIGRIS_SLOW_ARENA_BYTES=327680"
+        },
+        "captured_at_utc": "2026-07-17T17:22:03.267326Z"
+      },
+      "h753_mbv2_tflm.log": {
+        "artifacts": {
+          "firmware": {
+            "name": "tflm_bench.bin",
+            "sha256": "94844fce76f924c404406cbb9db671b1d5fbf61cab9af7145051e7115a05698c",
+            "size_bytes": 765484
+          },
+          "model": {
+            "name": "mbv2_tflite_i8.h",
+            "sha256": "3dff45470812f693cfc3c8a5c0845fc0195945ff82c50cfeab28a79e3f3d07c2",
+            "size_bytes": 3871442
+          }
+        },
+        "board": {
+          "board_type": "stm32-h753",
+          "siliconrig_board_id": "board_8db0ec102e42cdc85373b0c0",
+          "specs": null
+        },
+        "build": {
+          "configure_command": "cmake -S /home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability -B /home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability/build/h753_mbv2_tflm -DCMAKE_TOOLCHAIN_FILE=/tmp/tigris-runtime-provenance/cmake/arm-none-eabi.cmake -DTIGRIS_RUNTIME_ROOT=/tmp/tigris-runtime-provenance -DTIGRIS_BOARD=nucleo_h753zi -DBENCH_FRAMEWORK=tflm -DTFLM_MODEL=mbv2 -DTFLM_ARENA_BYTES=491520"
+        },
+        "captured_at_utc": "2026-07-17T17:22:45.554940Z"
+      },
+      "h753_ts_cmsis_nn.log": {
+        "artifacts": {
+          "firmware": {
+            "name": "tigris_bench.bin",
+            "sha256": "48a062303b6b2eb23e5bfd990189bb77e0bd806eb4aa9e676d3e668a4d8ecc07",
+            "size_bytes": 88612
+          },
+          "model": {
+            "name": "ts_matched.tgrs",
+            "sha256": "20fa4042c4272c216fea8daf86398013d20c20b280d1da6774f074da460d8e6a",
+            "size_bytes": 8940
+          }
+        },
+        "board": {
+          "board_type": "stm32-h753",
+          "siliconrig_board_id": "board_8db0ec102e42cdc85373b0c0",
+          "specs": null
+        },
+        "build": {
+          "configure_command": "cmake -S /home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability -B /home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability/build/h753_ts_cmsis_nn -DCMAKE_TOOLCHAIN_FILE=/tmp/tigris-runtime-provenance/cmake/arm-none-eabi.cmake -DTIGRIS_RUNTIME_ROOT=/tmp/tigris-runtime-provenance -DTIGRIS_BOARD=nucleo_h753zi -DBENCH_KERNEL=cmsis_nn -DTIGRIS_PLAN=/home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability/build/plans/ts_matched.tgrs -DTIGRIS_CODEGEN=/tmp/tigris-compiler-provenance/.venv/bin/tigris -DTIGRIS_FAST_ARENA_BYTES=65536 -DTIGRIS_SLOW_ARENA_BYTES=8192"
+        },
+        "captured_at_utc": "2026-07-17T17:20:20.346182Z"
+      },
+      "h753_ts_s8_ref.log": {
+        "artifacts": {
+          "firmware": {
+            "name": "tigris_bench.bin",
+            "sha256": "9bfd690d2a627a692b254158636ca6990e695b1023e5d4affba641e746f0de7f",
+            "size_bytes": 63268
+          },
+          "model": {
+            "name": "ts_matched.tgrs",
+            "sha256": "20fa4042c4272c216fea8daf86398013d20c20b280d1da6774f074da460d8e6a",
+            "size_bytes": 8940
+          }
+        },
+        "board": {
+          "board_type": "stm32-h753",
+          "siliconrig_board_id": "board_8db0ec102e42cdc85373b0c0",
+          "specs": null
+        },
+        "build": {
+          "configure_command": "cmake -S /home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability -B /home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability/build/h753_ts_s8_ref -DCMAKE_TOOLCHAIN_FILE=/tmp/tigris-runtime-provenance/cmake/arm-none-eabi.cmake -DTIGRIS_RUNTIME_ROOT=/tmp/tigris-runtime-provenance -DTIGRIS_BOARD=nucleo_h753zi -DBENCH_KERNEL=s8_ref -DTIGRIS_PLAN=/home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability/build/plans/ts_matched.tgrs -DTIGRIS_CODEGEN=/tmp/tigris-compiler-provenance/.venv/bin/tigris -DTIGRIS_FAST_ARENA_BYTES=65536 -DTIGRIS_SLOW_ARENA_BYTES=8192"
+        },
+        "captured_at_utc": "2026-07-17T17:20:26.642318Z"
+      },
+      "h753_ts_tflm.log": {
+        "artifacts": {
+          "firmware": {
+            "name": "tflm_bench.bin",
+            "sha256": "98e681f62d41552897de2f085deefe574f864c3f6ef7c1dd196088d91cdde2f9",
+            "size_bytes": 148196
+          },
+          "model": {
+            "name": "ts_tflite_i8.h",
+            "sha256": "7b837ddd1bc06917c224a72e3f60ed13ecf5c9c6a1ddf32a1a4d9411734b5da9",
+            "size_bytes": 64916
+          }
+        },
+        "board": {
+          "board_type": "stm32-h753",
+          "siliconrig_board_id": "board_8db0ec102e42cdc85373b0c0",
+          "specs": null
+        },
+        "build": {
+          "configure_command": "cmake -S /home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability -B /home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability/build/h753_ts_tflm -DCMAKE_TOOLCHAIN_FILE=/tmp/tigris-runtime-provenance/cmake/arm-none-eabi.cmake -DTIGRIS_RUNTIME_ROOT=/tmp/tigris-runtime-provenance -DTIGRIS_BOARD=nucleo_h753zi -DBENCH_FRAMEWORK=tflm -DTFLM_MODEL=ts -DTFLM_ARENA_BYTES=32768"
+        },
+        "captured_at_utc": "2026-07-17T17:20:37.548212Z"
+      },
+      "rp2350_ad_cmsis_nn.log": {
+        "artifacts": {
+          "firmware": {
+            "name": "tigris_pico_bench.uf2",
+            "sha256": "08c30fa3fae28e505b876a43c8785031c1607ee416f1aabfc92335cfff848d16",
+            "size_bytes": 774144
+          },
+          "model": {
+            "name": "ad_matched.tgrs",
+            "sha256": "b2c92ad248c1d40f68e6698430d64396d210acae5457b32c5e04a0a9a4033bd1",
+            "size_bytes": 299420
+          }
+        },
+        "board": {
+          "board_type": "rp2350",
+          "siliconrig_board_id": "board_591ec2d5896a8f60d9b8b6ea",
+          "specs": null
+        },
+        "build": {
+          "configure_command": "cmake -S /home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability/boards/pico2_rp2350 -B /home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability/build/rp2350_ad_cmsis_nn -Dpicotool_DIR=/home/armin/pico/picotool/install/lib/cmake/picotool -DBENCH_KERNEL=cmsis_nn -DTIGRIS_PLAN=/home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability/build/plans/ad_matched.tgrs -DTIGRIS_CODEGEN=/tmp/tigris-compiler-provenance/.venv/bin/tigris -DTIGRIS_RUNTIME_ROOT=/tmp/tigris-runtime-provenance -DTIGRIS_FAST_ARENA_BYTES=65536 -DTIGRIS_SLOW_ARENA_BYTES=8192"
+        },
+        "captured_at_utc": "2026-07-17T17:25:55.036160Z"
+      },
+      "rp2350_ad_s8_ref.log": {
+        "artifacts": {
+          "firmware": {
+            "name": "tigris_pico_bench.uf2",
+            "sha256": "a03c9e17c15c7ee25ce411f60ab141de693c2b06cf8cc220618e001e866a187e",
+            "size_bytes": 722432
+          },
+          "model": {
+            "name": "ad_matched.tgrs",
+            "sha256": "b2c92ad248c1d40f68e6698430d64396d210acae5457b32c5e04a0a9a4033bd1",
+            "size_bytes": 299420
+          }
+        },
+        "board": {
+          "board_type": "rp2350",
+          "siliconrig_board_id": "board_591ec2d5896a8f60d9b8b6ea",
+          "specs": null
+        },
+        "build": {
+          "configure_command": "cmake -S /home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability/boards/pico2_rp2350 -B /home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability/build/rp2350_ad_s8_ref -Dpicotool_DIR=/home/armin/pico/picotool/install/lib/cmake/picotool -DBENCH_KERNEL=s8_ref -DTIGRIS_PLAN=/home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability/build/plans/ad_matched.tgrs -DTIGRIS_CODEGEN=/tmp/tigris-compiler-provenance/.venv/bin/tigris -DTIGRIS_RUNTIME_ROOT=/tmp/tigris-runtime-provenance -DTIGRIS_FAST_ARENA_BYTES=65536 -DTIGRIS_SLOW_ARENA_BYTES=8192"
+        },
+        "captured_at_utc": "2026-07-17T17:26:07.983031Z"
+      },
+      "rp2350_ds_cnn_cmsis_nn.log": {
+        "artifacts": {
+          "firmware": {
+            "name": "tigris_pico_bench.uf2",
+            "sha256": "cf300f92ecc172080b46f97dce69de06c2b14a1b999507e630a921198e75f071",
+            "size_bytes": 256512
+          },
+          "model": {
+            "name": "ds_cnn_matched.tgrs",
+            "sha256": "6a8a39098401bacf2f0a44a3394c5816230d9fa01fa0e50272c45e7f5cc046b1",
+            "size_bytes": 40604
+          }
+        },
+        "board": {
+          "board_type": "rp2350",
+          "siliconrig_board_id": "board_591ec2d5896a8f60d9b8b6ea",
+          "specs": null
+        },
+        "build": {
+          "configure_command": "cmake -S /home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability/boards/pico2_rp2350 -B /home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability/build/rp2350_ds_cnn_cmsis_nn -Dpicotool_DIR=/home/armin/pico/picotool/install/lib/cmake/picotool -DBENCH_KERNEL=cmsis_nn -DTIGRIS_PLAN=/home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability/build/plans/ds_cnn_matched.tgrs -DTIGRIS_CODEGEN=/tmp/tigris-compiler-provenance/.venv/bin/tigris -DTIGRIS_RUNTIME_ROOT=/tmp/tigris-runtime-provenance -DTIGRIS_FAST_ARENA_BYTES=65536 -DTIGRIS_SLOW_ARENA_BYTES=8192"
+        },
+        "captured_at_utc": "2026-07-17T17:25:23.384811Z"
+      },
+      "rp2350_ds_cnn_s8_ref.log": {
+        "artifacts": {
+          "firmware": {
+            "name": "tigris_pico_bench.uf2",
+            "sha256": "bc01a48550bee3cd485631aa9dd6c448c76d8b50700e141a1e6ed5c861d7da58",
+            "size_bytes": 204800
+          },
+          "model": {
+            "name": "ds_cnn_matched.tgrs",
+            "sha256": "6a8a39098401bacf2f0a44a3394c5816230d9fa01fa0e50272c45e7f5cc046b1",
+            "size_bytes": 40604
+          }
+        },
+        "board": {
+          "board_type": "rp2350",
+          "siliconrig_board_id": "board_591ec2d5896a8f60d9b8b6ea",
+          "specs": null
+        },
+        "build": {
+          "configure_command": "cmake -S /home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability/boards/pico2_rp2350 -B /home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability/build/rp2350_ds_cnn_s8_ref -Dpicotool_DIR=/home/armin/pico/picotool/install/lib/cmake/picotool -DBENCH_KERNEL=s8_ref -DTIGRIS_PLAN=/home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability/build/plans/ds_cnn_matched.tgrs -DTIGRIS_CODEGEN=/tmp/tigris-compiler-provenance/.venv/bin/tigris -DTIGRIS_RUNTIME_ROOT=/tmp/tigris-runtime-provenance -DTIGRIS_FAST_ARENA_BYTES=65536 -DTIGRIS_SLOW_ARENA_BYTES=8192"
+        },
+        "captured_at_utc": "2026-07-17T17:25:44.069724Z"
+      },
+      "rp2350_mbv2_cmsis_nn.log": {
+        "artifacts": {
+          "firmware": {
+            "name": "tigris_pico_bench.uf2",
+            "sha256": "04cf2af6bfb7725f4fe5f2e37a76819f7910c424f4fe39dde6f209bc110e49f5",
+            "size_bytes": 1388032
+          },
+          "model": {
+            "name": "mbv2_a35.tgrs",
+            "sha256": "2e25516de8291022ddf6b223313276ecadacb90cf2adf796b9f4a71e37339bc9",
+            "size_bytes": 606284
+          }
+        },
+        "board": {
+          "board_type": "rp2350",
+          "siliconrig_board_id": "board_591ec2d5896a8f60d9b8b6ea",
+          "specs": null
+        },
+        "build": {
+          "configure_command": "cmake -S /home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability/boards/pico2_rp2350 -B /home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability/build/rp2350_mbv2_cmsis_nn -Dpicotool_DIR=/home/armin/pico/picotool/install/lib/cmake/picotool -DBENCH_KERNEL=cmsis_nn -DTIGRIS_PLAN=/home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability/build/plans/mbv2_a35.tgrs -DTIGRIS_CODEGEN=/tmp/tigris-compiler-provenance/.venv/bin/tigris -DTIGRIS_RUNTIME_ROOT=/tmp/tigris-runtime-provenance -DTIGRIS_FAST_ARENA_BYTES=163840 -DTIGRIS_SLOW_ARENA_BYTES=327680"
+        },
+        "captured_at_utc": "2026-07-17T17:30:28.593357Z"
+      },
+      "rp2350_ts_cmsis_nn.log": {
+        "artifacts": {
+          "firmware": {
+            "name": "tigris_pico_bench.uf2",
+            "sha256": "209e9d9d58fd0db96ec4c9f609b029e327924373a041e5dcea293a08b236a5ae",
+            "size_bytes": 193024
+          },
+          "model": {
+            "name": "ts_matched.tgrs",
+            "sha256": "20fa4042c4272c216fea8daf86398013d20c20b280d1da6774f074da460d8e6a",
+            "size_bytes": 8940
+          }
+        },
+        "board": {
+          "board_type": "rp2350",
+          "siliconrig_board_id": "board_591ec2d5896a8f60d9b8b6ea",
+          "specs": null
+        },
+        "build": {
+          "configure_command": "cmake -S /home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability/boards/pico2_rp2350 -B /home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability/build/rp2350_ts_cmsis_nn -Dpicotool_DIR=/home/armin/pico/picotool/install/lib/cmake/picotool -DBENCH_KERNEL=cmsis_nn -DTIGRIS_PLAN=/home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability/build/plans/ts_matched.tgrs -DTIGRIS_CODEGEN=/tmp/tigris-compiler-provenance/.venv/bin/tigris -DTIGRIS_RUNTIME_ROOT=/tmp/tigris-runtime-provenance -DTIGRIS_FAST_ARENA_BYTES=65536 -DTIGRIS_SLOW_ARENA_BYTES=8192"
+        },
+        "captured_at_utc": "2026-07-17T17:26:14.981590Z"
+      },
+      "rp2350_ts_s8_ref.log": {
+        "artifacts": {
+          "firmware": {
+            "name": "tigris_pico_bench.uf2",
+            "sha256": "62ffdef14e7591a19a740adf074a601675f2fdd279dd8e75faa26326475e5cb0",
+            "size_bytes": 141824
+          },
+          "model": {
+            "name": "ts_matched.tgrs",
+            "sha256": "20fa4042c4272c216fea8daf86398013d20c20b280d1da6774f074da460d8e6a",
+            "size_bytes": 8940
+          }
+        },
+        "board": {
+          "board_type": "rp2350",
+          "siliconrig_board_id": "board_591ec2d5896a8f60d9b8b6ea",
+          "specs": null
+        },
+        "build": {
+          "configure_command": "cmake -S /home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability/boards/pico2_rp2350 -B /home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability/build/rp2350_ts_s8_ref -Dpicotool_DIR=/home/armin/pico/picotool/install/lib/cmake/picotool -DBENCH_KERNEL=s8_ref -DTIGRIS_PLAN=/home/armin/Documents/git/_raws/tigris/tigris-bench/cortex-m-deployability/build/plans/ts_matched.tgrs -DTIGRIS_CODEGEN=/tmp/tigris-compiler-provenance/.venv/bin/tigris -DTIGRIS_RUNTIME_ROOT=/tmp/tigris-runtime-provenance -DTIGRIS_FAST_ARENA_BYTES=65536 -DTIGRIS_SLOW_ARENA_BYTES=8192"
+        },
+        "captured_at_utc": "2026-07-17T17:26:21.754736Z"
+      }
+    }
+  }
 }

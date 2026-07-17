@@ -23,7 +23,9 @@ project(tigris_pico_bench C CXX ASM)
 pico_sdk_init()
 
 set(BENCH_ROOT ${CMAKE_CURRENT_LIST_DIR}/../..)
-set(RT_DIR     ${BENCH_ROOT}/../../tigris-runtime)
+set(TIGRIS_RUNTIME_ROOT "${BENCH_ROOT}/../../tigris-runtime"
+    CACHE PATH "pinned TiGrIS runtime checkout")
+set(RT_DIR     ${TIGRIS_RUNTIME_ROOT})
 set(NN_DIR     ${BENCH_ROOT}/third_party/CMSIS-NN)
 
 set(BENCH_KERNEL "cmsis_nn" CACHE STRING "TiGrIS backend: cmsis_nn | s8_ref")

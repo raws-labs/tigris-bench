@@ -63,6 +63,7 @@ extern const unsigned int  g_tigris_plan_len;
 static uint8_t s_fast_arena[TIGRIS_FAST_ARENA_BYTES] __attribute__((aligned(16)));
 static uint8_t s_slow_arena[TIGRIS_SLOW_ARENA_BYTES] __attribute__((aligned(16)));
 static void   *s_tensor_ptrs[BENCH_MAX_TENSORS];
+static tigris_executor_workspace_t s_executor_workspace;
 
 static const char *kernel_name(void)
 {
@@ -130,10 +131,12 @@ static uint32_t run_once(tigris_plan_t *plan, tigris_mem_t *mem,
     tigris_exec_stats_t stats;
     uint32_t c0 = platform_cycles();
 #ifdef BENCH_PROFILE_OPS
-    tigris_exec_error_t err = tigris_run(plan, mem, dispatch, NULL, &stats);
+    tigris_exec_error_t err = tigris_run_with_workspace(
+        plan, mem, dispatch, NULL, &stats, &s_executor_workspace);
 #else
     (void)dispatch;  /* generated core owns the normal dispatch call. */
-    tigris_exec_error_t err = tigris_codegen_run(plan, mem, &stats);
+    tigris_exec_error_t err = tigris_codegen_run(
+        plan, mem, &stats, &s_executor_workspace);
 #endif
     uint32_t c1 = platform_cycles();
 
@@ -268,7 +271,14 @@ int main(void)
     } else {
         base = TIGRIS_FAST_ARENA_BYTES;
     }
-    uint32_t fast_size = base + align_reserve + tigris_weight_decompression_overhead(&plan);
+    uint32_t fast_size = base + align_reserve
+        + tigris_weight_decompression_overhead(&plan);
+#if defined(BENCH_KERNEL_CMSIS_NN)
+    /* The plan budget covers activations and transient weights, not backend
+     * scratch. CMSIS-NN reserves its exact scratch requirement from the same
+     * physical backing store before inference. */
+    fast_size = tigris_cmsis_nn_fast_arena_required(&plan);
+#endif
 #ifdef TIGRIS_FAST_OVERRIDE
     /* Diagnostic: force a specific fast-arena size to probe the runtime minimum. */
     if (TIGRIS_FAST_OVERRIDE)
@@ -400,13 +410,16 @@ int main(void)
      *     framework needs in SRAM at runtime, not a compile-time estimate.
      *       act_peak  = fast + slow arena high-water (the live activation set)
      *       scratch   = CMSIS-NN scratch carved from the fast arena (0 for s8_ref)
-     *       meta      = the runtime tensor-pointer table (TiGrIS's RAM metadata;
-     *                   TFLM keeps its equivalent TfLiteEvalTensor table inside
-     *                   the arena, so arena_used already counts it - we add ours)
+     *       meta      = the runtime tensor-pointer table plus caller-owned
+     *                   executor workspace (TFLM keeps equivalent metadata
+     *                   inside its arena, so arena_used already counts it)
      *     plan.header->peak (the old reported value) is the compiler's compile-
      *     time activation estimate; kept as plan_act_peak_bytes for reference. */
     uint32_t scratch_bytes = fast_size - mem.fast_size;     /* prepare() carve; 0 if none */
-    uint32_t meta_bytes    = (uint32_t)plan.header->num_tensors * (uint32_t)sizeof(void *);
+    uint32_t tensor_table_bytes =
+        (uint32_t)plan.header->num_tensors * (uint32_t)sizeof(void *);
+    uint32_t executor_workspace_bytes = (uint32_t)sizeof(s_executor_workspace);
+    uint32_t meta_bytes = tensor_table_bytes + executor_workspace_bytes;
     uint32_t fast_peak     = mem.fast_peak;
     uint32_t slow_peak     = last_stats.slow_peak;
     uint32_t act_peak      = fast_peak + slow_peak;
@@ -439,6 +452,7 @@ int main(void)
            "sram_slow_peak_bytes=%lu,"
            "sram_scratch_bytes=%lu,"
            "sram_meta_bytes=%lu,"
+           "sram_executor_workspace_bytes=%lu,"
            "plan_act_peak_bytes=%lu,"
            "sram_budget_kb=%lu,"
            "sram_provisioned_kb=%lu,"
@@ -467,6 +481,7 @@ int main(void)
            (unsigned long)slow_peak,
            (unsigned long)scratch_bytes,
            (unsigned long)meta_bytes,
+           (unsigned long)executor_workspace_bytes,
            (unsigned long)plan.header->peak,
            (unsigned long)(plan.header->budget / 1024),
            (unsigned long)(fast_size / 1024),

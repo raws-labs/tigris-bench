@@ -13,6 +13,8 @@ set(TIGRIS_FAST_ARENA_BYTES "131072" CACHE STRING "fast arena size (bytes)")
 set(TIGRIS_SLOW_ARENA_BYTES "262144" CACHE STRING "slow arena size (bytes)")
 set(TIGRIS_CODEGEN "${CMAKE_CURRENT_SOURCE_DIR}/../../tigris/.venv/bin/tigris"
     CACHE FILEPATH "TiGrIS codegen executable")
+set(TIGRIS_RUNTIME_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../../tigris-runtime"
+    CACHE PATH "pinned TiGrIS runtime checkout")
 # Optimization level for ALL benchmark code (TiGrIS runtime, CMSIS-NN, harness, TFLM
 # glue). MUST be consistent across boards and frameworks for a fair comparison: TFLM's
 # own kernels build at -O2, and without this the clean-CMake path defaults to -O0 (no
@@ -50,7 +52,7 @@ if(BENCH_FRAMEWORK STREQUAL "tigris")
     add_subdirectory(third_party)                          # cmsis-nn static lib
 
     set(TIGRIS_HAS_CMSIS_NN ON CACHE BOOL "" FORCE)
-    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../tigris-runtime
+    add_subdirectory(${TIGRIS_RUNTIME_ROOT}
                      ${CMAKE_BINARY_DIR}/tigris_runtime)
 
     if(BENCH_KERNEL STREQUAL "cmsis_nn")

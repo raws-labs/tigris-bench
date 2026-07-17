@@ -39,7 +39,10 @@ BENCH_MODELS=ds_cnn BENCH_CONFIGS=cmsis_nn scripts/run_all.sh f446   # one cell
 This vendors CMSIS (first run), builds each (board, model, config), flashes +
 captures each on the SiliconRig remote lab until `BENCH_DONE`, writes
 `results/summary.json`, and runs the device-to-device parity gate. Raw serial logs
-land in `results/raw/` (gitignored; `summary.json` is the tracked artifact).
+land in `results/raw/` (gitignored; `summary.json` is the tracked artifact). Each
+raw capture also carries a machine-readable provenance record for the exact
+repositories, dependencies, tools, build invocation, model, firmware, and
+allocated board. Collection fails if that evidence is missing or incomplete.
 
 ## Manual steps
 
@@ -118,6 +121,7 @@ cat /dev/ttyACM0 > results/raw/pico_ts_cmsis.log   # stop at BENCH_DONE
 | `BENCH_OPT_LEVEL` | `-O2` | optimization for ALL benchmark code; consistent across boards + matches TFLM's `-O2` kernels (the clean-CMake default would otherwise be `-O0`) |
 | `TIGRIS_PLAN` | `ds_cnn_i8.tgrs` | the `.tgrs` plan embedded in flash (compile at a budget that fits the board) |
 | `TIGRIS_CODEGEN` | sibling TiGrIS venv CLI | `tigris` executable used to generate the backend deployment core during the build |
+| `TIGRIS_RUNTIME_ROOT` | sibling `tigris-runtime` | exact runtime checkout compiled into the firmware; `run_all.sh` binds this to the checkout it validates and records |
 | `TIGRIS_FAST_ARENA_BYTES` | `131072` | static fast arena backing store; the harness provisions only a tight slice of it (`peak + align`) so the compactor engages and the measured RAM is the true minimum |
 | `TIGRIS_SLOW_ARENA_BYTES` | `262144` | slow arena backing store; use `8192` on the F446 |
 | `TFLM_MODEL` | `ds_cnn` | TFLM model: `<name>_tflite_i8.h` in `MODELS_DIR` |
@@ -135,14 +139,15 @@ cat /dev/ttyACM0 > results/raw/pico_ts_cmsis.log   # stop at BENCH_DONE
   as its DWT under-counts XIP-stall cycles.)
 - **RAM metric:** `sram_peak_bytes` is the MEASURED runtime working set, directly
   comparable to TFLM's `arena_used_bytes`. For TiGrIS it is the fast + slow arena
-  high-water + CMSIS-NN scratch + the runtime tensor table; the harness provisions
-  a tight arena (`peak + alignment`) so the executor's reactive compactor engages
-  and the figure is the true minimum, not a lazy bump high-water. (Provision a
-  generous arena and the same model reports far more RAM - that is a measurement
-  artifact, not a real cost.)
-- **Vendor pins** (`fetch.sh`): CMSIS-NN `6d9d61d8` (full SHA, asserted after
-  checkout; matches TFLM's bundled pin), cmsis-device-h7 `master`, cmsis-device-f4
-  `3c77349`. Override via `DEV_*_REF`.
+  high-water + CMSIS-NN scratch + the runtime tensor table + the caller-owned
+  executor workspace; the harness provisions a tight arena (`peak + alignment`)
+  so the executor's reactive compactor engages and the figure is the true
+  minimum, not a lazy bump high-water. (Provision a generous arena and the same
+  model reports far more RAM - that is a measurement artifact, not a real cost.)
+- **Vendor pins** (`fetch.sh`): CMSIS-NN `6d9d61d8` (matches TFLM's bundled
+  pin), CMSIS-Core `45dab712`, cmsis-device-h7 `de8243d2`,
+  cmsis-device-f4 `3c77349`, and TFLM `074b75f8`. Every checkout is asserted
+  against its full commit. RP2350 runs likewise assert pico-sdk `a1438dff`.
 - **Parity** is checked device-to-device by `scripts/validate_accuracy.py` (reads
   `results/summary.json` by default, which carries each cell's `OUTPUT_I8`; pass a
   `results/raw/` dir to read logs instead). It groups by (board, model) and compares
