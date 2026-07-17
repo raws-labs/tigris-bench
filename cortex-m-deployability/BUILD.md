@@ -139,11 +139,11 @@ cat /dev/ttyACM0 > results/raw/pico_ts_cmsis.log   # stop at BENCH_DONE
   as its DWT under-counts XIP-stall cycles.)
 - **RAM metric:** `sram_peak_bytes` is the MEASURED runtime working set, directly
   comparable to TFLM's `arena_used_bytes`. For TiGrIS it is the fast + slow arena
-  high-water + CMSIS-NN scratch + the runtime tensor table; the harness provisions
-  a tight arena (`peak + alignment`) so the executor's reactive compactor engages
-  and the figure is the true minimum, not a lazy bump high-water. (Provision a
-  generous arena and the same model reports far more RAM - that is a measurement
-  artifact, not a real cost.)
+  high-water + CMSIS-NN scratch + the runtime tensor table + the caller-owned
+  executor workspace; the harness provisions a tight arena (`peak + alignment`)
+  so the executor's reactive compactor engages and the figure is the true
+  minimum, not a lazy bump high-water. (Provision a generous arena and the same
+  model reports far more RAM - that is a measurement artifact, not a real cost.)
 - **Vendor pins** (`fetch.sh`): CMSIS-NN `6d9d61d8` (matches TFLM's bundled
   pin), CMSIS-Core `45dab712`, cmsis-device-h7 `de8243d2`,
   cmsis-device-f4 `3c77349`, and TFLM `074b75f8`. Every checkout is asserted

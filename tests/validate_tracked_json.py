@@ -164,6 +164,7 @@ def validate_cortex_summary(document: object) -> list[str]:
         return ["top level must be an object"]
 
     configs = document.get("configs")
+    has_embedded_provenance = isinstance(document.get("provenance"), dict)
     if not isinstance(configs, list):
         return ["configs must be a list"]
     if document.get("count") != len(configs):
@@ -230,6 +231,12 @@ def validate_cortex_summary(document: object) -> list[str]:
             if (not isinstance(value, (int, float)) or isinstance(value, bool)
                     or value <= 0):
                 errors.append(f"{tag} {field} must be a positive number")
+        if (has_embedded_provenance
+                and config["framework"] == "tigris"):
+            workspace = config.get("sram_executor_workspace_bytes")
+            if not isinstance(workspace, int) or workspace <= 0:
+                errors.append(
+                    f"{tag} must count a positive executor workspace")
 
         output = (config.get("output_values") or {}).get("i8")
         if not isinstance(output, list) or not output:
