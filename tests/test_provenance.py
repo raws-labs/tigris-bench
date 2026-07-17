@@ -4,7 +4,9 @@
 from __future__ import annotations
 
 import copy
+import importlib.util
 import json
+import tempfile
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -18,6 +20,12 @@ from provenance_validation import (
 
 ROOT = Path(__file__).resolve().parents[1]
 PROVENANCE_PATH = ROOT / "cortex-m-deployability/results/provenance.json"
+RESULTS_PATH = ROOT / "cortex-m-deployability/scripts/results.py"
+RESULTS_SPEC = importlib.util.spec_from_file_location(
+    "cortex_results", RESULTS_PATH)
+assert RESULTS_SPEC and RESULTS_SPEC.loader
+cortex_results = importlib.util.module_from_spec(RESULTS_SPEC)
+RESULTS_SPEC.loader.exec_module(cortex_results)
 
 
 class ProvenanceContractTest(unittest.TestCase):
@@ -96,6 +104,109 @@ class ProvenanceContractTest(unittest.TestCase):
             mutated,
             "revision SHA-256 mismatch for "
             "cortex-m-deployability/results/summary.json",
+        )
+
+
+def valid_capture_provenance() -> dict:
+    revision = "1" * 40
+    digest = "2" * 64
+    return {
+        "captured_at_utc": "2026-07-17T12:00:00Z",
+        "repositories": {
+            name: {"revision": revision, "dirty": False}
+            for name in (
+                "benchmark", "tigris_compiler", "tigris_runtime",
+                "tflite_micro",
+            )
+        },
+        "dependencies": {
+            name: revision
+            for name in (
+                "CMSIS-NN", "CMSIS-Core", "cmsis-device-f4",
+                "cmsis-device-h7",
+            )
+        },
+        "tools": {
+            "arm_none_eabi_gcc": "arm-none-eabi-gcc 13.2.1",
+            "cmake": "cmake version 3.28.3",
+            "pico_sdk_revision": None,
+        },
+        "host_model_environment": {
+            "requirements_sha256": digest,
+            "packages": {"numpy": "2.3.5"},
+        },
+        "siliconrig_sdk_version": "0.2.1",
+        "build": {"configure_command": "cmake -S . -B build/test -O2"},
+        "artifacts": {
+            kind: {"name": f"{kind}.bin", "sha256": digest, "size_bytes": 42}
+            for kind in ("model", "firmware")
+        },
+        "board": {
+            "siliconrig_board_id": "board_test",
+            "board_type": "stm32-h753",
+            "specs": {"mcu": "STM32H753ZI"},
+        },
+    }
+
+
+def write_capture(path: Path, provenance: object | None) -> None:
+    lines = [
+        "BENCH_RESULT:framework=tigris,kernel=cmsis_nn,dtype=int8,"
+        "model=ds_cnn_matched,board=nucleo_h753zi,cpu_mhz=480,status=ok,"
+        "latency_median_ms=1.0,latency_median_cycles=480000,"
+        "sram_peak_bytes=1024,runs=30",
+    ]
+    if provenance is not None:
+        lines.append(
+            "BENCH_PROVENANCE:"
+            + json.dumps(provenance, sort_keys=True, separators=(",", ":")))
+    path.write_text("\n".join(lines) + "\n")
+
+
+class CaptureProvenanceTest(unittest.TestCase):
+    def test_complete_capture_is_collected_and_deduplicated(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "h753_ds_cnn_cmsis_nn.log"
+            write_capture(path, valid_capture_provenance())
+            configs = cortex_results.collect(path, require_provenance=True)
+            summary_provenance = cortex_results.extract_summary_provenance(
+                configs, required=True)
+
+        self.assertNotIn("_capture_provenance", configs[0])
+        self.assertEqual(
+            summary_provenance["source"], "BENCH_PROVENANCE")
+        self.assertIn(path.name, summary_provenance["cells"])
+        self.assertIn("repositories", summary_provenance["common"])
+
+    def test_missing_capture_provenance_is_rejected_when_required(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "legacy.log"
+            write_capture(path, None)
+            with self.assertRaisesRegex(ValueError, "missing BENCH_PROVENANCE"):
+                cortex_results.collect(path, require_provenance=True)
+
+    def test_dirty_repository_is_rejected(self) -> None:
+        provenance = valid_capture_provenance()
+        provenance["repositories"]["tigris_runtime"]["dirty"] = True
+        errors = cortex_results.validate_capture_provenance(
+            provenance, "nucleo_h753zi")
+        self.assertIn(
+            "repositories.tigris_runtime.dirty must be false", errors)
+
+    def test_missing_artifact_hash_is_rejected(self) -> None:
+        provenance = valid_capture_provenance()
+        del provenance["artifacts"]["firmware"]["sha256"]
+        errors = cortex_results.validate_capture_provenance(
+            provenance, "nucleo_h753zi")
+        self.assertIn("artifacts.firmware.sha256 must be a SHA-256", errors)
+
+    def test_rp2350_requires_pico_sdk_revision(self) -> None:
+        provenance = valid_capture_provenance()
+        errors = cortex_results.validate_capture_provenance(
+            provenance, "pico2_rp2350")
+        self.assertIn(
+            "tools.pico_sdk_revision must be a full Git SHA for RP2350",
+            errors,
         )
 
 

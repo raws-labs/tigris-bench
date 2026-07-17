@@ -39,7 +39,10 @@ BENCH_MODELS=ds_cnn BENCH_CONFIGS=cmsis_nn scripts/run_all.sh f446   # one cell
 This vendors CMSIS (first run), builds each (board, model, config), flashes +
 captures each on the SiliconRig remote lab until `BENCH_DONE`, writes
 `results/summary.json`, and runs the device-to-device parity gate. Raw serial logs
-land in `results/raw/` (gitignored; `summary.json` is the tracked artifact).
+land in `results/raw/` (gitignored; `summary.json` is the tracked artifact). Each
+raw capture also carries a machine-readable provenance record for the exact
+repositories, dependencies, tools, build invocation, model, firmware, and
+allocated board. Collection fails if that evidence is missing or incomplete.
 
 ## Manual steps
 
@@ -140,9 +143,10 @@ cat /dev/ttyACM0 > results/raw/pico_ts_cmsis.log   # stop at BENCH_DONE
   and the figure is the true minimum, not a lazy bump high-water. (Provision a
   generous arena and the same model reports far more RAM - that is a measurement
   artifact, not a real cost.)
-- **Vendor pins** (`fetch.sh`): CMSIS-NN `6d9d61d8` (full SHA, asserted after
-  checkout; matches TFLM's bundled pin), cmsis-device-h7 `master`, cmsis-device-f4
-  `3c77349`. Override via `DEV_*_REF`.
+- **Vendor pins** (`fetch.sh`): CMSIS-NN `6d9d61d8` (matches TFLM's bundled
+  pin), CMSIS-Core `45dab712`, cmsis-device-h7 `de8243d2`,
+  cmsis-device-f4 `3c77349`, and TFLM `074b75f8`. Every checkout is asserted
+  against its full commit. RP2350 runs likewise assert pico-sdk `a1438dff`.
 - **Parity** is checked device-to-device by `scripts/validate_accuracy.py` (reads
   `results/summary.json` by default, which carries each cell's `OUTPUT_I8`; pass a
   `results/raw/` dir to read logs instead). It groups by (board, model) and compares

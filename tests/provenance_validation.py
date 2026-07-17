@@ -279,7 +279,10 @@ def validate_repository_revision(
     return errors
 
 
-def validate_execution_provenance(value: object) -> list[str]:
+def validate_execution_provenance(
+        value: object,
+        embedded_in_result: bool,
+) -> list[str]:
     if not isinstance(value, dict):
         return ["execution_provenance must be an object"]
     expected_fields = UNKNOWN_EXECUTION_FIELDS | {"clock_state"}
@@ -288,11 +291,12 @@ def validate_execution_provenance(value: object) -> list[str]:
         errors.append(
             "execution_provenance fields="
             f"{sorted(value)}, expected {sorted(expected_fields)}")
+    expected_value = (
+        "recorded_in_result_artifact" if embedded_in_result else "unknown")
     for field in sorted(UNKNOWN_EXECUTION_FIELDS):
-        if value.get(field) != "unknown":
+        if value.get(field) != expected_value:
             errors.append(
-                f"execution_provenance.{field} must remain explicit 'unknown' "
-                "until evidence is recorded")
+                f"execution_provenance.{field} must be {expected_value!r}")
     if value.get("clock_state") != "recorded_per_cell":
         errors.append(
             "execution_provenance.clock_state must be 'recorded_per_cell'")
@@ -388,6 +392,7 @@ def validate_provenance(
     artifacts = document.get("result_artifacts")
     listed_artifacts: set[Path] = set()
     revision_records: dict[Path, str] = {}
+    embedded_execution_provenance = False
     artifact_fields = {
         "path",
         "kind",
@@ -433,6 +438,13 @@ def validate_provenance(
                         f"{label} SHA-256 mismatch for {relative}: "
                         f"manifest={artifact['sha256']}, actual={actual}")
                 revision_records[relative] = artifact["sha256"]
+                try:
+                    result_document = json.loads(artifact_path.read_text())
+                except (OSError, UnicodeError, ValueError):
+                    result_document = None
+                if (isinstance(result_document, dict)
+                        and isinstance(result_document.get("provenance"), dict)):
+                    embedded_execution_provenance = True
 
             collector_path, collector_errors = validate_hashed_path(
                 artifact.get("collector"), f"{label}.collector", root)
@@ -472,7 +484,8 @@ def validate_provenance(
                 root, revision, revision_records))
 
     errors.extend(validate_execution_provenance(
-        document.get("execution_provenance")))
+        document.get("execution_provenance"),
+        embedded_execution_provenance))
     errors.extend(validate_dependencies(
         document.get("declared_dependencies"), root))
     return errors

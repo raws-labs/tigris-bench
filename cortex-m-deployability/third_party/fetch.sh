@@ -6,23 +6,37 @@
 #   - ARM-software/CMSIS_6   v6.3.0  : CMSIS-Core (core_cm7.h) for the BSP
 #   - STMicroelectronics/cmsis-device-h7 : stm32h753xx.h, system file, startup
 #   - STMicroelectronics/cmsis-device-f4 : stm32f446xx.h, system file, startup
+#   - tensorflow/tflite-micro: the TFLM comparison baseline
 #
 # Run once before configuring CMake. Clones are git-ignored.
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 
-# cmsis-device-h7 publishes no release tags; pin a commit for reproducibility.
-# Override with DEV_H7_REF=<sha> to bump it.
-DEV_H7_REF="${DEV_H7_REF:-master}"
+# cmsis-device-h7 publishes no release tags, so use an immutable full commit.
+# Override with DEV_H7_REF=<full-sha> only while deliberately testing an update.
+DEV_H7_REF="${DEV_H7_REF:-de8243d2c15f87936f28a49fcd9e6f5ba10fc233}"
 
-clone_tag() {  # url tag dir
+clone_commit() {  # url commit dir
     local url="$1" ref="$2" dir="$3"
     if [ -d "$HERE/$dir/.git" ]; then
-        echo "[skip] $dir already present"
+        assert_revision "$dir" "$ref"
+        echo "[skip] $dir already present ($(git -C "$HERE/$dir" rev-parse --short HEAD))"
         return
     fi
     echo "[fetch] $dir @ $ref"
-    git clone --depth 1 --branch "$ref" "$url" "$HERE/$dir"
+    git clone "$url" "$HERE/$dir"
+    git -C "$HERE/$dir" checkout "$ref"
+    assert_revision "$dir" "$ref"
+}
+
+assert_revision() {  # dir expected
+    local dir="$1" expected="$2" got
+    got="$(git -C "$HERE/$dir" rev-parse HEAD)"
+    if [ "$got" != "$expected" ]; then
+        echo "[error] $dir HEAD $got != pinned $expected" >&2
+        echo "        remove $HERE/$dir and re-run, or explicitly update its pin" >&2
+        exit 1
+    fi
 }
 
 # CMSIS-NN is pinned to the EXACT commit TFLite Micro bundles
@@ -44,19 +58,21 @@ if [ ! -d "$HERE/CMSIS-NN/.git" ]; then
     fi
     echo "[pin] CMSIS-NN at $(git -C "$HERE/CMSIS-NN" rev-parse --short HEAD)"
 else
+    assert_revision CMSIS-NN "$CMSIS_NN_COMMIT"
     echo "[skip] CMSIS-NN already present ($(git -C "$HERE/CMSIS-NN" rev-parse --short HEAD))"
 fi
-clone_tag https://github.com/ARM-software/CMSIS_6.git   v6.3.0 CMSIS_6
+CMSIS_CORE_COMMIT="45dab712ad84f8cbbf2b7bfc089c19088507df6f"
+clone_commit https://github.com/ARM-software/CMSIS_6.git \
+    "$CMSIS_CORE_COMMIT" CMSIS_6
 
 if [ ! -d "$HERE/cmsis-device-h7/.git" ]; then
     echo "[fetch] cmsis-device-h7 @ ${DEV_H7_REF}"
     git clone https://github.com/STMicroelectronics/cmsis-device-h7.git "$HERE/cmsis-device-h7"
-    if [ "$DEV_H7_REF" != "master" ]; then
-        git -C "$HERE/cmsis-device-h7" checkout "$DEV_H7_REF"
-    fi
+    git -C "$HERE/cmsis-device-h7" checkout "$DEV_H7_REF"
     echo "[pin] cmsis-device-h7 at $(git -C "$HERE/cmsis-device-h7" rev-parse --short HEAD)"
 else
-    echo "[skip] cmsis-device-h7 already present"
+    assert_revision cmsis-device-h7 "$DEV_H7_REF"
+    echo "[skip] cmsis-device-h7 already present ($(git -C "$HERE/cmsis-device-h7" rev-parse --short HEAD))"
 fi
 
 # cmsis-device-f4 (NUCLEO-F446RE). Pin a commit for reproducibility.
@@ -67,7 +83,12 @@ if [ ! -d "$HERE/cmsis-device-f4/.git" ]; then
     git -C "$HERE/cmsis-device-f4" checkout "$DEV_F4_REF"
     echo "[pin] cmsis-device-f4 at $(git -C "$HERE/cmsis-device-f4" rev-parse --short HEAD)"
 else
-    echo "[skip] cmsis-device-f4 already present"
+    assert_revision cmsis-device-f4 "$DEV_F4_REF"
+    echo "[skip] cmsis-device-f4 already present ($(git -C "$HERE/cmsis-device-f4" rev-parse --short HEAD))"
 fi
+
+TFLM_COMMIT="074b75f8ec873cd6a8ebbd2d971b277e135e059e"
+clone_commit https://github.com/tensorflow/tflite-micro.git \
+    "$TFLM_COMMIT" tflite-micro
 
 echo "Done. Vendored under $HERE/"
