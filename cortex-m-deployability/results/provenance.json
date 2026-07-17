@@ -8,7 +8,7 @@
       "sha256": "40109f40b8b6ad7b1660204806532c8f1b901633ae136eb4e942e68deb931093",
       "collector": {
         "path": "cortex-m-deployability/scripts/results.py",
-        "sha256": "4b9c822dd9e8f0c7c62b0e6eab36403af31910f717042f8e56aeef09f2f90078"
+        "sha256": "dc520330f7f085343e81feabd172a71d8e3cca78baad96f12011fba0787dda02"
       },
       "validator": {
         "path": "cortex-m-deployability/scripts/validate_accuracy.py",
@@ -20,67 +20,67 @@
       "source_captures": [
         {
           "path": "cortex-m-deployability/results/raw/f446_ad_cmsis_nn.log",
-          "sha256": "0d47f5316891ae92e24f480de72a5c8aecc2b45509286e66ab591a86461d0f2a"
+          "sha256": "75e1bad11b5223c31598521472e3358e7d8a00bf76014bd2db754f673a00f09b"
         },
         {
           "path": "cortex-m-deployability/results/raw/f446_ad_s8_ref.log",
-          "sha256": "4d38e00c969107c424612bee817bc442400bfb8098bc7fa4976e399a95d7c2a8"
+          "sha256": "990aa189460275773b01c9faad7e576299f27f4f224d62806544a333c5756f9b"
         },
         {
           "path": "cortex-m-deployability/results/raw/f446_ad_tflm.log",
-          "sha256": "5b589216bf437ac0fc766e06ef1b04b5890563b0bdb068ee031d792b208802aa"
+          "sha256": "fc29983b0ff6dea012abb5d5dd80f37699ba201338763b6ffc313d36ffedab47"
         },
         {
           "path": "cortex-m-deployability/results/raw/f446_ds_cnn_cmsis_nn.log",
-          "sha256": "a1ff06624e8eda14c06c9039fa44e1fc967f03cb797d65eab3a3d9f3aa7559e3"
+          "sha256": "dfe07f86d7b354f87e7d7b49d3bdaad87c5129d92356f7c6535e66a0e95920d4"
         },
         {
           "path": "cortex-m-deployability/results/raw/f446_ds_cnn_s8_ref.log",
-          "sha256": "92a0eeb313b1b86fbf5e42695a9a1599030e34e8394fcf16a84600d04a068414"
+          "sha256": "df89161c7efc426ece800eef3271a117b3db0db49cd583bd9e7dd0817c5656b9"
         },
         {
           "path": "cortex-m-deployability/results/raw/f446_ds_cnn_tflm.log",
-          "sha256": "9321ab8bd2403c937c087dd29f30b84a2d5c0231be395a4a0a09f19569cc08f5"
+          "sha256": "377b1d4ec601db295e5507ac87ca40fed8048bc2efecc3fc915c426239a71f50"
         },
         {
           "path": "cortex-m-deployability/results/raw/f446_ts_cmsis_nn.log",
-          "sha256": "5a7482c7f5663907196ada0bb02f84bb9d23759847fd2e1826ee5d0f00f22eed"
+          "sha256": "e4876f5c87424aa0b72425238232956ec2ba3e5db39ee25336c39053a5a071db"
         },
         {
           "path": "cortex-m-deployability/results/raw/f446_ts_s8_ref.log",
-          "sha256": "bd6eb98a5e6484ff41e78659b352759917aa6d883fc44fedcdbecabc47148138"
+          "sha256": "088490a552dae8594c7054a612160da996b756efb9f21643f802abceb359eb26"
         },
         {
           "path": "cortex-m-deployability/results/raw/f446_ts_tflm.log",
-          "sha256": "0f0d734f9eb7e9bf6ad42f3ae083b80caf3c0997661edac0a1b03ffa4faa948e"
+          "sha256": "092d12989c18723547166e99f01cd27ce5fa80f3daa3d93d98ef774dbc61e03c"
         },
         {
           "path": "cortex-m-deployability/results/raw/h753_ad_cmsis_nn.log",
-          "sha256": "4010dea75ab84cf4490525112179b8c9535ab4bd9cf13a57ed3f2adb3758192e"
+          "sha256": "e27a260f0c431f5dd96486eb5970212c68e1026e2cd860930a72439bdf127e10"
         },
         {
           "path": "cortex-m-deployability/results/raw/h753_ad_s8_ref.log",
-          "sha256": "ec3dc713d42f3abc8e1bd722a913a5e3d8e019f85f05d2599fb585c78a27d4cd"
+          "sha256": "40057bb7d26672852e8e1d919e5b93a12afd9949b0296b79922f933b7339ae18"
         },
         {
           "path": "cortex-m-deployability/results/raw/h753_ad_tflm.log",
-          "sha256": "e72838bb3104461659a8d05445e9fff51f13da870344df91bd29e7cb524ca161"
+          "sha256": "4fdca5b50b7c33dfbc733326bdc5cfcfd635dc8fb311034fda1d9c316f6ee58e"
         },
         {
           "path": "cortex-m-deployability/results/raw/h753_ds_cnn_cmsis_nn.log",
-          "sha256": "2a73bb1d99f340753b698110791d5d9279b60c29d6049ddc565caec7071dd474"
+          "sha256": "3c5badd9ca99093e68b239dcb73ee36b827643e290d472261211cabcf9035831"
         },
         {
           "path": "cortex-m-deployability/results/raw/h753_ds_cnn_s8_ref.log",
-          "sha256": "639ba2e3860a69e7b7c407d448e29cae1f4df73e6bbb1380e5ceaa374d683d5d"
+          "sha256": "439ae6b2fced139e306989711fb8f544b43643fbed28ed8bb2f87c815c6362d5"
         },
         {
           "path": "cortex-m-deployability/results/raw/h753_ds_cnn_tflm.log",
-          "sha256": "2f5971c06f744878c381de07016a4345f3501f22b9ed665dc8e71a851bbdd9e8"
+          "sha256": "46c67c474f63100b30ead486966f6dfa04d4d7851a135de886cd4b4df517ad2d"
         },
         {
           "path": "cortex-m-deployability/results/raw/h753_mbv2_cmsis_nn.log",
-          "sha256": "4af089fd87a25fe9cff1546741161f380c995e69e5a2a9e72d918cfb503361a7"
+          "sha256": "afbd4760bcf84b522ee6613192e420f95d084c310710c21e3ade330155aeafc4"
         },
         {
           "path": "cortex-m-deployability/results/raw/h753_mbv2_tflm.log",
@@ -88,49 +88,49 @@
         },
         {
           "path": "cortex-m-deployability/results/raw/h753_ts_cmsis_nn.log",
-          "sha256": "93283f9771fcfa1be8c4b1c830f06b39c6796c625684c383c5e236e7ad5b9439"
+          "sha256": "1fb1322c5ab1a5eb4b6e71ac4658b4eb375eb9001692fc2969634c32cf5c5bb8"
         },
         {
           "path": "cortex-m-deployability/results/raw/h753_ts_s8_ref.log",
-          "sha256": "4a35de60db91a088f1df6c50fbdbe00a2eba06e5b5fea0b61c7461b7bf07ca36"
+          "sha256": "fb447fd614667703814866bbe7a51fdfa7765461b5c4fbd1189adc3d0fee17e0"
         },
         {
           "path": "cortex-m-deployability/results/raw/h753_ts_tflm.log",
-          "sha256": "22b64cdf9a207dfc141b62a5150708b66cd47c4891e2a9e00abd949f8465767a"
+          "sha256": "83d310d9fb409c89dd75ce05abf0375b10a573be5981beebc2280240263fe545"
         },
         {
           "path": "cortex-m-deployability/results/raw/rp2350_ad_cmsis_nn.log",
-          "sha256": "41340d881b6b7054e978e4d263008f75395f055c8faa5f47d8f7719483ba9708"
+          "sha256": "63352ff9f4f8251ac98946e2d4080dd0b75109bc632a32099944de6a62db89ec"
         },
         {
           "path": "cortex-m-deployability/results/raw/rp2350_ad_s8_ref.log",
-          "sha256": "f79a99a9e1d9c5eca753cafbd4a0a2fa940e97ba600ddcf9af72bbe997aaf24c"
+          "sha256": "71dd09a24303322714fe7fba7c89e9e91861644e67f5c9e392beea52ab11fc96"
         },
         {
           "path": "cortex-m-deployability/results/raw/rp2350_ds_cnn_cmsis_nn.log",
-          "sha256": "cb80b5c5bafdaa575ec7e45c90c85def2065feb63f3f827ff1035bcb86299bb0"
+          "sha256": "3f2df0198cb6f5a14aea3875ea764cb19f49a18fd461d448e48884e8b62a4407"
         },
         {
           "path": "cortex-m-deployability/results/raw/rp2350_ds_cnn_s8_ref.log",
-          "sha256": "59be77a66b8ff88a4bca5ce296d575d43614d947e07c7532ca329d2810102fa9"
+          "sha256": "e22df0bfd2f4695bb34922176a6a40006544cd3e4de57d787cfcbfbcbfa86c5d"
         },
         {
           "path": "cortex-m-deployability/results/raw/rp2350_mbv2_cmsis_nn.log",
-          "sha256": "b8cecd802b5893a42db863e844e0ba69182fa0fe681b6341eace94ba2c21c8e0"
+          "sha256": "251837fcb2e5efd538d8570e1ed6595bb54d7f1343c92d1a461971ac12568829"
         },
         {
           "path": "cortex-m-deployability/results/raw/rp2350_ts_cmsis_nn.log",
-          "sha256": "52bc1e2908c27b46b7dd3c32f974aea442df667ddbbc7a98568f39210a2d9087"
+          "sha256": "231a8d409d83163682b3418c9530f9fbb3239aa86337a4031294e7b4992bd8c9"
         },
         {
           "path": "cortex-m-deployability/results/raw/rp2350_ts_s8_ref.log",
-          "sha256": "a6fa44cd167c135c8adab440484812a63e4db5f774ea57325ab30f6f99203e65"
+          "sha256": "3642f1b5667d902cca7ad7964f9fcefafddfeb3c47069588b4121a2ee069ff13"
         }
       ]
     }
   ],
   "artifact_repository": {
-    "revision": "dadc06538ad4ad4a482dc5aee0aa8dffc778d5f3",
+    "revision": "e19455c872707e3d6728929aa34316cb74488335",
     "basis": "commit_containing_byte_identical_artifact_and_tools"
   },
   "execution_provenance": {
@@ -154,28 +154,35 @@
       "revision": "6d9d61d8a586c39160d0c1ba58f6948e4cf61ad0",
       "basis": "declared_pin",
       "evidence_path": "cortex-m-deployability/third_party/fetch.sh",
-      "evidence_sha256": "6f2da087c11be583757ab535281ac8822732c6cb0551dddd86e7a752f122bc87"
+      "evidence_sha256": "05d5cf94ea5ed9484ef01bd22eb7a1ac3c3914ea46499fe95332dfd5b6f67f4b"
     },
     {
       "name": "CMSIS-Core",
-      "revision": "v6.3.0",
+      "revision": "45dab712ad84f8cbbf2b7bfc089c19088507df6f",
       "basis": "declared_pin",
       "evidence_path": "cortex-m-deployability/third_party/fetch.sh",
-      "evidence_sha256": "6f2da087c11be583757ab535281ac8822732c6cb0551dddd86e7a752f122bc87"
+      "evidence_sha256": "05d5cf94ea5ed9484ef01bd22eb7a1ac3c3914ea46499fe95332dfd5b6f67f4b"
     },
     {
       "name": "cmsis-device-f4",
       "revision": "3c77349ce04c8af401454cc51f85ea9a50e34fc1",
       "basis": "declared_pin",
       "evidence_path": "cortex-m-deployability/third_party/fetch.sh",
-      "evidence_sha256": "6f2da087c11be583757ab535281ac8822732c6cb0551dddd86e7a752f122bc87"
+      "evidence_sha256": "05d5cf94ea5ed9484ef01bd22eb7a1ac3c3914ea46499fe95332dfd5b6f67f4b"
     },
     {
       "name": "cmsis-device-h7",
-      "revision": "unknown",
-      "basis": "unknown_mutable_default",
+      "revision": "de8243d2c15f87936f28a49fcd9e6f5ba10fc233",
+      "basis": "declared_pin",
       "evidence_path": "cortex-m-deployability/third_party/fetch.sh",
-      "evidence_sha256": "6f2da087c11be583757ab535281ac8822732c6cb0551dddd86e7a752f122bc87"
+      "evidence_sha256": "05d5cf94ea5ed9484ef01bd22eb7a1ac3c3914ea46499fe95332dfd5b6f67f4b"
+    },
+    {
+      "name": "tflite-micro",
+      "revision": "074b75f8ec873cd6a8ebbd2d971b277e135e059e",
+      "basis": "declared_pin",
+      "evidence_path": "cortex-m-deployability/third_party/fetch.sh",
+      "evidence_sha256": "05d5cf94ea5ed9484ef01bd22eb7a1ac3c3914ea46499fe95332dfd5b6f67f4b"
     }
   ]
 }

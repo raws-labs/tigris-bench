@@ -33,6 +33,7 @@ EXPECTED_DEPENDENCIES = {
     "CMSIS-Core",
     "cmsis-device-f4",
     "cmsis-device-h7",
+    "tflite-micro",
 }
 
 
