@@ -177,6 +177,17 @@ class CaptureProvenanceTest(unittest.TestCase):
         self.assertIn("add_subdirectory(${TIGRIS_RUNTIME_ROOT}", stm32_cmake)
         self.assertIn("set(RT_DIR     ${TIGRIS_RUNTIME_ROOT})", pico_cmake)
 
+    def test_cmsis_scratch_is_provisioned_outside_plan_budget(self) -> None:
+        harness = (
+            ROOT / "cortex-m-deployability/harness/main.c").read_text()
+        run_all = (
+            ROOT / "cortex-m-deployability/scripts/run_all.sh").read_text()
+        self.assertIn(
+            "fast_size = tigris_cmsis_nn_fast_arena_required(&plan);",
+            harness,
+        )
+        self.assertIn("local plan fast=65536 slow=8192", run_all)
+
     def test_complete_capture_is_collected_and_deduplicated(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "h753_ds_cnn_cmsis_nn.log"

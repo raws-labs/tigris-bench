@@ -79,7 +79,10 @@ build_cell() {   # board model config
 
     local bd="$HERE/build/${board}_${model}_${cfg}"
     local to=180; [ "$cfg" = s8_ref ] && to=300; [ "$model" = mbv2 ] && to=600
-    local plan fast=32768 slow=8192
+    # The 32 KiB plan budget excludes backend scratch. Keep enough physical
+    # backing for the budget plus the exact CMSIS-NN reservation computed by
+    # the runtime; reported RAM uses measured high-water, not this capacity.
+    local plan fast=65536 slow=8192
     if [ "$model" = mbv2 ]; then plan="$PLAN_DIR/mbv2_a35_128k.tgrs"; fast=163840; slow=327680
     else plan="$PLAN_DIR/${model}_matched_32k.tgrs"; fi
 

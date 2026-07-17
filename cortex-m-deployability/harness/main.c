@@ -271,7 +271,14 @@ int main(void)
     } else {
         base = TIGRIS_FAST_ARENA_BYTES;
     }
-    uint32_t fast_size = base + align_reserve + tigris_weight_decompression_overhead(&plan);
+    uint32_t fast_size = base + align_reserve
+        + tigris_weight_decompression_overhead(&plan);
+#if defined(BENCH_KERNEL_CMSIS_NN)
+    /* The plan budget covers activations and transient weights, not backend
+     * scratch. CMSIS-NN reserves its exact scratch requirement from the same
+     * physical backing store before inference. */
+    fast_size = tigris_cmsis_nn_fast_arena_required(&plan);
+#endif
 #ifdef TIGRIS_FAST_OVERRIDE
     /* Diagnostic: force a specific fast-arena size to probe the runtime minimum. */
     if (TIGRIS_FAST_OVERRIDE)
