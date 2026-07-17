@@ -23,9 +23,10 @@ ties differently from on-device CMSIS-NN, so it is not used as a baseline. All
 boards build at `-O2`; each runs at its rated clock, verified per run by a clock
 guard in `results.py`. Latency is the median of 30 runs (DWT cycle counter on
 M7/M4, hardware `time_us` on M33). RAM is the activation working set: TiGrIS
-`sram_peak` (fast-arena peak + slow-pool spill + scratch + tensor table) against
-TFLM `arena_used`; weights live in flash and are excluded, as is stack. Captured
-remotely on a SiliconRig hardware-in-the-loop lab via `scripts/run_all.sh`.
+`sram_peak` (fast-arena peak + slow-pool spill + scratch + tensor table +
+executor workspace) against TFLM `arena_used`; weights live in flash and are
+excluded, as is stack. Captured remotely on a SiliconRig hardware-in-the-loop
+lab via `scripts/run_all.sh`.
 
 For each TiGrIS cell, CMake runs `tigris codegen <plan> --backend
 {cmsis-nn|reference} --format core`. The generated, backend-specific deployment
@@ -46,44 +47,42 @@ int8 weights plus biases, measured from the committed plans.
 
 | Framework | Kernel | Latency | Cycles | RAM (work. set) | Flash (firmware) |
 |---|---|---|---|---|---|
-| TiGrIS | cmsis_nn | 11.21 ms | 5.38 M | 16.8 KB | 108 KB |
-| TFLM | cmsis_nn | 12.80 ms | 6.14 M | 22.2 KB | 166 KB |
-| TiGrIS | s8_ref | 63.12 ms | 30.30 M | 16.7 KB | 84 KB |
+| TiGrIS | cmsis_nn | 11.14 ms | 5.35 M | 25.5 KB | 118 KB |
+| TFLM | cmsis_nn | 12.80 ms | 6.14 M | 22.2 KB | 176 KB |
+| TiGrIS | s8_ref | 81.96 ms | 39.34 M | 25.3 KB | 93 KB |
 
 **Anomaly detection:**
 
 | Framework | Kernel | Latency | Cycles | RAM (work. set) | Flash (firmware) |
 |---|---|---|---|---|---|
-| TiGrIS | cmsis_nn | 1.19 ms | 569 K | 2.7 KB | 361 KB |
-| TFLM | cmsis_nn | 1.16 ms | 558 K | 15.5 KB | 408 KB |
-| TiGrIS | s8_ref | 3.02 ms | 1.45 M | 2.7 KB | 337 KB |
+| TiGrIS | cmsis_nn | 1.19 ms | 570 K | 11.6 KB | 370 KB |
+| TFLM | cmsis_nn | 1.16 ms | 558 K | 15.5 KB | 417 KB |
+| TiGrIS | s8_ref | 3.05 ms | 1.46 M | 11.4 KB | 346 KB |
 
 **Timeseries:**
 
 | Framework | Kernel | Latency | Cycles | RAM (work. set) | Flash (firmware) |
 |---|---|---|---|---|---|
-| TiGrIS | cmsis_nn | 0.306 ms | 147 K | 1.9 KB | 77 KB |
-| TFLM | cmsis_nn | 0.345 ms | 166 K | 2.9 KB | 135 KB |
-| TiGrIS | s8_ref | 1.13 ms | 544 K | 2.0 KB | 53 KB |
+| TiGrIS | cmsis_nn | 0.298 ms | 143 K | 11.4 KB | 87 KB |
+| TFLM | cmsis_nn | 0.345 ms | 166 K | 2.9 KB | 145 KB |
+| TiGrIS | s8_ref | 1.61 ms | 774 K | 10.7 KB | 62 KB |
 
 - Output is bit-exact device-to-device: every (model, framework, kernel) cell
   emits the identical INT8 vector (max abs diff 0), checked by
   `scripts/validate_accuracy.py`.
-- CMSIS-NN vs the portable reference kernels (same model, both `-O2`): 5.6x
-  (DS-CNN) / 2.5x (AD) / 3.7x (TS) on the M7.
+- CMSIS-NN vs the portable reference kernels (same model, both `-O2`): 7.4x
+  (DS-CNN) / 2.6x (AD) / 5.4x (TS) on the M7.
 - Cycles are clock-independent; ms is at 480 MHz.
-- Latency, cycles, and RAM come from the tracked `results/summary.json`. The
-  flash column is a build-time `arm-none-eabi-size` measurement that
-  `summary.json` does not carry, so it is not refreshed by a rerun; these values
-  are from the 2026-06-27 rig build and predate the codegen-core harness.
+- Latency, cycles, RAM, and firmware sizes come from the same tracked,
+  provenance-bearing run in `results/summary.json`.
 
 ## NUCLEO-F446RE (Cortex-M4F @ 180 MHz)
 
 | Model | TiGrIS cmsis | TFLM cmsis | TiGrIS s8 | RAM (TiGrIS / TFLM) |
 |---|---|---|---|---|
-| TS | 1.56 ms | 1.80 ms | 11.00 ms | 1.9 / 2.9 KB |
-| AD | 4.97 ms | 4.82 ms | 15.11 ms | 2.7 / 15.5 KB |
-| DS-CNN | 59.90 ms | 68.19 ms | 513.20 ms | 16.8 / 22.2 KB |
+| TS | 1.56 ms | 1.80 ms | 8.41 ms | 11.4 / 2.9 KB |
+| AD | 4.97 ms | 4.82 ms | 16.53 ms | 11.6 / 15.5 KB |
+| DS-CNN | 63.53 ms | 68.19 ms | 467.58 ms | 25.5 / 22.2 KB |
 
 Output is byte-identical to the H753 (same weights, two architectures). The
 128 KB SRAM holds every model.
@@ -96,11 +95,11 @@ byte-identical to the H753 and F446. Weights are read from QSPI flash via XIP.
 
 | Model | TiGrIS cmsis | TiGrIS s8 | RAM |
 |---|---|---|---|
-| TS | 2.73 ms | 9.02 ms | 1.9 KB |
-| AD | 35.08 ms | 44.52 ms | 2.7 KB |
-| DS-CNN | 62.94 ms | 412.77 ms | 16.8 KB |
+| TS | 2.68 ms | 8.37 ms | 11.4 KB |
+| AD | 35.01 ms | 44.56 ms | 11.6 KB |
+| DS-CNN | 67.83 ms | 412.06 ms | 25.5 KB |
 
-The FC-heavy AD is slower here (35.08 ms vs 4.97 ms on the F446): each of its
+The FC-heavy AD is slower here (35.01 ms vs 4.97 ms on the F446): each of its
 265 KB of weights is read once per inference from XIP flash with no reuse, so it
 is QSPI-bandwidth-bound. The conv models reuse weights across spatial positions
 and stay fast.
@@ -109,13 +108,14 @@ and stay fast.
 
 MobileNetV2 (alpha 0.35, 224x224, INT8, 591 KB weights, 52 convs with
 inverted-residual ADD skips) has a naive activation peak of 735 KB, larger than
-any of these boards' SRAM. TiGrIS tiles it to a 300 KB working set (129 KB fast +
-172 KB slow-pool spill, 2 tiled stages), with bit-exact output across boards.
+any of these boards' SRAM. TiGrIS tiles it to a 307.7 KB working set (127.1 KB
+fast + 171.5 KB slow-pool spill + 9.1 KB scratch/runtime metadata, 2 tiled
+stages), with bit-exact output across boards.
 
 | Board (SRAM) | TiGrIS (tiled) | TFLM (no tiling) |
 |---|---|---|
-| H753ZI (512 KB) | runs, 1.24 s, 300 KB | OOM at AllocateTensors |
-| RP2350 (520 KB) | runs, 6.55 s, 300 KB | n/a (no M33 lib) |
+| H753ZI (512 KB) | runs, 1.43 s, 307.7 KB | OOM at AllocateTensors |
+| RP2350 (520 KB) | runs, 7.03 s, 307.7 KB | n/a (no M33 lib) |
 | F446RE (128 KB) | does not fit | does not fit |
 
 - On the H753, TFLM given a 480 KB arena (nearly all of the 512 KB SRAM) fails
@@ -123,7 +123,7 @@ any of these boards' SRAM. TiGrIS tiles it to a 300 KB working set (129 KB fast 
   735 KB. TiGrIS runs the identical model on the same board.
 - The F446 cannot hold MobileNetV2: the 591 KB weight blob exceeds its 512 KB
   flash, and the 300 KB tiled working set exceeds its 128 KB SRAM.
-- RP2350 is ~5.3x slower than the H753 on this model (XIP-bound: 591 KB of
+- RP2350 is ~4.9x slower than the H753 on this model (XIP-bound: 591 KB of
   weights streamed from QSPI flash each inference, plus the lower clock).
 
 ## Reproduce
@@ -131,17 +131,18 @@ any of these boards' SRAM. TiGrIS tiles it to a 300 KB working set (129 KB fast 
 `SRIG_API_KEY=... ./scripts/run_all.sh` builds every cell, flashes and captures
 on the SiliconRig lab, aggregates, and runs the parity gate. Raw serial logs land
 in `results/raw/` (gitignored); the tracked artifact is `results/summary.json`,
-which carries each cell's numbers and `OUTPUT_I8` vector. See `BUILD.md` for the
-build knobs and a locally-attached-board (no-rig) path.
+which carries each cell's numbers, `OUTPUT_I8` vector, and deduplicated execution
+provenance. See `BUILD.md` for the build knobs and a locally-attached-board
+(no-rig) path.
 
 `results/provenance.json` binds that summary and its collector/validator to
-SHA-256 digests, records the paths and hashes of all 27 source captures, and
-distinguishes declared dependency pins from unavailable execution provenance.
-The captures are not shipped in a clone, but their hashes are retained so an
-obtained capture set can be checked. Fields marked `unknown` are intentionally
-unresolved rather than reconstructed from commit dates or current sibling
-checkouts. Host validation always checks tracked artifact/tool hashes and also
-checks source-capture hashes when those gitignored files are present. When the
-complete capture set is available, it reruns the collector in a temporary
-directory and requires byte-identical `summary.json` output; a clean clone
-skips that reconstruction and does not report it as verified.
+SHA-256 digests and records the paths and hashes of all 27 source captures. The
+summary embeds the actual compiler, runtime, TFLM, CMSIS and SDK revisions;
+tool and Python-environment versions; build invocations; model and firmware
+hashes/sizes; capture timestamps; and SiliconRig board identities. The captures
+are not shipped in a clone, but their hashes are retained so an obtained capture
+set can be checked. Host validation always checks tracked artifact/tool hashes
+and also checks source-capture hashes when those gitignored files are present.
+When the complete capture set is available, it reruns the collector in a
+temporary directory and requires byte-identical `summary.json` output; a clean
+clone skips that reconstruction and does not report it as verified.
