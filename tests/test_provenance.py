@@ -164,6 +164,19 @@ def write_capture(path: Path, provenance: object | None) -> None:
 
 
 class CaptureProvenanceTest(unittest.TestCase):
+    def test_build_uses_the_checkout_that_core_validation_inspects(self) -> None:
+        run_all = (
+            ROOT / "cortex-m-deployability/scripts/run_all.sh").read_text()
+        stm32_cmake = (
+            ROOT / "cortex-m-deployability/CMakeLists.txt").read_text()
+        pico_cmake = (
+            ROOT / "cortex-m-deployability/boards/pico2_rp2350/CMakeLists.txt"
+        ).read_text()
+        self.assertIn(
+            '-DTIGRIS_RUNTIME_ROOT="$TIGRIS_RUNTIME_ROOT"', run_all)
+        self.assertIn("add_subdirectory(${TIGRIS_RUNTIME_ROOT}", stm32_cmake)
+        self.assertIn("set(RT_DIR     ${TIGRIS_RUNTIME_ROOT})", pico_cmake)
+
     def test_complete_capture_is_collected_and_deduplicated(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "h753_ds_cnn_cmsis_nn.log"

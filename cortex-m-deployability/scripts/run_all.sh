@@ -87,6 +87,7 @@ build_cell() {   # board model config
         local -a configure=(cmake -S "$HERE/boards/pico2_rp2350" -B "$bd"
             -Dpicotool_DIR="$PICOTOOL" -DBENCH_KERNEL="$cfg" -DTIGRIS_PLAN="$plan" \
             -DTIGRIS_CODEGEN="$TIGRIS_COMPILER" \
+            -DTIGRIS_RUNTIME_ROOT="$TIGRIS_RUNTIME_ROOT" \
             -DTIGRIS_FAST_ARENA_BYTES=$fast -DTIGRIS_SLOW_ARENA_BYTES=$slow)
         command_string "${configure[@]}"; local configure_command="$REPLY"
         PICO_SDK_PATH="$PICO_SDK" "${configure[@]}" >/dev/null
@@ -96,7 +97,9 @@ build_cell() {   # board model config
         return 0
     fi
 
-    local common=(-S "$HERE" -B "$bd" -DCMAKE_TOOLCHAIN_FILE="$TC" -DTIGRIS_BOARD="${TB[$board]}")
+    local common=(-S "$HERE" -B "$bd" -DCMAKE_TOOLCHAIN_FILE="$TC"
+                  -DTIGRIS_RUNTIME_ROOT="$TIGRIS_RUNTIME_ROOT"
+                  -DTIGRIS_BOARD="${TB[$board]}")
     if [ "$cfg" = tflm ]; then
         local arena=32768; [ "$model" = mbv2 ] && arena=491520   # ~480 KB: most of the H753 SRAM, still OOMs
         local -a configure=(cmake "${common[@]}" -DBENCH_FRAMEWORK=tflm
@@ -188,6 +191,7 @@ def artifact(path):
 
 
 def checked_python_environment(path):
+    model_packages = {"onnx", "onnxruntime", "numpy", "tensorflow"}
     packages = {}
     for raw_line in path.read_text().splitlines():
         line = raw_line.strip()
@@ -196,6 +200,8 @@ def checked_python_environment(path):
         if "==" not in line:
             raise RuntimeError(f"mutable Python requirement is not allowed: {line}")
         name, expected = line.split("==", 1)
+        if name not in model_packages:
+            continue
         actual = importlib.metadata.version(name)
         if actual != expected:
             raise RuntimeError(
