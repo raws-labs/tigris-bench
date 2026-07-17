@@ -199,6 +199,17 @@ class CaptureProvenanceTest(unittest.TestCase):
         )
         self.assertNotIn("_matched_32k.tgrs", plan_builder)
 
+    def test_subset_runs_cannot_replace_the_canonical_summary(self) -> None:
+        run_all = (
+            ROOT / "cortex-m-deployability/scripts/run_all.sh").read_text()
+        self.assertIn('RUN_RAW="$(mktemp -d)"', run_all)
+        self.assertIn('"$HERE/scripts/results.py" "$RUN_RAW"', run_all)
+        self.assertIn('if [ "$CANONICAL_RUN" -eq 1 ]', run_all)
+        self.assertIn(
+            "Subset run complete; canonical summary left unchanged.",
+            run_all,
+        )
+
     def test_complete_capture_is_collected_and_deduplicated(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "h753_ds_cnn_cmsis_nn.log"

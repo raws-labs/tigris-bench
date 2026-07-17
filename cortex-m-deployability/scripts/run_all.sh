@@ -42,6 +42,12 @@ if [ "${TIGRIS_ALLOW_UNPINNED_CORE:-0}" = 1 ]; then
 fi
 python3 "$HERE/../scripts/check_core_versions.py" "${CORE_CHECK_ARGS[@]}"
 
+CANONICAL_RUN=0
+if [ "$#" -eq 0 ] \
+        && [ -z "${BENCH_MODELS+x}" ] \
+        && [ -z "${BENCH_CONFIGS+x}" ]; then
+    CANONICAL_RUN=1
+fi
 BOARDS=("$@"); [ "${#BOARDS[@]}" -eq 0 ] && BOARDS=(h753 f446 rp2350)
 read -r -a MODELS  <<< "${BENCH_MODELS:-ds_cnn ad ts mbv2}"
 read -r -a CONFIGS <<< "${BENCH_CONFIGS:-cmsis_nn s8_ref tflm}"
@@ -65,7 +71,10 @@ python3 "$HERE/scripts/prepare_tigris_plans.py" \
     --compiler "$TIGRIS_COMPILER" --models-dir "$MODELS_DIR" \
     --output-dir "$PLAN_DIR" "${MODELS[@]}"
 
-MANIFEST="$(mktemp)"; trap 'rm -f "$MANIFEST"' EXIT
+MANIFEST="$(mktemp)"
+RUN_RAW="$(mktemp -d)"
+COLLECTED_SUMMARY="$(mktemp)"
+trap 'rm -f "$MANIFEST" "$COLLECTED_SUMMARY"; rm -rf "$RUN_RAW"' EXIT
 # rigtype, firmware, log name, timeout, embedded model, exact CMake invocation
 emit() { printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$1" "$2" "$3" "$4" "$5" "$6" >> "$MANIFEST"; }
 command_string() { printf -v REPLY '%q ' "$@"; REPLY="${REPLY% }"; }
@@ -145,7 +154,7 @@ for board in "${BOARDS[@]}"; do
 done
 
 echo "Flashing + capturing on SiliconRig..."
-python3 - "$MANIFEST" "$RAW" "$HERE" "$TIGRIS_COMPILER_ROOT" \
+python3 - "$MANIFEST" "$RUN_RAW" "$HERE" "$TIGRIS_COMPILER_ROOT" \
     "$TIGRIS_RUNTIME_ROOT" "$PICO_SDK" "$HERE/../tflm-esp32s3/requirements.txt" <<'PY'
 import collections
 import hashlib
@@ -310,5 +319,27 @@ PY
 
 echo ""
 echo "Collecting + validating..."
-python3 "$HERE/scripts/results.py" "$RAW" -o "$HERE/results/summary.json" --require-provenance
-python3 "$HERE/scripts/validate_accuracy.py" "$HERE/results/summary.json"
+python3 "$HERE/scripts/results.py" "$RUN_RAW" \
+    -o "$COLLECTED_SUMMARY" --require-provenance
+
+if [[ " ${CONFIGS[*]} " == *" cmsis_nn "* ]] \
+        && [[ " ${CONFIGS[*]} " == *" tflm "* ]]; then
+    python3 "$HERE/scripts/validate_accuracy.py" "$COLLECTED_SUMMARY"
+else
+    echo "Skipping cross-framework parity: this subset has no TFLM/CMSIS pair."
+fi
+
+# Promote only a completely collected invocation. A subset updates its selected
+# raw logs but cannot silently replace the canonical 27-cell summary.
+cp "$RUN_RAW"/*.log "$RAW"/
+SUMMARY_OUTPUT="${BENCH_SUMMARY_OUTPUT:-}"
+if [ "$CANONICAL_RUN" -eq 1 ]; then
+    SUMMARY_OUTPUT="${SUMMARY_OUTPUT:-$HERE/results/summary.json}"
+fi
+if [ -n "$SUMMARY_OUTPUT" ]; then
+    mkdir -p "$(dirname "$SUMMARY_OUTPUT")"
+    cp "$COLLECTED_SUMMARY" "$SUMMARY_OUTPUT"
+    echo "Promoted summary to $SUMMARY_OUTPUT"
+else
+    echo "Subset run complete; canonical summary left unchanged."
+fi
