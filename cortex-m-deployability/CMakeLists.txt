@@ -15,6 +15,8 @@ set(TIGRIS_CODEGEN "${CMAKE_CURRENT_SOURCE_DIR}/../../tigris/.venv/bin/tigris"
     CACHE FILEPATH "TiGrIS codegen executable")
 set(TIGRIS_RUNTIME_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../../tigris-runtime"
     CACHE PATH "pinned TiGrIS runtime checkout")
+option(TIGRIS_HOST_VALIDATION
+    "Build the hardware-free CMSIS-NN adapter parity executable" OFF)
 # Optimization level for ALL benchmark code (TiGrIS runtime, CMSIS-NN, harness, TFLM
 # glue). MUST be consistent across boards and frameworks for a fair comparison: TFLM's
 # own kernels build at -O2, and without this the clean-CMake path defaults to -O0 (no
@@ -25,10 +27,36 @@ project(cortexm_bench C CXX ASM)
 set(CMAKE_C_STANDARD 11)
 
 # ---- vendored CMSIS locations (populated by third_party/fetch.sh) ----
-set(CMSIS_NN_DIR        ${CMAKE_CURRENT_SOURCE_DIR}/third_party/CMSIS-NN)
-set(CMSIS_CORE_DIR      ${CMAKE_CURRENT_SOURCE_DIR}/third_party/CMSIS_6/CMSIS/Core)
-set(CMSIS_DEVICE_H7_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/cmsis-device-h7)
-set(CMSIS_DEVICE_F4_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/cmsis-device-f4)
+set(CMSIS_NN_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/CMSIS-NN"
+    CACHE PATH "CMSIS-NN source checkout")
+set(CMSIS_CORE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/CMSIS_6/CMSIS/Core"
+    CACHE PATH "CMSIS-Core source directory")
+set(CMSIS_DEVICE_H7_DIR
+    "${CMAKE_CURRENT_SOURCE_DIR}/third_party/cmsis-device-h7"
+    CACHE PATH "STM32H7 CMSIS device checkout")
+set(CMSIS_DEVICE_F4_DIR
+    "${CMAKE_CURRENT_SOURCE_DIR}/third_party/cmsis-device-f4"
+    CACHE PATH "STM32F4 CMSIS device checkout")
+
+if(TIGRIS_HOST_VALIDATION)
+    if(NOT EXISTS ${TIGRIS_RUNTIME_ROOT}/CMakeLists.txt)
+        message(FATAL_ERROR
+            "TiGrIS runtime not found at ${TIGRIS_RUNTIME_ROOT}.\n"
+            "Pass -DTIGRIS_RUNTIME_ROOT=<checkout>.")
+    endif()
+    add_subdirectory(third_party)
+    add_subdirectory(${TIGRIS_RUNTIME_ROOT}
+                     ${CMAKE_BINARY_DIR}/tigris_runtime)
+    target_compile_definitions(tigris_runtime PUBLIC TIGRIS_HAS_CMSIS_NN)
+    target_include_directories(tigris_runtime SYSTEM PRIVATE
+        ${CMSIS_NN_DIR}/Include)
+    add_executable(host_cmsis_validate tests/host_cmsis_validate.c)
+    target_compile_options(host_cmsis_validate PRIVATE
+        -Wall -Wextra -Wpedantic -Werror)
+    target_link_libraries(host_cmsis_validate PRIVATE
+        tigris_runtime cmsis-nn)
+    return()
+endif()
 
 # ---- board: sets BOARD_MCU_FLAGS, BOARD_STARTUP/SYSTEM/BSP/LINKER_SCRIPT,
 #      BOARD_DEFINES, BOARD_INCLUDES ----
