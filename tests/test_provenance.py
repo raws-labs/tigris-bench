@@ -188,6 +188,17 @@ class CaptureProvenanceTest(unittest.TestCase):
         )
         self.assertIn("local plan fast=65536 slow=8192", run_all)
 
+    def test_non_tiled_plan_budgets_do_not_inflate_ram_high_water(self) -> None:
+        plan_builder = (
+            ROOT / "cortex-m-deployability/scripts/prepare_tigris_plans.py"
+        ).read_text()
+        self.assertIn(
+            '"ds_cnn": ("ds_cnn_matched.onnx", "20K", '
+            '"ds_cnn_matched.tgrs")',
+            plan_builder,
+        )
+        self.assertNotIn("_matched_32k.tgrs", plan_builder)
+
     def test_complete_capture_is_collected_and_deduplicated(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "h753_ds_cnn_cmsis_nn.log"

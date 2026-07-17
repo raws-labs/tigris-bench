@@ -83,8 +83,11 @@ build_cell() {   # board model config
     # backing for the budget plus the exact CMSIS-NN reservation computed by
     # the runtime; reported RAM uses measured high-water, not this capacity.
     local plan fast=65536 slow=8192
-    if [ "$model" = mbv2 ]; then plan="$PLAN_DIR/mbv2_a35_128k.tgrs"; fast=163840; slow=327680
-    else plan="$PLAN_DIR/${model}_matched_32k.tgrs"; fi
+    if [ "$model" = mbv2 ]; then
+        plan="$PLAN_DIR/mbv2_a35.tgrs"; fast=163840; slow=327680
+    else
+        plan="$PLAN_DIR/${model}_matched.tgrs"
+    fi
 
     if [ "$board" = rp2350 ]; then
         local -a configure=(cmake -S "$HERE/boards/pico2_rp2350" -B "$bd"
