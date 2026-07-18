@@ -47,7 +47,7 @@ int8 weights plus biases, measured from the committed plans.
 
 | Framework | Kernel | Latency | Cycles | RAM (work. set) | Flash (firmware) |
 |---|---|---|---|---|---|
-| TiGrIS | cmsis_nn | 11.14 ms | 5.35 M | 25.5 KB | 118 KB |
+| TiGrIS | cmsis_nn | 11.14 ms | 5.35 M | 25.5 KB | 117 KB |
 | TFLM | cmsis_nn | 12.80 ms | 6.14 M | 22.2 KB | 176 KB |
 | TiGrIS | s8_ref | 81.96 ms | 39.34 M | 25.3 KB | 93 KB |
 
@@ -57,7 +57,7 @@ int8 weights plus biases, measured from the committed plans.
 |---|---|---|---|---|---|
 | TiGrIS | cmsis_nn | 1.19 ms | 570 K | 11.6 KB | 370 KB |
 | TFLM | cmsis_nn | 1.16 ms | 558 K | 15.5 KB | 417 KB |
-| TiGrIS | s8_ref | 3.05 ms | 1.46 M | 11.4 KB | 346 KB |
+| TiGrIS | s8_ref | 3.05 ms | 1.46 M | 11.4 KB | 345 KB |
 
 **Timeseries:**
 

@@ -11,7 +11,8 @@ if(NOT EXISTS ${CMSIS_NN_DIR}/Include/arm_nnfunctions.h)
         "CMSIS-NN not vendored at ${CMSIS_NN_DIR}.\n"
         "Run: third_party/fetch.sh")
 endif()
-if(NOT EXISTS ${CMSIS_DEVICE_H7_DIR}/Include/stm32h753xx.h)
+if(NOT TIGRIS_HOST_VALIDATION
+        AND NOT EXISTS ${CMSIS_DEVICE_H7_DIR}/Include/stm32h753xx.h)
     message(FATAL_ERROR
         "cmsis-device-h7 not vendored at ${CMSIS_DEVICE_H7_DIR}.\n"
         "Run: third_party/fetch.sh")

@@ -16,11 +16,14 @@ from provenance_validation import (
     git_tracked_paths,
     validate_provenance,
 )
+from validate_tracked_json import validate_readme_results
 
 
 ROOT = Path(__file__).resolve().parents[1]
 PROVENANCE_PATH = ROOT / "cortex-m-deployability/results/provenance.json"
 RESULTS_PATH = ROOT / "cortex-m-deployability/scripts/results.py"
+README_PATH = ROOT / "cortex-m-deployability/README.md"
+SUMMARY_PATH = ROOT / "cortex-m-deployability/results/summary.json"
 RESULTS_SPEC = importlib.util.spec_from_file_location(
     "cortex_results", RESULTS_PATH)
 assert RESULTS_SPEC and RESULTS_SPEC.loader
@@ -105,6 +108,34 @@ class ProvenanceContractTest(unittest.TestCase):
             "revision SHA-256 mismatch for "
             "cortex-m-deployability/results/summary.json",
         )
+
+
+class ReadmeResultContractTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self.summary = json.loads(SUMMARY_PATH.read_text())
+        self.readme = README_PATH.read_text()
+
+    def test_current_readme_matches_summary(self) -> None:
+        self.assertEqual(
+            validate_readme_results(self.summary, self.readme), [])
+
+    def test_mutated_readme_result_is_rejected(self) -> None:
+        mutated = self.readme.replace("11.14 ms", "11.15 ms", 1)
+        errors = validate_readme_results(self.summary, mutated)
+        self.assertTrue(
+            any("11.14 ms" in error for error in errors), errors)
+
+    def test_mutated_summary_result_is_rejected(self) -> None:
+        mutated = copy.deepcopy(self.summary)
+        cell = next(
+            config for config in mutated["configs"]
+            if config["board"] == "nucleo_f446re"
+            and config["model"] == "ts_matched"
+            and config["kernel"] == "cmsis_nn")
+        cell["latency_median_ms"] += 1
+        errors = validate_readme_results(mutated, self.readme)
+        self.assertTrue(
+            any("| TS | 2.56 ms" in error for error in errors), errors)
 
 
 def valid_capture_provenance() -> dict:
