@@ -63,7 +63,8 @@ extern const unsigned int  g_tigris_plan_len;
 static uint8_t s_fast_arena[TIGRIS_FAST_ARENA_BYTES] __attribute__((aligned(16)));
 static uint8_t s_slow_arena[TIGRIS_SLOW_ARENA_BYTES] __attribute__((aligned(16)));
 static void   *s_tensor_ptrs[BENCH_MAX_TENSORS];
-static tigris_executor_workspace_t s_executor_workspace;
+static uint8_t s_executor_workspace[
+    TIGRIS_CODEGEN_EXECUTOR_WORKSPACE_BYTES];
 
 static const char *kernel_name(void)
 {
@@ -131,12 +132,14 @@ static uint32_t run_once(tigris_plan_t *plan, tigris_mem_t *mem,
     tigris_exec_stats_t stats;
     uint32_t c0 = platform_cycles();
 #ifdef BENCH_PROFILE_OPS
-    tigris_exec_error_t err = tigris_run_with_workspace(
-        plan, mem, dispatch, NULL, &stats, &s_executor_workspace);
+    tigris_exec_error_t err = tigris_run_with_workspace_buffer(
+        plan, mem, dispatch, NULL, &stats, s_executor_workspace,
+        sizeof(s_executor_workspace));
 #else
     (void)dispatch;  /* generated core owns the normal dispatch call. */
-    tigris_exec_error_t err = tigris_codegen_run(
-        plan, mem, &stats, &s_executor_workspace);
+    tigris_exec_error_t err = tigris_codegen_run_with_workspace_buffer(
+        plan, mem, &stats, s_executor_workspace,
+        sizeof(s_executor_workspace));
 #endif
     uint32_t c1 = platform_cycles();
 

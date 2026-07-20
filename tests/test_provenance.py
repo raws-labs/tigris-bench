@@ -287,5 +287,23 @@ class CaptureProvenanceTest(unittest.TestCase):
         )
 
 
+class HarnessWorkspaceContractTest(unittest.TestCase):
+    def test_tigris_metadata_uses_generated_plan_sized_workspace(self) -> None:
+        harness = (
+            ROOT / "cortex-m-deployability/harness/main.c").read_text()
+
+        self.assertIn(
+            "s_executor_workspace[\n"
+            "    TIGRIS_CODEGEN_EXECUTOR_WORKSPACE_BYTES]",
+            harness,
+        )
+        self.assertIn("tigris_codegen_run_with_workspace_buffer(", harness)
+        self.assertIn("tigris_run_with_workspace_buffer(", harness)
+        self.assertIn(
+            "sizeof(s_executor_workspace)", harness)
+        self.assertNotIn(
+            "tigris_executor_workspace_t s_executor_workspace", harness)
+
+
 if __name__ == "__main__":
     unittest.main()
