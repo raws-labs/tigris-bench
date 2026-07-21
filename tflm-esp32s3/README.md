@@ -8,7 +8,11 @@ This is the suite that backs the numbers quoted in the [Introducing TiGrIS](http
 
 ### Case A: DS-CNN (keyword spotting)
 
-Model fits in SRAM, so tiling is not needed. Measures framework overhead at parity on the same kernels.
+Model fits in SRAM, so tiling is not needed. The INT8 TiGrIS source is
+reconstructed from the exact TFLite model embedded in the TFLM firmware; those
+two cells therefore compare matched weights, quantization, input, and ESP-NN
+kernels. The float models are independently initialized diagnostic cells and
+must not be presented as a framework-overhead comparison.
 
 | # | Config | Framework | dtype | Kernel |
 |---|--------|-----------|-------|--------|
@@ -25,10 +29,10 @@ Model is close to the SRAM ceiling. Measures tiling overhead as the budget shrin
 | # | Config | Framework | Budget | Expected |
 |---|--------|-----------|--------|----------|
 | 6 | TiGrIS MBV1 i8 ESP-NN | TiGrIS | 256K | Runs, no tiling needed |
-| 7 | TiGrIS MBV1 i8 ESP-NN | TiGrIS | 128K | Runs, chain-tiled |
-| 8 | TiGrIS MBV1 i8 ESP-NN | TiGrIS | 64K | Runs, spatially tiled |
-| 9 | TiGrIS MBV1 i8 ESP-NN | TiGrIS | 32K | Runs, spatially tiled |
-| 10 | TFLM MBV1 i8 | TFLite Micro | 256K | Fails (arena too small) |
+| 7 | TFLM MBV1 i8 | TFLite Micro | 256K | Fails (arena too small) |
+| 8 | TiGrIS MBV1 i8 ESP-NN | TiGrIS | 128K | Runs, chain-tiled |
+| 9 | TiGrIS MBV1 i8 ESP-NN | TiGrIS | 64K | Runs, spatially tiled |
+| 10 | TiGrIS MBV1 i8 ESP-NN | TiGrIS | 32K | Runs, spatially tiled |
 
 ## Hardware
 
@@ -64,9 +68,30 @@ This generates ONNX source models, TFLite models, C headers, and ONNX Runtime/TF
 
 ### 2. Run all benchmarks (device)
 
+Local USB:
+
 ```bash
 ./scripts/run_all.sh /dev/ttyUSB0
 ```
+
+SiliconRig (one remote board session for the complete matrix):
+
+```bash
+host_python="$(command -v python3)"
+source /path/to/esp-idf/export.sh
+SRIG_API_KEY=... PYTHON="$host_python" BENCH_TRANSPORT=siliconrig \
+  ./scripts/run_all.sh
+```
+
+The host Python environment needs this directory's requirements plus the
+SiliconRig SDK. Capturing its path before sourcing ESP-IDF avoids accidentally
+using ESP-IDF's private Python environment, which does not carry the benchmark
+model or SiliconRig packages.
+
+For TiGrIS cells the SiliconRig path merges the bootloader, partition table,
+application, and freshly compiled plan into one raw image. The plan is placed
+at the partition-table offset `0x210000`; the runner has a regression test that
+prevents the old, incorrect `0x60000` app-partition offset from returning.
 
 `run_all.sh` now accepts a result only after all 10 canonical cells were
 captured through `BENCH_DONE`, aggregated, and checked against their
@@ -103,13 +128,18 @@ python scripts/results.py results/raw/ -o results/summary.json
 python scripts/validate_accuracy.py results/summary.json models/output/
 ```
 
-`results.py` parses the serial logs and prints a pretty table; with `-o` it also writes a machine-parseable `summary.json`. `validate_accuracy.py` compares device outputs against the corresponding ONNX Runtime or TFLite reference and rejects the run if the numbers drift beyond tolerance.
+`results.py` parses the serial logs and prints a pretty table; with `-o` it also
+writes the tracked, machine-parseable `summary.json`. `validate_accuracy.py`
+compares device outputs against the corresponding ONNX Runtime or TFLite
+reference and rejects the run if the numbers drift beyond tolerance. Raw logs
+remain gitignored.
 
-INT8 references are raw int8 vectors. TiGrIS cells use the reference generated
-from their ONNX model; TFLM DS-CNN cells use references generated from the exact
-TFLite model embedded in the firmware (the ONNX and Keras models in this suite
-are independently initialized). The MobileNet TFLM cell is required to report
-the expected `ARENA_TOO_SMALL` status.
+INT8 references are raw int8 vectors. The TiGrIS INT8 models are reconstructed
+from the exact TFLite models embedded in the firmware, so their device outputs
+and the corresponding TFLM cells share weights and quantization. The TFLM
+MobileNet cell is required to report the expected `ARENA_TOO_SMALL` status.
+The independently initialized float cells retain model-specific references and
+are not used for cross-framework claims.
 
 For an intentional development run containing only some canonical cells, pass
 `--allow-partial` to `results.py`. This never permits unknown filenames,

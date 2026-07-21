@@ -200,5 +200,27 @@ class ValidationFixture(unittest.TestCase):
         self.assertEqual(run_all_summary.read_bytes(), accepted_summary)
 
 
+class OrchestratorContractTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self.script = (SCRIPTS_DIR / "run_all.sh").read_text()
+        self.harness = (SUITE_DIR / "tigris-esp" / "main" / "main.c").read_text()
+
+    def test_siliconrig_image_places_plan_at_partition_offset(self) -> None:
+        self.assertIn('segments+=(0x210000 "$plan_file")', self.script)
+        self.assertNotIn('segments+=(0x60000 "$plan_file")', self.script)
+
+    def test_siliconrig_reuses_one_board_session_for_the_matrix(self) -> None:
+        self.assertIn('with client.session(board="esp32-s3") as session:', self.script)
+        self.assertIn('session.flash(firmware, timeout=300)', self.script)
+
+    def test_preflight_requires_the_matched_ds_cnn_reference(self) -> None:
+        self.assertIn("ds_cnn_matched_ref.bin", self.script)
+
+    def test_esp_harness_uses_plan_sized_executor_workspace(self) -> None:
+        self.assertIn("tigris_executor_workspace_required(&plan)", self.harness)
+        self.assertIn("tigris_run_with_workspace_buffer(", self.harness)
+        self.assertNotIn("tigris_run(plan, mem", self.harness)
+
+
 if __name__ == "__main__":
     unittest.main()
