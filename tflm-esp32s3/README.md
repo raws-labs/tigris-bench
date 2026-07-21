@@ -28,11 +28,11 @@ Model is close to the SRAM ceiling. Measures tiling overhead as the budget shrin
 
 | # | Config | Framework | Budget | Expected |
 |---|--------|-----------|--------|----------|
-| 6 | TiGrIS MBV1 i8 ESP-NN | TiGrIS | 256K | Runs, no tiling needed |
+| 6 | TiGrIS MBV1 i8 ESP-NN | TiGrIS | 256K | Runs, 1 normal + 3 chain stages |
 | 7 | TFLM MBV1 i8 | TFLite Micro | 256K | Fails (arena too small) |
-| 8 | TiGrIS MBV1 i8 ESP-NN | TiGrIS | 128K | Runs, chain-tiled |
-| 9 | TiGrIS MBV1 i8 ESP-NN | TiGrIS | 64K | Runs, spatially tiled |
-| 10 | TiGrIS MBV1 i8 ESP-NN | TiGrIS | 32K | Runs, spatially tiled |
+| 8 | TiGrIS MBV1 i8 ESP-NN | TiGrIS | 128K | Runs, 1 normal + 8 tiled stages |
+| 9 | TiGrIS MBV1 i8 ESP-NN | TiGrIS | 64K | Runs, 1 normal + 12 tiled stages |
+| 10 | TiGrIS MBV1 i8 ESP-NN | TiGrIS | 32K | Runs, 1 normal + 24 tiled stages |
 
 ## Hardware
 
@@ -176,6 +176,6 @@ BENCH_VALIDATE_ONLY=1 ./scripts/run_all.sh
 ## Dependencies
 
 - Host: Python 3.10+, `onnx`, `onnxruntime`, `tensorflow`, `tigris-ml`, `pyserial`, `esptool`
-- Device: ESP-IDF 5.x, `esp-tflite-micro ~1.3.1`
+- Device: ESP-IDF 5.4.0, `esp-nn 1.1.2`, `esp-tflite-micro 1.3.5`
 - Hardware: ESP32-S3 board with 16 MB flash and 8 MB PSRAM
 - Runtime: a local checkout of [tigris-runtime](https://github.com/raws-labs/tigris-runtime) (see Prerequisites)
