@@ -140,7 +140,9 @@ static tigris_kernel_fn select_kernel(int is_quantized) {
  * If out_stats is non-NULL, the exec stats from this run are copied out. */
 static int64_t run_once(tigris_plan_t *plan, tigris_mem_t *mem,
                         tigris_kernel_fn dispatch, int is_quantized,
-                        tigris_exec_stats_t *out_stats) {
+                        tigris_exec_stats_t *out_stats,
+                        void *executor_workspace,
+                        size_t executor_workspace_size) {
     /* Re-init memory state (reset both arenas + tensor_ptrs) */
     tigris_mem_init(mem, mem->tensor_ptrs, mem->num_tensors,
                     mem->fast_base, mem->fast_size,
@@ -167,7 +169,9 @@ static int64_t run_once(tigris_plan_t *plan, tigris_mem_t *mem,
 
     tigris_exec_stats_t stats;
     int64_t t0 = esp_timer_get_time();
-    tigris_exec_error_t err = tigris_run(plan, mem, dispatch, NULL, &stats);
+    tigris_exec_error_t err = tigris_run_with_workspace_buffer(
+        plan, mem, dispatch, NULL, &stats,
+        executor_workspace, executor_workspace_size);
     int64_t t1 = esp_timer_get_time();
 
     if (err != TIGRIS_EXEC_OK) {
@@ -310,6 +314,28 @@ void app_main(void) {
         return;
     }
 
+    size_t executor_workspace_size =
+        tigris_executor_workspace_required(&plan);
+    if (executor_workspace_size == 0) {
+        ESP_LOGE(TAG, "could not derive executor workspace from plan");
+        heap_caps_free(tensor_ptrs);
+        heap_caps_free(slow_buf);
+        heap_caps_free(fast_buf);
+        esp_partition_munmap(mmap_handle);
+        return;
+    }
+    void *executor_workspace = heap_caps_malloc(
+        executor_workspace_size, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
+    if (!executor_workspace) {
+        ESP_LOGE(TAG, "alloc executor workspace failed (%lu)",
+                 (unsigned long)executor_workspace_size);
+        heap_caps_free(tensor_ptrs);
+        heap_caps_free(slow_buf);
+        heap_caps_free(fast_buf);
+        esp_partition_munmap(mmap_handle);
+        return;
+    }
+
     tigris_mem_t mem;
     tigris_mem_error_t merr = tigris_mem_init(
         &mem, tensor_ptrs, num_t,
@@ -332,11 +358,15 @@ void app_main(void) {
 
     printf("\nSRAM budget: %lu KB\n", (unsigned long)(fast_size / 1024));
     printf("Slow buffer: %lu KB\n\n", (unsigned long)(slow_size / 1024));
+    printf("Executor workspace: %lu bytes (plan-sized)\n\n",
+           (unsigned long)executor_workspace_size);
 
     /* 4. Warmup runs */
     printf("Warmup (%d runs)...\n", WARMUP_RUNS);
     for (int i = 0; i < WARMUP_RUNS; i++) {
-        int64_t us = run_once(&plan, &mem, dispatch, is_quantized, NULL);
+        int64_t us = run_once(
+            &plan, &mem, dispatch, is_quantized, NULL,
+            executor_workspace, executor_workspace_size);
         if (us < 0) goto cleanup;
         printf("  warmup[%d]: %.2f ms\n", i, (float)us / 1000.0f);
     }
@@ -347,7 +377,9 @@ void app_main(void) {
     tigris_exec_stats_t last_stats = {0};
     for (int i = 0; i < BENCH_RUNS; i++) {
         tigris_exec_stats_t *sp = (i == BENCH_RUNS - 1) ? &last_stats : NULL;
-        int64_t us = run_once(&plan, &mem, dispatch, is_quantized, sp);
+        int64_t us = run_once(
+            &plan, &mem, dispatch, is_quantized, sp,
+            executor_workspace, executor_workspace_size);
         if (us < 0) goto cleanup;
         latencies[i] = (float)us / 1000.0f;
         printf("  run[%d]: %.2f ms\n", i, latencies[i]);
@@ -435,6 +467,7 @@ void app_main(void) {
            "latency_stdev_ms=%.2f,"
            "sram_budget_kb=%lu,"
            "sram_actual_kb=%lu,"
+           "executor_workspace_bytes=%lu,"
            "plan_flash_kb=%lu,"
            "runs=%d,"
            "stages_normal=%u,"
@@ -447,6 +480,7 @@ void app_main(void) {
            mean, min_lat, max_lat, stdev,
            (unsigned long)(sram_budget / 1024),
            (unsigned long)(sram_actual / 1024),
+           (unsigned long)executor_workspace_size,
            (unsigned long)(plan_flash / 1024),
            BENCH_RUNS,
            (unsigned)last_stats.stages_normal,
@@ -457,6 +491,7 @@ void app_main(void) {
     printf("BENCH_DONE\n");
 
 cleanup:
+    heap_caps_free(executor_workspace);
     heap_caps_free(tensor_ptrs);
     heap_caps_free(slow_buf);
     heap_caps_free(fast_buf);
