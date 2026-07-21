@@ -131,8 +131,10 @@ python scripts/validate_accuracy.py results/summary.json models/output/
 `results.py` parses the serial logs and prints a pretty table; with `-o` it also
 writes the tracked, machine-parseable `summary.json`. `validate_accuracy.py`
 compares device outputs against the corresponding ONNX Runtime or TFLite
-reference and rejects the run if the numbers drift beyond tolerance. Raw logs
-remain gitignored.
+reference and rejects the run if the numbers drift beyond the matrix cell's
+explicit tolerance. The TFLM DS-CNN ESP-NN cell permits at most 4 INT8 output
+units relative to the host TFLite interpreter; TiGrIS cells permit at most 1.
+Raw logs remain gitignored.
 
 INT8 references are raw int8 vectors. The TiGrIS INT8 models are reconstructed
 from the exact TFLite models embedded in the firmware, so their device outputs

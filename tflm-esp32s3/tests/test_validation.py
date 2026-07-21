@@ -153,6 +153,31 @@ class ValidationFixture(unittest.TestCase):
         with self.assertRaisesRegex(BenchmarkDataError, "missing result cells"):
             validate_accuracy.validate_summary(summary, self.models)
 
+    def test_int8_tolerances_are_cell_specific_and_enforce_the_boundary(self) -> None:
+        path = self.raw / "tflm_i8.log"
+        path.write_text(path.read_text().replace(
+            "OUTPUT_I8: 7 0 -7", "OUTPUT_I8: 11 0 -7"))
+        validations = validate_accuracy.validate_summary(self._summary(), self.models)
+        tflm = next(v for v in validations if v["name"].startswith("tflm_i8 "))
+        self.assertEqual(tflm["status"], "pass")
+        self.assertIn("max_abs_diff=4", tflm["message"])
+        self.assertIn("atol=4", tflm["message"])
+
+        path.write_text(path.read_text().replace(
+            "OUTPUT_I8: 11 0 -7", "OUTPUT_I8: 12 0 -7"))
+        validations = validate_accuracy.validate_summary(self._summary(), self.models)
+        tflm = next(v for v in validations if v["name"].startswith("tflm_i8 "))
+        self.assertEqual(tflm["status"], "fail")
+
+        tigris_path = self.raw / "tigris_i8_espnn.log"
+        tigris_path.write_text(tigris_path.read_text().replace(
+            "OUTPUT_I8: 1 -2 3", "OUTPUT_I8: 3 -2 3"))
+        validations = validate_accuracy.validate_summary(self._summary(), self.models)
+        tigris = next(
+            v for v in validations if v["name"].startswith("tigris_i8_espnn "))
+        self.assertEqual(tigris["status"], "fail")
+        self.assertIn("atol=1", tigris["message"])
+
     def test_cli_passes_complete_fixture_and_fails_corrupt_output(self) -> None:
         summary_path = self.root / "summary.json"
         env = os.environ.copy()
