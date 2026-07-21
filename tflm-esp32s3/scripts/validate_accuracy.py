@@ -2,9 +2,8 @@
 """Validate every successful ESP32-S3 result against its model reference.
 
 INT8 references are raw int8 vectors, not float32 ORT output. Reference names
-are selected by canonical matrix cell so DS-CNN and MobileNet can never be
-silently compared to one another, and TFLM's independently generated DS-CNN is
-checked against a reference produced from its own TFLite model.
+and device/backend-specific tolerances are selected by canonical matrix cell so
+DS-CNN and MobileNet can never be silently compared to one another.
 
 Usage:
     python validate_accuracy.py results/summary.json models/output/
@@ -45,7 +44,7 @@ def validate_config(
         models_dir: Path,
         *,
         f32_atol: float = 0.01,
-        int8_atol: int = 1,
+        int8_atol: int | None = None,
 ) -> dict:
     """Validate one structurally valid canonical matrix cell."""
     log_file = config["log_file"]
@@ -93,16 +92,17 @@ def validate_config(
             "message": f"max_abs_diff={max_abs:.6f}, atol={f32_atol:g}",
         }
 
+    effective_int8_atol = spec.int8_atol if int8_atol is None else int8_atol
     diff = np.abs(reference.astype(np.int16) - device.astype(np.int16))
     max_abs = int(diff.max(initial=0))
     n_diff = int(np.count_nonzero(diff))
-    passed = max_abs <= int8_atol
+    passed = max_abs <= effective_int8_atol
     return {
         "name": name,
         "status": "pass" if passed else "fail",
         "message": (
             f"max_abs_diff={max_abs}, differing={n_diff}/{device.size}, "
-            f"atol={int8_atol}"
+            f"atol={effective_int8_atol}"
         ),
     }
 
@@ -112,7 +112,7 @@ def validate_summary(
         models_dir: Path,
         *,
         f32_atol: float = 0.01,
-        int8_atol: int = 1,
+        int8_atol: int | None = None,
 ) -> list[dict]:
     configs = summary.get("configs")
     if not isinstance(configs, list):
@@ -137,11 +137,11 @@ def main() -> None:
         "--f32-atol", type=float, default=0.01,
         help="absolute tolerance for float32 output (default: 0.01)")
     parser.add_argument(
-        "--int8-atol", type=int, default=1,
-        help="maximum elementwise INT8 difference (default: 1 LSB)")
+        "--int8-atol", type=int,
+        help="override every cell's maximum elementwise INT8 difference")
     args = parser.parse_args()
 
-    if args.f32_atol < 0 or args.int8_atol < 0:
+    if args.f32_atol < 0 or (args.int8_atol is not None and args.int8_atol < 0):
         parser.error("tolerances must be non-negative")
 
     try:

@@ -271,9 +271,9 @@ def generate_reference(onnx_path: Path, output_path: Path):
 def generate_tflite_reference(tflite_path: Path, output_path: Path):
     """Run a TFLite model with an all-ones input and write its native output.
 
-    The ONNX and Keras/TFLite models are independently initialized in this
-    suite, so TFLM must be checked against a reference produced from the exact
-    TFLite model embedded in its firmware rather than against the ONNX output.
+    TFLM is checked against a reference produced from the exact TFLite model
+    embedded in its firmware. The matched TiGrIS ONNX model is reconstructed
+    from this same TFLite artifact.
     """
     import tensorflow as tf
 

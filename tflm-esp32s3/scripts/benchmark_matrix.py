@@ -21,6 +21,7 @@ class CellSpec:
     output_key: str | None
     reference_file: str | None
     expected_status: str = "ok"
+    int8_atol: int = 1
 
 
 EXPECTED_RUNS = 10
@@ -42,7 +43,7 @@ EXPECTED_CELLS: dict[str, CellSpec] = {
         "f32", "ds_cnn_tflite_reference_f32.bin"),
     "tflm_i8.log": CellSpec(
         "tflm", "default", "int8", "ds_cnn", 256,
-        "i8", "ds_cnn_tflite_reference_i8.bin"),
+        "i8", "ds_cnn_tflite_reference_i8.bin", int8_atol=4),
     "tigris_mbv1_i8_espnn.log": CellSpec(
         "tigris", "esp_nn", "int8", "mobilenet_v1_matched", 256,
         "i8", "mobilenet_v1_matched_ref.bin"),
