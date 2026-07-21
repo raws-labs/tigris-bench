@@ -127,10 +127,68 @@
           "sha256": "1f6e3638d62d51a99a980096596b4a8268cdca090b788b8c0158697164f09509"
         }
       ]
+    },
+    {
+      "path": "tflm-esp32s3/results/summary.json",
+      "kind": "device_result_summary",
+      "sha256": "46dfad2d1895520a42c973a4842bf6b73b8bb0bad437665505811a3235a2b3a9",
+      "collector": {
+        "path": "tflm-esp32s3/scripts/results.py",
+        "sha256": "7cdd870557a5344bda9a37b8e6bfb2fbf7058647139fe33fcc188a81cf9019bd"
+      },
+      "validator": {
+        "path": "tflm-esp32s3/scripts/validate_accuracy.py",
+        "sha256": "9bac5e710d6246cbb5084c5c26c17210e3185300ce979919ba52c3c1a540310c"
+      },
+      "source_capture_root": "tflm-esp32s3/results/raw",
+      "source_tracking": "gitignored_not_shipped",
+      "source_relation": "byte_identical_reconstruction_verified",
+      "source_captures": [
+        {
+          "path": "tflm-esp32s3/results/raw/tflm_f32.log",
+          "sha256": "6cbfa0e39d9bb717e6eb515e08837453b85f84d7760303f41d237177856feab2"
+        },
+        {
+          "path": "tflm-esp32s3/results/raw/tflm_i8.log",
+          "sha256": "8469bf0a4f55bdf332341622d19eef17bc8f194b258400bcfc2cab2b5fc2c3fd"
+        },
+        {
+          "path": "tflm-esp32s3/results/raw/tflm_mbv1_i8.log",
+          "sha256": "57a04205eed4dbcf11490184f353150b43479beeb48e6a7a444af1deb6d9082e"
+        },
+        {
+          "path": "tflm-esp32s3/results/raw/tigris_f32_ref.log",
+          "sha256": "efab4526c6f5769e3663cd607eeeacb79541cc74ea620be6bf7fc872c1a3d814"
+        },
+        {
+          "path": "tflm-esp32s3/results/raw/tigris_i8_espnn.log",
+          "sha256": "2ac9267fc7de4381c5b856d1a13ef3ec109ca25636f0da7e6a37f0d971a789d3"
+        },
+        {
+          "path": "tflm-esp32s3/results/raw/tigris_i8_ref.log",
+          "sha256": "f18e3c1c0e18a608df37014300286832933e31934db3054f95db2087230cc507"
+        },
+        {
+          "path": "tflm-esp32s3/results/raw/tigris_mbv1_i8_espnn.log",
+          "sha256": "8c331b9f8170d379408fc9c413ac05ea0fc70a55d65e89e4f418b43f47a548fe"
+        },
+        {
+          "path": "tflm-esp32s3/results/raw/tigris_mbv1_i8_espnn_128k.log",
+          "sha256": "6a37ca3bcb67db41d6db671324d4fc03d3b040587c9a111246ebe32208f2cc09"
+        },
+        {
+          "path": "tflm-esp32s3/results/raw/tigris_mbv1_i8_espnn_32k.log",
+          "sha256": "528402cef22c337fb710076ade8259ef02cabbfd6726f347cb2ed4df97662bc8"
+        },
+        {
+          "path": "tflm-esp32s3/results/raw/tigris_mbv1_i8_espnn_64k.log",
+          "sha256": "ced51c1feedb940d999f7cc2beaa1208fcbe09ff8239513dc33f309f792921d7"
+        }
+      ]
     }
   ],
   "artifact_repository": {
-    "revision": "5cbb0a4f4dc7654eeb60525602485ac2a53cb968",
+    "revision": "2f0f29e6c9ceb7a6f5e07c387c15cbd27c13d96b",
     "basis": "commit_containing_byte_identical_artifact_and_tools"
   },
   "execution_provenance": {
