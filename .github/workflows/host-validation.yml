@@ -1,7 +1,7 @@
 name: Host validation
 
-# Clone-local by design: no board access, compiler toolchains, or mutable
-# third_party/fetch.sh network checkouts are required by this workflow.
+# Hardware-free by design: no board access or cross compiler is required.
+# Host CMSIS parity uses only immutable, full-SHA source checkouts.
 
 on:
   push:
@@ -62,8 +62,102 @@ jobs:
       - name: Validate tracked JSON artifacts
         run: python -W error tests/validate_tracked_json.py
 
+      - name: Validate exact TiGrIS core pins
+        run: python -W error scripts/check_core_versions.py --manifest-only
+
       - name: Validate tracked Cortex-M output parity
         working-directory: cortex-m-deployability
         run: >-
           python -W error scripts/validate_accuracy.py
           results/summary.json
+
+      - name: Build and run host CMSIS-NN parity
+        shell: bash
+        run: |
+          set -euo pipefail
+          host_root="$RUNNER_TEMP/tigris-host-validation"
+          compiler_revision="$(python -c \
+            'import json; print(json.load(open("core-versions.json"))["compiler"]["commit"])')"
+          runtime_revision="$(python -c \
+            'import json; print(json.load(open("core-versions.json"))["runtime"]["commit"])')"
+          cmsis_revision="$(python -c \
+            'import json; print(json.load(open("cortex-m-deployability/results/summary.json"))["provenance"]["common"]["dependencies"]["CMSIS-NN"])')"
+
+          checkout_revision() {
+            local repository="$1" destination="$2" revision="$3"
+            git init "$destination"
+            git -C "$destination" remote add origin "$repository"
+            git -C "$destination" fetch --depth=1 origin "$revision"
+            git -C "$destination" checkout --detach FETCH_HEAD
+            test "$(git -C "$destination" rev-parse HEAD)" = "$revision"
+          }
+          checkout_revision https://github.com/raws-labs/tigris.git \
+            "$host_root/compiler" "$compiler_revision"
+          checkout_revision https://github.com/raws-labs/tigris-runtime.git \
+            "$host_root/runtime" "$runtime_revision"
+          checkout_revision https://github.com/ARM-software/CMSIS-NN.git \
+            "$host_root/CMSIS-NN" "$cmsis_revision"
+
+          python -m pip install --no-deps "$host_root/compiler"
+          HOST_ROOT="$host_root" python - <<'PY'
+          import os
+          from pathlib import Path
+
+          import numpy as np
+          import onnx
+          from onnx import TensorProto, helper, numpy_helper
+
+          root = Path(os.environ["HOST_ROOT"])
+          scalar_f32 = lambda name, value: numpy_helper.from_array(
+              np.array([value], dtype=np.float32), name)
+          scalar_i8 = lambda name: numpy_helper.from_array(
+              np.array([0], dtype=np.int8), name)
+          inputs = helper.make_tensor_value_info(
+              "input", TensorProto.FLOAT, [1, 1, 4, 4])
+          outputs = helper.make_tensor_value_info(
+              "output", TensorProto.FLOAT, [1, 1, 4, 4])
+          initializers = [
+              scalar_f32("input_scale", 0.25), scalar_i8("input_zp"),
+              numpy_helper.from_array(
+                  np.array([[[[2]]]], dtype=np.int8), "weight"),
+              scalar_f32("weight_scale", 0.25), scalar_i8("weight_zp"),
+              scalar_f32("output_scale", 0.25), scalar_i8("output_zp"),
+          ]
+          nodes = [
+              helper.make_node(
+                  "QuantizeLinear", ["input", "input_scale", "input_zp"],
+                  ["input_q"]),
+              helper.make_node(
+                  "DequantizeLinear", ["input_q", "input_scale", "input_zp"],
+                  ["input_dq"]),
+              helper.make_node(
+                  "DequantizeLinear", ["weight", "weight_scale", "weight_zp"],
+                  ["weight_dq"]),
+              helper.make_node("Conv", ["input_dq", "weight_dq"], ["raw"]),
+              helper.make_node(
+                  "QuantizeLinear", ["raw", "output_scale", "output_zp"],
+                  ["output_q"]),
+              helper.make_node(
+                  "DequantizeLinear", ["output_q", "output_scale", "output_zp"],
+                  ["output"]),
+          ]
+          model = helper.make_model(
+              helper.make_graph(
+                  nodes, "host_cmsis_conv", [inputs], [outputs], initializers),
+              opset_imports=[helper.make_opsetid("", 13)],
+          )
+          model.ir_version = 8
+          onnx.checker.check_model(model)
+          onnx.save(model, root / "host_cmsis_conv.onnx")
+          PY
+          tigris compile "$host_root/host_cmsis_conv.onnx" \
+            --mem 4K --output "$host_root/host_cmsis_conv.tgrs"
+          cmake -S cortex-m-deployability -B "$host_root/build" \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DTIGRIS_HOST_VALIDATION=ON \
+            -DTIGRIS_RUNTIME_ROOT="$host_root/runtime" \
+            -DCMSIS_NN_DIR="$host_root/CMSIS-NN"
+          cmake --build "$host_root/build" \
+            --target host_cmsis_validate --parallel 2
+          "$host_root/build/host_cmsis_validate" \
+            "$host_root/host_cmsis_conv.tgrs"

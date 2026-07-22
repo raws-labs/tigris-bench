@@ -35,6 +35,7 @@
 #if defined(BENCH_KERNEL_CMSIS_NN)
 #include "tigris_kernels_cmsis_nn.h"
 #endif
+#include "tigris_codegen_core.h"
 
 /* Embedded plan blob (generated from the .tgrs by tools/bin2c.py). */
 extern const unsigned char g_tigris_plan[];
@@ -62,6 +63,8 @@ extern const unsigned int  g_tigris_plan_len;
 static uint8_t s_fast_arena[TIGRIS_FAST_ARENA_BYTES] __attribute__((aligned(16)));
 static uint8_t s_slow_arena[TIGRIS_SLOW_ARENA_BYTES] __attribute__((aligned(16)));
 static void   *s_tensor_ptrs[BENCH_MAX_TENSORS];
+static uint8_t s_executor_workspace[
+    TIGRIS_CODEGEN_EXECUTOR_WORKSPACE_BYTES];
 
 static const char *kernel_name(void)
 {
@@ -69,15 +72,6 @@ static const char *kernel_name(void)
     return "cmsis_nn";
 #else
     return "s8_ref";
-#endif
-}
-
-static tigris_kernel_fn select_kernel(void)
-{
-#if defined(BENCH_KERNEL_CMSIS_NN)
-    return tigris_dispatch_kernel_cmsis_nn;
-#else
-    return tigris_dispatch_kernel_s8;
 #endif
 }
 
@@ -111,30 +105,42 @@ static float cycles_to_ms(uint32_t cycles)
     return (float)((double)cycles * 1000.0 / (double)platform_cpu_hz());
 }
 
+/* Model inputs are benchmark data, not a codegen policy.  The generated core
+ * allocates them and calls this hook on every warmup/timed reset. */
+static void fill_benchmark_input(void *data, uint32_t size_bytes,
+                                 uint16_t tensor_index, void *user_ctx)
+{
+    (void)tensor_index;
+    (void)user_ctx;
+    memset(data, 1, size_bytes);  /* matches prepare.py's reference input */
+}
+
 /* Run one inference. Re-inits the arena state, refills inputs, returns the
  * DWT cycle count for the tigris_run() call. Sets *ok to 0 on failure. */
 static uint32_t run_once(tigris_plan_t *plan, tigris_mem_t *mem,
                          tigris_kernel_fn dispatch,
                          tigris_exec_stats_t *out_stats, int *ok)
 {
-    tigris_mem_init(mem, mem->tensor_ptrs, mem->num_tensors,
-                    mem->fast_base, mem->fast_size,
-                    mem->slow_base, mem->slow_size);
-
-    for (uint8_t i = 0; i < plan->header->num_model_inputs; i++) {
-        uint16_t tidx = plan->model_inputs[i];
-        uint32_t sz = plan->tensors[tidx].size_bytes;
-        if (tigris_mem_alloc_slow(mem, tidx, sz) != TIGRIS_MEM_OK) {
-            *ok = 0;
-            return 0;
-        }
-        /* int8 value 1 - matches prepare.py's reference input generator. */
-        memset(mem->tensor_ptrs[tidx], 1, sz);
+    tigris_mem_error_t merr = tigris_codegen_reset(
+        plan, mem, fill_benchmark_input, NULL);
+    if (merr != TIGRIS_MEM_OK) {
+        printf("generated setup failed: %s\n", tigris_mem_error_str(merr));
+        *ok = 0;
+        return 0;
     }
 
     tigris_exec_stats_t stats;
     uint32_t c0 = platform_cycles();
-    tigris_exec_error_t err = tigris_run(plan, mem, dispatch, NULL, &stats);
+#ifdef BENCH_PROFILE_OPS
+    tigris_exec_error_t err = tigris_run_with_workspace_buffer(
+        plan, mem, dispatch, NULL, &stats, s_executor_workspace,
+        sizeof(s_executor_workspace));
+#else
+    (void)dispatch;  /* generated core owns the normal dispatch call. */
+    tigris_exec_error_t err = tigris_codegen_run_with_workspace_buffer(
+        plan, mem, &stats, s_executor_workspace,
+        sizeof(s_executor_workspace));
+#endif
     uint32_t c1 = platform_cycles();
 
     if (err != TIGRIS_EXEC_OK) {
@@ -212,7 +218,8 @@ int main(void)
 
     /* 1. Load the embedded plan. */
     tigris_plan_t plan;
-    tigris_error_t perr = tigris_plan_load(g_tigris_plan, g_tigris_plan_len, &plan);
+    tigris_error_t perr = tigris_codegen_load_plan(
+        g_tigris_plan, g_tigris_plan_len, &plan);
     if (perr != TIGRIS_OK) {
         printf("plan load failed: %s\n", tigris_error_str(perr));
         emit_failed("unknown", "PLAN_LOAD_FAILED");
@@ -267,7 +274,14 @@ int main(void)
     } else {
         base = TIGRIS_FAST_ARENA_BYTES;
     }
-    uint32_t fast_size = base + align_reserve + tigris_weight_decompression_overhead(&plan);
+    uint32_t fast_size = base + align_reserve
+        + tigris_weight_decompression_overhead(&plan);
+#if defined(BENCH_KERNEL_CMSIS_NN)
+    /* The plan budget covers activations and transient weights, not backend
+     * scratch. CMSIS-NN reserves its exact scratch requirement from the same
+     * physical backing store before inference. */
+    fast_size = tigris_cmsis_nn_fast_arena_required(&plan);
+#endif
 #ifdef TIGRIS_FAST_OVERRIDE
     /* Diagnostic: force a specific fast-arena size to probe the runtime minimum. */
     if (TIGRIS_FAST_OVERRIDE)
@@ -282,26 +296,17 @@ int main(void)
     uint32_t slow_size = sizeof(s_slow_arena);
 
     tigris_mem_t mem;
-    tigris_mem_error_t merr = tigris_mem_init(
-        &mem, s_tensor_ptrs, plan.header->num_tensors,
-        s_fast_arena, fast_size, s_slow_arena, slow_size);
+    tigris_mem_error_t merr = tigris_codegen_init(
+        &plan, &mem, s_tensor_ptrs, BENCH_MAX_TENSORS,
+        s_fast_arena, fast_size, s_slow_arena, slow_size,
+        fill_benchmark_input, NULL);
     if (merr != TIGRIS_MEM_OK) {
         printf("mem init failed: %s\n", tigris_mem_error_str(merr));
         emit_failed(model_name, "MEM_INIT_FAILED");
         platform_halt();
     }
 
-    tigris_kernel_fn dispatch = select_kernel();
-
-#if defined(BENCH_KERNEL_CMSIS_NN)
-    /* Reserve CMSIS-NN kernel scratch from the arena top (no stack VLAs). Must
-     * run after mem_init and before any inference; reduces mem.fast_size. */
-    if (tigris_cmsis_nn_prepare(&plan, &mem) != 0) {
-        printf("cmsis_nn prepare failed (arena too small for scratch)\n");
-        emit_failed(model_name, "SCRATCH_TOO_SMALL");
-        platform_halt();
-    }
-#endif
+    tigris_kernel_fn dispatch = tigris_codegen_dispatch();
 
 #ifdef BENCH_PROFILE_OPS
     s_prof_inner = dispatch;
@@ -408,13 +413,16 @@ int main(void)
      *     framework needs in SRAM at runtime, not a compile-time estimate.
      *       act_peak  = fast + slow arena high-water (the live activation set)
      *       scratch   = CMSIS-NN scratch carved from the fast arena (0 for s8_ref)
-     *       meta      = the runtime tensor-pointer table (TiGrIS's RAM metadata;
-     *                   TFLM keeps its equivalent TfLiteEvalTensor table inside
-     *                   the arena, so arena_used already counts it - we add ours)
+     *       meta      = the runtime tensor-pointer table plus caller-owned
+     *                   executor workspace (TFLM keeps equivalent metadata
+     *                   inside its arena, so arena_used already counts it)
      *     plan.header->peak (the old reported value) is the compiler's compile-
      *     time activation estimate; kept as plan_act_peak_bytes for reference. */
     uint32_t scratch_bytes = fast_size - mem.fast_size;     /* prepare() carve; 0 if none */
-    uint32_t meta_bytes    = (uint32_t)plan.header->num_tensors * (uint32_t)sizeof(void *);
+    uint32_t tensor_table_bytes =
+        (uint32_t)plan.header->num_tensors * (uint32_t)sizeof(void *);
+    uint32_t executor_workspace_bytes = (uint32_t)sizeof(s_executor_workspace);
+    uint32_t meta_bytes = tensor_table_bytes + executor_workspace_bytes;
     uint32_t fast_peak     = mem.fast_peak;
     uint32_t slow_peak     = last_stats.slow_peak;
     uint32_t act_peak      = fast_peak + slow_peak;
@@ -447,6 +455,7 @@ int main(void)
            "sram_slow_peak_bytes=%lu,"
            "sram_scratch_bytes=%lu,"
            "sram_meta_bytes=%lu,"
+           "sram_executor_workspace_bytes=%lu,"
            "plan_act_peak_bytes=%lu,"
            "sram_budget_kb=%lu,"
            "sram_provisioned_kb=%lu,"
@@ -475,6 +484,7 @@ int main(void)
            (unsigned long)slow_peak,
            (unsigned long)scratch_bytes,
            (unsigned long)meta_bytes,
+           (unsigned long)executor_workspace_bytes,
            (unsigned long)plan.header->peak,
            (unsigned long)(plan.header->budget / 1024),
            (unsigned long)(fast_size / 1024),

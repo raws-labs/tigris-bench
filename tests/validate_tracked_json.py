@@ -14,6 +14,7 @@ from provenance_validation import (
 
 
 ROOT = Path(__file__).resolve().parents[1]
+CORTEX_README = Path("cortex-m-deployability/README.md")
 CORTEX_SUMMARY = Path("cortex-m-deployability/results/summary.json")
 CORTEX_EXPECTED_MATRIX = Path(
     "cortex-m-deployability/results/expected-matrix.json")
@@ -23,6 +24,11 @@ EXPECTED_MHZ = {
     "nucleo_h753zi": 480,
     "nucleo_f446re": 180,
     "pico2_rp2350": 150,
+}
+MODEL_LABELS = {
+    "DS-CNN": ("ds_cnn_matched", "ds_cnn"),
+    "AD": ("ad_matched", "ad"),
+    "TS": ("ts_matched", "ts"),
 }
 
 
@@ -164,6 +170,7 @@ def validate_cortex_summary(document: object) -> list[str]:
         return ["top level must be an object"]
 
     configs = document.get("configs")
+    has_embedded_provenance = isinstance(document.get("provenance"), dict)
     if not isinstance(configs, list):
         return ["configs must be a list"]
     if document.get("count") != len(configs):
@@ -230,6 +237,12 @@ def validate_cortex_summary(document: object) -> list[str]:
             if (not isinstance(value, (int, float)) or isinstance(value, bool)
                     or value <= 0):
                 errors.append(f"{tag} {field} must be a positive number")
+        if (has_embedded_provenance
+                and config["framework"] == "tigris"):
+            workspace = config.get("sram_executor_workspace_bytes")
+            if not isinstance(workspace, int) or workspace <= 0:
+                errors.append(
+                    f"{tag} must count a positive executor workspace")
 
         output = (config.get("output_values") or {}).get("i8")
         if not isinstance(output, list) or not output:
@@ -242,6 +255,144 @@ def validate_cortex_summary(document: object) -> list[str]:
 
     if ok_cells == 0:
         errors.append("summary contains no successful cells")
+    return errors
+
+
+def _result_cell(
+        summary: dict[str, object],
+        board: str,
+        model: str,
+        framework: str,
+        kernel: str,
+) -> dict[str, object]:
+    configs = summary.get("configs")
+    if not isinstance(configs, list):
+        raise ValueError("summary configs must be a list")
+    matches = [
+        config for config in configs
+        if isinstance(config, dict)
+        and config.get("board") == board
+        and config.get("model") == model
+        and config.get("framework") == framework
+        and config.get("kernel") == kernel
+    ]
+    if len(matches) != 1:
+        raise ValueError(
+            "expected one result for "
+            f"{board}/{model}/{framework}/{kernel}, found {len(matches)}")
+    return matches[0]
+
+
+def _latency(cell: dict[str, object], decimals: int = 2) -> str:
+    value = cell.get("latency_median_ms")
+    if not isinstance(value, (int, float)) or isinstance(value, bool):
+        raise ValueError("result has no numeric median latency")
+    return f"{value:.{decimals}f}"
+
+
+def _ram(cell: dict[str, object]) -> str:
+    value = cell.get("sram_peak_bytes")
+    if not isinstance(value, int):
+        raise ValueError("result has no integer RAM peak")
+    return f"{value / 1024:.1f}"
+
+
+def _cycles(cell: dict[str, object]) -> str:
+    value = cell.get("latency_median_cycles")
+    if not isinstance(value, int):
+        raise ValueError("result has no integer median cycle count")
+    if value >= 1_000_000:
+        return f"{value / 1_000_000:.2f} M"
+    return f"{value / 1_000:.0f} K"
+
+
+def _firmware_kb(
+        summary: dict[str, object], cell: dict[str, object]) -> str:
+    provenance = summary.get("provenance")
+    log_file = cell.get("log_file")
+    try:
+        value = provenance["cells"][log_file]["artifacts"]["firmware"]["size_bytes"]
+    except (KeyError, TypeError):
+        raise ValueError(
+            f"result {log_file!r} has no firmware size provenance") from None
+    if not isinstance(value, int) or value <= 0:
+        raise ValueError(f"result {log_file!r} has an invalid firmware size")
+    return f"{value / 1024:.0f}"
+
+
+def expected_readme_result_rows(
+        document: object,
+) -> tuple[list[str], list[str]]:
+    if not isinstance(document, dict):
+        return [], ["summary must be an object"]
+    rows: list[str] = []
+    try:
+        board = "nucleo_h753zi"
+        for label, (tigris_model, tflm_model) in MODEL_LABELS.items():
+            for framework_label, framework, kernel, model in (
+                ("TiGrIS", "tigris", "cmsis_nn", tigris_model),
+                ("TFLM", "tflm", "cmsis_nn", tflm_model),
+                ("TiGrIS", "tigris", "s8_ref", tigris_model),
+            ):
+                cell = _result_cell(
+                    document, board, model, framework, kernel)
+                latency_decimals = (
+                    3 if cell["latency_median_ms"] < 1 else 2)
+                rows.append(
+                    f"| {framework_label} | {kernel} | "
+                    f"{_latency(cell, latency_decimals)} ms | "
+                    f"{_cycles(cell)} | {_ram(cell)} KB | "
+                    f"{_firmware_kb(document, cell)} KB |")
+
+        for label, (tigris_model, tflm_model) in reversed(MODEL_LABELS.items()):
+            cmsis = _result_cell(
+                document, "nucleo_f446re", tigris_model,
+                "tigris", "cmsis_nn")
+            tflm = _result_cell(
+                document, "nucleo_f446re", tflm_model,
+                "tflm", "cmsis_nn")
+            s8 = _result_cell(
+                document, "nucleo_f446re", tigris_model,
+                "tigris", "s8_ref")
+            rows.append(
+                f"| {label} | {_latency(cmsis)} ms | {_latency(tflm)} ms | "
+                f"{_latency(s8)} ms | {_ram(cmsis)} / {_ram(tflm)} KB |")
+
+        for label, (tigris_model, _) in reversed(MODEL_LABELS.items()):
+            cmsis = _result_cell(
+                document, "pico2_rp2350", tigris_model,
+                "tigris", "cmsis_nn")
+            s8 = _result_cell(
+                document, "pico2_rp2350", tigris_model,
+                "tigris", "s8_ref")
+            rows.append(
+                f"| {label} | {_latency(cmsis)} ms | {_latency(s8)} ms | "
+                f"{_ram(cmsis)} KB |")
+
+        for board, label, tflm in (
+            ("nucleo_h753zi", "H753ZI (512 KB)", "OOM at AllocateTensors"),
+            ("pico2_rp2350", "RP2350 (520 KB)", "n/a (no M33 lib)"),
+        ):
+            cell = _result_cell(
+                document, board, "mbv2_a35_r224_matched",
+                "tigris", "cmsis_nn")
+            seconds = cell["latency_median_ms"] / 1000
+            rows.append(
+                f"| {label} | runs, {seconds:.2f} s, {_ram(cell)} KB | "
+                f"{tflm} |")
+    except (KeyError, TypeError, ValueError) as exc:
+        return [], [str(exc)]
+    return rows, []
+
+
+def validate_readme_results(document: object, readme: str) -> list[str]:
+    rows, errors = expected_readme_result_rows(document)
+    for row in rows:
+        count = readme.count(row)
+        if count != 1:
+            errors.append(
+                f"derived result row occurs {count} times; expected exactly once: "
+                f"{row}")
     return errors
 
 
@@ -274,6 +425,15 @@ def main() -> None:
     errors.extend(
         f"{CORTEX_EXPECTED_MATRIX}: {problem}"
         for problem in expected_errors)
+    if CORTEX_SUMMARY in documents:
+        try:
+            readme = (ROOT / CORTEX_README).read_text()
+        except (OSError, UnicodeError) as exc:
+            errors.append(f"{CORTEX_README}: cannot read: {exc}")
+        else:
+            errors.extend(
+                f"{CORTEX_README}: {problem}"
+                for problem in validate_readme_results(summary, readme))
     provenance_errors: list[str] = []
     reconstruction_checked = False
     if CORTEX_PROVENANCE in documents:

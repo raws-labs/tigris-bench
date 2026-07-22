@@ -11,6 +11,12 @@ set(TIGRIS_PLAN
     CACHE FILEPATH "the .tgrs plan to embed in flash")
 set(TIGRIS_FAST_ARENA_BYTES "131072" CACHE STRING "fast arena size (bytes)")
 set(TIGRIS_SLOW_ARENA_BYTES "262144" CACHE STRING "slow arena size (bytes)")
+set(TIGRIS_CODEGEN "${CMAKE_CURRENT_SOURCE_DIR}/../../tigris/.venv/bin/tigris"
+    CACHE FILEPATH "TiGrIS codegen executable")
+set(TIGRIS_RUNTIME_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../../tigris-runtime"
+    CACHE PATH "pinned TiGrIS runtime checkout")
+option(TIGRIS_HOST_VALIDATION
+    "Build the hardware-free CMSIS-NN adapter parity executable" OFF)
 # Optimization level for ALL benchmark code (TiGrIS runtime, CMSIS-NN, harness, TFLM
 # glue). MUST be consistent across boards and frameworks for a fair comparison: TFLM's
 # own kernels build at -O2, and without this the clean-CMake path defaults to -O0 (no
@@ -21,10 +27,36 @@ project(cortexm_bench C CXX ASM)
 set(CMAKE_C_STANDARD 11)
 
 # ---- vendored CMSIS locations (populated by third_party/fetch.sh) ----
-set(CMSIS_NN_DIR        ${CMAKE_CURRENT_SOURCE_DIR}/third_party/CMSIS-NN)
-set(CMSIS_CORE_DIR      ${CMAKE_CURRENT_SOURCE_DIR}/third_party/CMSIS_6/CMSIS/Core)
-set(CMSIS_DEVICE_H7_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/cmsis-device-h7)
-set(CMSIS_DEVICE_F4_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/cmsis-device-f4)
+set(CMSIS_NN_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/CMSIS-NN"
+    CACHE PATH "CMSIS-NN source checkout")
+set(CMSIS_CORE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/CMSIS_6/CMSIS/Core"
+    CACHE PATH "CMSIS-Core source directory")
+set(CMSIS_DEVICE_H7_DIR
+    "${CMAKE_CURRENT_SOURCE_DIR}/third_party/cmsis-device-h7"
+    CACHE PATH "STM32H7 CMSIS device checkout")
+set(CMSIS_DEVICE_F4_DIR
+    "${CMAKE_CURRENT_SOURCE_DIR}/third_party/cmsis-device-f4"
+    CACHE PATH "STM32F4 CMSIS device checkout")
+
+if(TIGRIS_HOST_VALIDATION)
+    if(NOT EXISTS ${TIGRIS_RUNTIME_ROOT}/CMakeLists.txt)
+        message(FATAL_ERROR
+            "TiGrIS runtime not found at ${TIGRIS_RUNTIME_ROOT}.\n"
+            "Pass -DTIGRIS_RUNTIME_ROOT=<checkout>.")
+    endif()
+    add_subdirectory(third_party)
+    add_subdirectory(${TIGRIS_RUNTIME_ROOT}
+                     ${CMAKE_BINARY_DIR}/tigris_runtime)
+    target_compile_definitions(tigris_runtime PUBLIC TIGRIS_HAS_CMSIS_NN)
+    target_include_directories(tigris_runtime SYSTEM PRIVATE
+        ${CMSIS_NN_DIR}/Include)
+    add_executable(host_cmsis_validate tests/host_cmsis_validate.c)
+    target_compile_options(host_cmsis_validate PRIVATE
+        -Wall -Wextra -Wpedantic -Werror)
+    target_link_libraries(host_cmsis_validate PRIVATE
+        tigris_runtime cmsis-nn)
+    return()
+endif()
 
 # ---- board: sets BOARD_MCU_FLAGS, BOARD_STARTUP/SYSTEM/BSP/LINKER_SCRIPT,
 #      BOARD_DEFINES, BOARD_INCLUDES ----
@@ -48,30 +80,41 @@ if(BENCH_FRAMEWORK STREQUAL "tigris")
     add_subdirectory(third_party)                          # cmsis-nn static lib
 
     set(TIGRIS_HAS_CMSIS_NN ON CACHE BOOL "" FORCE)
-    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../tigris-runtime
+    add_subdirectory(${TIGRIS_RUNTIME_ROOT}
                      ${CMAKE_BINARY_DIR}/tigris_runtime)
 
     if(BENCH_KERNEL STREQUAL "cmsis_nn")
         set(KERNEL_DEFINE BENCH_KERNEL_CMSIS_NN)
+        set(CODEGEN_BACKEND cmsis-nn)
     elseif(BENCH_KERNEL STREQUAL "s8_ref")
         set(KERNEL_DEFINE BENCH_KERNEL_S8)
+        set(CODEGEN_BACKEND reference)
     else()
         message(FATAL_ERROR "BENCH_KERNEL must be 'cmsis_nn' or 's8_ref'")
     endif()
 
     set(PLAN_BLOB ${CMAKE_BINARY_DIR}/model_blob.c)
+    set(CODEGEN_CORE ${CMAKE_BINARY_DIR}/tigris_codegen_core.c)
+    set(CODEGEN_HEADER ${CMAKE_BINARY_DIR}/tigris_codegen_core.h)
     add_custom_command(
         OUTPUT ${PLAN_BLOB}
         COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tools/bin2c.py
                 ${TIGRIS_PLAN} ${PLAN_BLOB} --symbol g_tigris_plan
         DEPENDS ${TIGRIS_PLAN} ${CMAKE_CURRENT_SOURCE_DIR}/tools/bin2c.py
         COMMENT "Embedding plan: ${TIGRIS_PLAN}")
+    add_custom_command(
+        OUTPUT ${CODEGEN_CORE} ${CODEGEN_HEADER}
+        COMMAND ${TIGRIS_CODEGEN} codegen ${TIGRIS_PLAN}
+                --backend ${CODEGEN_BACKEND} --format core
+                --output ${CODEGEN_CORE} --header ${CODEGEN_HEADER}
+        DEPENDS ${TIGRIS_PLAN} ${TIGRIS_CODEGEN}
+        COMMENT "Generating TiGrIS ${CODEGEN_BACKEND} deployment core")
 
     add_executable(tigris_bench
-        harness/main.c ${PLAN_BLOB}
+        harness/main.c ${PLAN_BLOB} ${CODEGEN_CORE}
         ${BOARD_BSP} ${BOARD_SYSTEM} ${BOARD_STARTUP})
     target_include_directories(tigris_bench PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/harness ${BOARD_INCLUDES})
+        ${CMAKE_CURRENT_SOURCE_DIR}/harness ${CMAKE_BINARY_DIR} ${BOARD_INCLUDES})
     target_compile_definitions(tigris_bench PRIVATE
         ${KERNEL_DEFINE} ${BOARD_DEFINES}
         TIGRIS_FAST_ARENA_BYTES=${TIGRIS_FAST_ARENA_BYTES}

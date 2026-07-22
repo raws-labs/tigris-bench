@@ -167,11 +167,16 @@ for oi in range(G.OperatorsLength()):
         gap = tag + "_gap"
         nodes.append(helper.make_node("GlobalAveragePool", [tmap[ins[0]]], [gap]))
         gapq = act_qdq(gap, out_ti, tag)
-        flat = tag + "_flat"
-        nodes.append(helper.make_node("Flatten", [gapq], [flat], axis=1))
-        # Quantize the Flatten output too (it's the FC's input) - otherwise the
-        # FC input scale is 0 and its effective requant collapses to zero.
-        tmap[out_ti] = act_qdq(flat, out_ti, tag + "b")
+        if len(shape(out_ti)) == 2:
+            flat = tag + "_flat"
+            nodes.append(helper.make_node("Flatten", [gapq], [flat], axis=1))
+            # Quantize the Flatten output too (it's the FC's input) - otherwise
+            # the FC input scale is lost between pool and dense.
+            tmap[out_ti] = act_qdq(flat, out_ti, tag + "b")
+        else:
+            # MobileNetV1 has a 1x1 classifier Conv after global pooling and
+            # therefore retains NCHW rank four at this point.
+            tmap[out_ti] = gapq
 
     elif name == "FULLY_CONNECTED":
         x = tmap[ins[0]]
@@ -193,6 +198,26 @@ for oi in range(G.OperatorsLength()):
         nodes.append(helper.make_node("Gemm", [x, w_dq, bias_in], [gemm], transB=1))
         tmap[out_ti] = act_qdq(fused_act(gemm, fc_fused(op), tag), out_ti, tag)
 
+    elif name in ("SHAPE", "STRIDED_SLICE", "PACK"):
+        # MobileNetV1's TFLite converter emits these three integer-only nodes
+        # solely to construct the following Reshape's static [1, classes]
+        # shape.  The shape is already known from the declared output tensor,
+        # so retaining them would add non-inference metadata to the ONNX graph.
+        tmap[out_ti] = None
+
+    elif name == "RESHAPE":
+        # The preceding static shape calculation flattens a [1, 1, 1, C]
+        # classifier tensor to [1, C].  ONNX Flatten is the equivalent data
+        # operation and avoids encoding TFLite's shape-calculation subgraph.
+        flat = tag + "_flat"
+        nodes.append(helper.make_node("Flatten", [tmap[ins[0]]], [flat], axis=1))
+        tmap[out_ti] = act_qdq(flat, out_ti, tag)
+
+    elif name == "SOFTMAX":
+        softmax = tag + "_softmax"
+        nodes.append(helper.make_node("Softmax", [tmap[ins[0]]], [softmax], axis=1))
+        tmap[out_ti] = act_qdq(softmax, out_ti, tag)
+
     else:
         # Fail loud: silently skipping an op makes the reconstructed ONNX diverge
         # from the .tflite, which would void the "numerically identical model"
@@ -210,6 +235,7 @@ Y = helper.make_tensor_value_info(tmap[out_ti], TensorProto.FLOAT, _out_sh)
 g = helper.make_graph(nodes, "matched", [X], [Y], initializer=inits)
 m = helper.make_model(g, opset_imports=[helper.make_opsetid("", 17)])
 m.ir_version = 8
+m = onnx.shape_inference.infer_shapes(m)
 onnx.checker.check_model(m)
 onnx.save(m, onnx_path)
 print(f"reconstructed {onnx_path}: {len(nodes)} nodes")

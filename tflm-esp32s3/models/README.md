@@ -25,6 +25,8 @@ in the TiGrIS test fixtures (`tigris/src/tigris/cli/fixtures.py:build_ds_cnn`).
 | `ds_cnn_reference_i8.bin` | raw vector | int8 | ONNX Runtime reference for TiGrIS |
 | `ds_cnn_tflite_reference_f32.bin` | raw vector | f32 | TFLite reference for TFLM |
 | `ds_cnn_tflite_reference_i8.bin` | raw vector | int8 | TFLite reference for TFLM |
+| `mobilenet_v1_reference_i8.bin` | raw vector | int8 | ONNX-quantized MobileNet reference |
+| `mobilenet_v1_matched_ref.bin` | raw vector | int8 | TFLite-reconstructed MobileNet reference for TiGrIS |
 
 ## Regeneration
 

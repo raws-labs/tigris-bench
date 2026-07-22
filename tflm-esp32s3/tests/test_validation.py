@@ -26,8 +26,10 @@ REFERENCE_VALUES: dict[str, list[int] | list[float]] = {
     "ds_cnn_reference_f32.bin": [0.25, -0.5],
     "ds_cnn_tflite_reference_f32.bin": [0.125, -0.25],
     "ds_cnn_reference_i8.bin": [1, -2, 3],
+    "ds_cnn_matched_ref.bin": [1, -2, 3],
     "ds_cnn_tflite_reference_i8.bin": [7, 0, -7],
     "mobilenet_v1_reference_i8.bin": [4, -5],
+    "mobilenet_v1_matched_ref.bin": [8, -9],
 }
 
 
@@ -108,9 +110,9 @@ class ValidationFixture(unittest.TestCase):
         ds_ref = validate_accuracy.load_reference(
             self.models / "ds_cnn_reference_i8.bin", "int8")
         mb_ref = validate_accuracy.load_reference(
-            self.models / "mobilenet_v1_reference_i8.bin", "int8")
+            self.models / "mobilenet_v1_matched_ref.bin", "int8")
         self.assertEqual(ds_ref.tolist(), [1, -2, 3])
-        self.assertEqual(mb_ref.tolist(), [4, -5])
+        self.assertEqual(mb_ref.tolist(), [8, -9])
 
     def test_missing_cell_is_fatal(self) -> None:
         (self.raw / "tigris_i8_ref.log").unlink()
@@ -151,6 +153,31 @@ class ValidationFixture(unittest.TestCase):
         with self.assertRaisesRegex(BenchmarkDataError, "missing result cells"):
             validate_accuracy.validate_summary(summary, self.models)
 
+    def test_int8_tolerances_are_cell_specific_and_enforce_the_boundary(self) -> None:
+        path = self.raw / "tflm_i8.log"
+        path.write_text(path.read_text().replace(
+            "OUTPUT_I8: 7 0 -7", "OUTPUT_I8: 11 0 -7"))
+        validations = validate_accuracy.validate_summary(self._summary(), self.models)
+        tflm = next(v for v in validations if v["name"].startswith("tflm_i8 "))
+        self.assertEqual(tflm["status"], "pass")
+        self.assertIn("max_abs_diff=4", tflm["message"])
+        self.assertIn("atol=4", tflm["message"])
+
+        path.write_text(path.read_text().replace(
+            "OUTPUT_I8: 11 0 -7", "OUTPUT_I8: 12 0 -7"))
+        validations = validate_accuracy.validate_summary(self._summary(), self.models)
+        tflm = next(v for v in validations if v["name"].startswith("tflm_i8 "))
+        self.assertEqual(tflm["status"], "fail")
+
+        tigris_path = self.raw / "tigris_i8_espnn.log"
+        tigris_path.write_text(tigris_path.read_text().replace(
+            "OUTPUT_I8: 1 -2 3", "OUTPUT_I8: 3 -2 3"))
+        validations = validate_accuracy.validate_summary(self._summary(), self.models)
+        tigris = next(
+            v for v in validations if v["name"].startswith("tigris_i8_espnn "))
+        self.assertEqual(tigris["status"], "fail")
+        self.assertIn("atol=1", tigris["message"])
+
     def test_cli_passes_complete_fixture_and_fails_corrupt_output(self) -> None:
         summary_path = self.root / "summary.json"
         env = os.environ.copy()
@@ -182,7 +209,7 @@ class ValidationFixture(unittest.TestCase):
         self.assertEqual(gated.returncode, 0, gated.stdout + gated.stderr)
         accepted_summary = run_all_summary.read_bytes()
 
-        (self.models / "mobilenet_v1_reference_i8.bin").write_bytes(
+        (self.models / "mobilenet_v1_matched_ref.bin").write_bytes(
             struct.pack("<2b", 12, -5))
         rejected = subprocess.run(
             [sys.executable, str(SCRIPTS_DIR / "validate_accuracy.py"),
@@ -196,6 +223,28 @@ class ValidationFixture(unittest.TestCase):
             text=True, capture_output=True, env=gate_env, check=False)
         self.assertNotEqual(rejected_gate.returncode, 0)
         self.assertEqual(run_all_summary.read_bytes(), accepted_summary)
+
+
+class OrchestratorContractTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self.script = (SCRIPTS_DIR / "run_all.sh").read_text()
+        self.harness = (SUITE_DIR / "tigris-esp" / "main" / "main.c").read_text()
+
+    def test_siliconrig_image_places_plan_at_partition_offset(self) -> None:
+        self.assertIn('segments+=(0x210000 "$plan_file")', self.script)
+        self.assertNotIn('segments+=(0x60000 "$plan_file")', self.script)
+
+    def test_siliconrig_reuses_one_board_session_for_the_matrix(self) -> None:
+        self.assertIn('with client.session(board="esp32-s3") as session:', self.script)
+        self.assertIn('session.flash(firmware, timeout=300)', self.script)
+
+    def test_preflight_requires_the_matched_ds_cnn_reference(self) -> None:
+        self.assertIn("ds_cnn_matched_ref.bin", self.script)
+
+    def test_esp_harness_uses_plan_sized_executor_workspace(self) -> None:
+        self.assertIn("tigris_executor_workspace_required(&plan)", self.harness)
+        self.assertIn("tigris_run_with_workspace_buffer(", self.harness)
+        self.assertNotIn("tigris_run(plan, mem", self.harness)
 
 
 if __name__ == "__main__":
