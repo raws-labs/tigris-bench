@@ -60,7 +60,18 @@ jobs:
           done < <(git ls-files '*.sh' | sort)
 
       - name: Validate tracked JSON artifacts
-        run: python -W error tests/validate_tracked_json.py
+        env:
+          PERFORMANCE_BASELINE: >-
+            ${{ github.event_name == 'pull_request' &&
+                github.event.pull_request.base.sha || github.event.before }}
+        shell: bash
+        run: |
+          args=()
+          if [[ -n "$PERFORMANCE_BASELINE" &&
+                "$PERFORMANCE_BASELINE" != "0000000000000000000000000000000000000000" ]]; then
+            args+=(--performance-baseline "$PERFORMANCE_BASELINE")
+          fi
+          python -W error tests/validate_tracked_json.py "${args[@]}"
 
       - name: Validate exact TiGrIS core pins
         run: python -W error scripts/check_core_versions.py --manifest-only

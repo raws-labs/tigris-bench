@@ -3,7 +3,9 @@
 
 from __future__ import annotations
 
+import argparse
 import json
+import subprocess
 from pathlib import Path
 
 from provenance_validation import (
@@ -19,6 +21,7 @@ CORTEX_SUMMARY = Path("cortex-m-deployability/results/summary.json")
 CORTEX_EXPECTED_MATRIX = Path(
     "cortex-m-deployability/results/expected-matrix.json")
 CORTEX_PROVENANCE = Path("cortex-m-deployability/results/provenance.json")
+ESP_SUMMARY = Path("tflm-esp32s3/results/summary.json")
 IDENTITY_FIELDS = ("board", "model", "framework", "kernel")
 EXPECTED_MHZ = {
     "nucleo_h753zi": 480,
@@ -29,6 +32,18 @@ MODEL_LABELS = {
     "DS-CNN": ("ds_cnn_matched", "ds_cnn"),
     "AD": ("ad_matched", "ad"),
     "TS": ("ts_matched", "ts"),
+}
+
+# Device timing is compared only from committed silicon captures. The checker
+# itself is deterministic: CI reads both JSON snapshots from Git and never
+# times work on a shared host runner. Every non-zero delta is reported; these
+# limits reject only changes large enough to be engineering regressions rather
+# than measurement noise or insignificant alignment/linker movement.
+PERFORMANCE_LIMITS = {
+    "latency": (0.05, 0),
+    "working_memory": (0.02, 128),
+    "artifact_size": (0.01, 256),
+    "firmware_size": (0.01, 2048),
 }
 
 
@@ -258,6 +273,177 @@ def validate_cortex_summary(document: object) -> list[str]:
     return errors
 
 
+def _performance_cells(
+        document: object, suite: str) -> tuple[dict[str, dict[str, object]], list[str]]:
+    if not isinstance(document, dict) or not isinstance(document.get("configs"), list):
+        return {}, [f"{suite} summary has no configs list"]
+    cells: dict[str, dict[str, object]] = {}
+    errors: list[str] = []
+    for index, cell in enumerate(document["configs"]):
+        if not isinstance(cell, dict):
+            continue
+        log_file = cell.get("log_file")
+        if not isinstance(log_file, str) or not log_file:
+            errors.append(f"{suite} configs[{index}] has no stable log_file identity")
+        elif log_file in cells:
+            errors.append(f"{suite} performance identity duplicates {log_file}")
+        else:
+            cells[log_file] = cell
+    return cells, errors
+
+
+def _positive_number(value: object) -> float | int | None:
+    if (not isinstance(value, (int, float)) or isinstance(value, bool)
+            or value <= 0):
+        return None
+    return value
+
+
+def _artifact_size(
+        summary: dict[str, object], cell: dict[str, object], kind: str,
+) -> int | None:
+    log_file = cell.get("log_file")
+    try:
+        value = summary["provenance"]["cells"][log_file]["artifacts"][kind][
+            "size_bytes"]
+    except (KeyError, TypeError):
+        return None
+    return value if isinstance(value, int) and not isinstance(value, bool) else None
+
+
+def _performance_metrics(
+        summary: dict[str, object], cell: dict[str, object], suite: str,
+) -> dict[str, tuple[float | int, str, str]]:
+    """Return metric -> (value, unit, limit-class) for one captured cell."""
+    metrics: dict[str, tuple[float | int, str, str]] = {}
+    if suite == "cortex-m":
+        latency = _positive_number(cell.get("latency_median_cycles"))
+        memory = _positive_number(cell.get("sram_peak_bytes"))
+        if latency is not None:
+            metrics["median latency"] = (latency, "cycles", "latency")
+        if memory is not None:
+            metrics["all-in working memory"] = (
+                memory, "bytes", "working_memory")
+        for kind, label, limit_class in (
+            ("model", "model/plan artifact", "artifact_size"),
+            ("firmware", "firmware artifact", "firmware_size"),
+        ):
+            size = _artifact_size(summary, cell, kind)
+            if size is not None and size > 0:
+                metrics[label] = (size, "bytes", limit_class)
+    elif suite == "esp32-s3":
+        latency = _positive_number(cell.get("latency_mean_ms"))
+        if latency is not None:
+            metrics["mean latency"] = (latency, "ms", "latency")
+
+        arena_kb = _positive_number(
+            cell.get("sram_actual_kb", cell.get("arena_kb")))
+        workspace = cell.get("executor_workspace_bytes", 0)
+        if (arena_kb is not None and isinstance(workspace, int)
+                and not isinstance(workspace, bool) and workspace >= 0):
+            metrics["all-in working memory"] = (
+                int(arena_kb * 1024) + workspace,
+                "bytes",
+                "working_memory",
+            )
+
+        artifact_kb = _positive_number(
+            cell.get("plan_flash_kb", cell.get("model_flash_kb")))
+        if artifact_kb is not None:
+            metrics["model/plan artifact"] = (
+                int(artifact_kb * 1024), "bytes", "artifact_size")
+    else:
+        raise ValueError(f"unknown performance suite {suite!r}")
+    return metrics
+
+
+def _cell_label(suite: str, cell: dict[str, object]) -> str:
+    parts = [suite]
+    for field in ("board", "model", "framework", "kernel", "dtype"):
+        value = cell.get(field)
+        if isinstance(value, str) and value:
+            parts.append(value)
+    budget = cell.get("sram_budget_kb", cell.get("arena_kb"))
+    if isinstance(budget, (int, float)) and not isinstance(budget, bool):
+        parts.append(f"{budget:g}KiB")
+    return "/".join(parts)
+
+
+def compare_performance_summaries(
+        current: object, baseline: object, suite: str,
+) -> tuple[list[str], list[str]]:
+    """Compare committed device captures, returning observations and failures."""
+    current_cells, current_errors = _performance_cells(current, suite)
+    baseline_cells, baseline_errors = _performance_cells(baseline, suite)
+    errors = current_errors + baseline_errors
+    observations: list[str] = []
+    if not isinstance(current, dict) or not isinstance(baseline, dict):
+        return observations, errors
+
+    for log_file in sorted(baseline_cells.keys() - current_cells.keys()):
+        cell = baseline_cells[log_file]
+        errors.append(
+            f"{_cell_label(suite, cell)}: removed baseline cell {log_file}")
+    for log_file in sorted(current_cells.keys() - baseline_cells.keys()):
+        observations.append(
+            f"NEW {_cell_label(suite, current_cells[log_file])}: {log_file}")
+
+    for log_file in sorted(current_cells.keys() & baseline_cells.keys()):
+        new_cell = current_cells[log_file]
+        old_cell = baseline_cells[log_file]
+        label = _cell_label(suite, new_cell)
+        old_status = old_cell.get("status", "ok")
+        new_status = new_cell.get("status", "ok")
+        if old_status == "ok" and new_status != "ok":
+            errors.append(
+                f"{label}: status regressed from ok to {new_status!r}")
+            continue
+        if old_status != "ok" or new_status != "ok":
+            continue
+
+        old_metrics = _performance_metrics(baseline, old_cell, suite)
+        new_metrics = _performance_metrics(current, new_cell, suite)
+        for metric in sorted(old_metrics.keys() - new_metrics.keys()):
+            errors.append(f"{label}: removed baseline metric {metric}")
+        for metric in sorted(new_metrics.keys() - old_metrics.keys()):
+            observations.append(f"NEW {label}: metric {metric}")
+        for metric in sorted(old_metrics.keys() & new_metrics.keys()):
+            old_value, old_unit, old_class = old_metrics[metric]
+            new_value, new_unit, new_class = new_metrics[metric]
+            if old_unit != new_unit or old_class != new_class:
+                errors.append(f"{label}: incompatible {metric} metric contract")
+                continue
+            delta = new_value - old_value
+            if delta == 0:
+                continue
+            relative = delta / old_value
+            direction = "+" if delta > 0 else ""
+            observation = (
+                f"{label}: {metric} {old_value:g} -> {new_value:g} {old_unit} "
+                f"({direction}{relative * 100:.2f}%)")
+            observations.append(observation)
+            relative_limit, absolute_limit = PERFORMANCE_LIMITS[old_class]
+            if delta > absolute_limit and relative > relative_limit:
+                errors.append(
+                    f"{observation}; exceeds +{relative_limit * 100:g}% and "
+                    f"+{absolute_limit:g} {old_unit}")
+    return observations, errors
+
+
+def _git_json(revision: str, path: Path) -> object:
+    completed = subprocess.run(
+        ["git", "show", f"{revision}:{path.as_posix()}"],
+        cwd=ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if completed.returncode != 0:
+        raise ValueError(
+            f"cannot read {path} at {revision}: {completed.stderr.strip()}")
+    return json.loads(completed.stdout, parse_constant=reject_nonstandard_number)
+
+
 def _result_cell(
         summary: dict[str, object],
         board: str,
@@ -397,6 +583,17 @@ def validate_readme_results(document: object, readme: str) -> list[str]:
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Validate tracked benchmark data and optional performance drift.")
+    parser.add_argument(
+        "--performance-baseline",
+        metavar="REVISION",
+        help=(
+            "compare committed silicon metrics with the summaries at this Git "
+            "revision; no hardware or host timing is run"),
+    )
+    args = parser.parse_args()
+
     tracked_paths = git_tracked_paths(ROOT)
     paths = tracked_json_paths(tracked_paths)
     errors: list[str] = []
@@ -463,7 +660,32 @@ def main() -> None:
                 for problem in mutation_errors)
             mutation_checked = not mutation_errors
 
+    performance_observations: list[str] = []
+    performance_checked = False
+    if args.performance_baseline:
+        for suite, path in (
+            ("cortex-m", CORTEX_SUMMARY),
+            ("esp32-s3", ESP_SUMMARY),
+        ):
+            current = documents.get(path)
+            if current is None:
+                errors.append(f"Performance contract: current {path} is unavailable")
+                continue
+            try:
+                baseline = _git_json(args.performance_baseline, path)
+            except (ValueError, json.JSONDecodeError) as exc:
+                errors.append(f"Performance contract: {exc}")
+                continue
+            observations, regressions = compare_performance_summaries(
+                current, baseline, suite)
+            performance_observations.extend(observations)
+            errors.extend(
+                f"Performance regression: {problem}" for problem in regressions)
+            performance_checked = True
+
     if errors:
+        for observation in performance_observations:
+            print(f"PERF: {observation}")
         for error in errors:
             print(f"ERROR: {error}")
         raise SystemExit(1)
@@ -471,6 +693,15 @@ def main() -> None:
         print("Verified that removing an expected Cortex matrix cell fails.")
     if reconstruction_checked:
         print("Rebuilt the Cortex summary byte-for-byte from 27 source captures.")
+    if performance_checked:
+        if performance_observations:
+            for observation in performance_observations:
+                print(f"PERF: {observation}")
+        else:
+            print("No device-performance metrics changed from the baseline.")
+        print(
+            "Compared committed Cortex-M and ESP32-S3 silicon metrics with "
+            f"{args.performance_baseline}.")
     print(f"Validated {len(paths)} JSON artifact(s).")
 
 

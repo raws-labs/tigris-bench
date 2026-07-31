@@ -40,6 +40,21 @@ python scripts/results.py results/raw/ -o results/summary.json
 
 Accuracy validation is part of the pipeline: `validate_accuracy.py` compares device outputs against the ORT reference, so a run is rejected if the numbers do not match within tolerance.
 
+When a committed hardware summary changes, CI also compares it with the pull
+request base (or previous pushed commit). The comparison runs entirely from the
+two versioned snapshots: it reports every latency, all-in working-memory,
+model/plan-size, and firmware-size delta, and rejects material regressions or a
+formerly successful cell becoming unavailable. It does not time shared CI
+runners or pretend that hardware is continuously available. The materiality
+limits are 5% for latency; 2% plus 128 bytes for working memory; 1% plus 256
+bytes for model/plan artifacts; and 1% plus 2 KiB for firmware. A regression
+must exceed both the percentage and absolute limit. Review the same gate locally
+with:
+
+```bash
+python tests/validate_tracked_json.py --performance-baseline <git-revision>
+```
+
 ## Common dependencies
 
 - Host: Python 3.10+, `onnx`, `onnxruntime`, `tigris-ml`, plus whatever a specific suite needs

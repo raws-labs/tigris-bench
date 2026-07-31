@@ -16,7 +16,10 @@ from provenance_validation import (
     git_tracked_paths,
     validate_provenance,
 )
-from validate_tracked_json import validate_readme_results
+from validate_tracked_json import (
+    compare_performance_summaries,
+    validate_readme_results,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -24,6 +27,7 @@ PROVENANCE_PATH = ROOT / "cortex-m-deployability/results/provenance.json"
 RESULTS_PATH = ROOT / "cortex-m-deployability/scripts/results.py"
 README_PATH = ROOT / "cortex-m-deployability/README.md"
 SUMMARY_PATH = ROOT / "cortex-m-deployability/results/summary.json"
+ESP_SUMMARY_PATH = ROOT / "tflm-esp32s3/results/summary.json"
 RESULTS_SPEC = importlib.util.spec_from_file_location(
     "cortex_results", RESULTS_PATH)
 assert RESULTS_SPEC and RESULTS_SPEC.loader
@@ -136,6 +140,102 @@ class ReadmeResultContractTest(unittest.TestCase):
         errors = validate_readme_results(mutated, self.readme)
         self.assertTrue(
             any("| TS | 2.56 ms" in error for error in errors), errors)
+
+
+class PerformanceRegressionContractTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self.cortex = json.loads(SUMMARY_PATH.read_text())
+        self.esp = json.loads(ESP_SUMMARY_PATH.read_text())
+
+    @staticmethod
+    def cell(document: dict, log_file: str) -> dict:
+        return next(
+            config for config in document["configs"]
+            if config["log_file"] == log_file)
+
+    def test_unchanged_snapshots_have_no_deltas(self) -> None:
+        for suite, summary in (("cortex-m", self.cortex), ("esp32-s3", self.esp)):
+            observations, errors = compare_performance_summaries(
+                summary, copy.deepcopy(summary), suite)
+            self.assertEqual(observations, [])
+            self.assertEqual(errors, [])
+
+    def test_material_cycle_regression_is_rejected(self) -> None:
+        current = copy.deepcopy(self.cortex)
+        cell = self.cell(current, "h753_ds_cnn_cmsis_nn.log")
+        cell["latency_median_cycles"] = int(
+            cell["latency_median_cycles"] * 1.051)
+        observations, errors = compare_performance_summaries(
+            current, self.cortex, "cortex-m")
+        self.assertTrue(any("median latency" in item for item in observations))
+        self.assertTrue(any("exceeds +5%" in error for error in errors), errors)
+
+    def test_timing_noise_below_limit_is_reported_but_allowed(self) -> None:
+        current = copy.deepcopy(self.esp)
+        cell = self.cell(current, "tigris_i8_espnn.log")
+        cell["latency_mean_ms"] *= 1.049
+        observations, errors = compare_performance_summaries(
+            current, self.esp, "esp32-s3")
+        self.assertTrue(any("mean latency" in item for item in observations))
+        self.assertEqual(errors, [])
+
+    def test_material_working_memory_growth_is_rejected(self) -> None:
+        current = copy.deepcopy(self.cortex)
+        cell = self.cell(current, "h753_ad_cmsis_nn.log")
+        cell["sram_peak_bytes"] += 129
+        _, errors = compare_performance_summaries(
+            current, self.cortex, "cortex-m")
+        self.assertTrue(
+            any("all-in working memory" in error for error in errors), errors)
+
+    def test_small_absolute_memory_growth_is_reported_but_allowed(self) -> None:
+        current = copy.deepcopy(self.cortex)
+        cell = self.cell(current, "h753_ad_cmsis_nn.log")
+        cell["sram_peak_bytes"] += 64
+        observations, errors = compare_performance_summaries(
+            current, self.cortex, "cortex-m")
+        self.assertTrue(
+            any("all-in working memory" in item for item in observations))
+        self.assertEqual(errors, [])
+
+    def test_exact_firmware_growth_is_rejected(self) -> None:
+        current = copy.deepcopy(self.cortex)
+        provenance = current["provenance"]["cells"]
+        artifact = provenance["h753_ds_cnn_cmsis_nn.log"]["artifacts"][
+            "firmware"]
+        artifact["size_bytes"] += 4096
+        _, errors = compare_performance_summaries(
+            current, self.cortex, "cortex-m")
+        self.assertTrue(
+            any("firmware artifact" in error for error in errors), errors)
+
+    def test_success_to_failure_is_rejected(self) -> None:
+        current = copy.deepcopy(self.esp)
+        self.cell(current, "tigris_i8_espnn.log")["status"] = "FAILED"
+        _, errors = compare_performance_summaries(
+            current, self.esp, "esp32-s3")
+        self.assertTrue(any("status regressed" in error for error in errors), errors)
+
+    def test_removed_baseline_cell_cannot_hide_a_regression(self) -> None:
+        current = copy.deepcopy(self.cortex)
+        current["configs"] = [
+            cell for cell in current["configs"]
+            if cell["log_file"] != "h753_ds_cnn_cmsis_nn.log"]
+        _, errors = compare_performance_summaries(
+            current, self.cortex, "cortex-m")
+        self.assertTrue(
+            any("removed baseline cell" in error for error in errors), errors)
+
+    def test_removed_baseline_metric_cannot_hide_a_regression(self) -> None:
+        current = copy.deepcopy(self.esp)
+        del self.cell(current, "tigris_i8_espnn.log")["latency_mean_ms"]
+        _, errors = compare_performance_summaries(
+            current, self.esp, "esp32-s3")
+        self.assertTrue(
+            any("removed baseline metric mean latency" in error
+                for error in errors),
+            errors,
+        )
 
 
 def valid_capture_provenance() -> dict:
