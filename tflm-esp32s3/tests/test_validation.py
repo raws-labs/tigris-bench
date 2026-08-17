@@ -30,6 +30,7 @@ REFERENCE_VALUES: dict[str, list[int] | list[float]] = {
     "ds_cnn_tflite_reference_i8.bin": [7, 0, -7],
     "mobilenet_v1_reference_i8.bin": [4, -5],
     "mobilenet_v1_matched_ref.bin": [8, -9],
+    "unet_matched_ref.bin": [2, -3],
 }
 
 

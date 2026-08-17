@@ -207,7 +207,8 @@ for ref in \
     ds_cnn_matched_ref.bin \
     ds_cnn_tflite_reference_f32.bin \
     ds_cnn_tflite_reference_i8.bin \
-    mobilenet_v1_matched_ref.bin; do
+    mobilenet_v1_matched_ref.bin \
+    unet_matched_ref.bin; do
     if [ ! -f "$MODELS/$ref" ]; then
         echo "ERROR: missing $MODELS/$ref; run: python models/prepare.py" >&2
         exit 1
@@ -287,6 +288,17 @@ run_tflm_config "tflm_mbv1_i8" "-DBENCH_WIDE=1"
 for budget in 128k 64k 32k; do
     run_tigris_config "tigris_mbv1_i8_espnn_${budget}" "$PLAN_DIR/mobilenet_v1_i8_${budget}.tgrs" "esp_nn"
 done
+
+# Case C: "Doesn't Fit" segmentation showcase (U-Net, 2D-tiled ConvTranspose
+# decoder). ESP-NN has no TransposeConv/Concat kernels, so those ops fall
+# back to s8_ref; the surrounding Conv stages still dispatch to ESP-NN.
+
+# TiGrIS U-Net i8 (ESP-NN, falls back to s8_ref per-op)
+run_tigris_config "tigris_unet_i8_espnn" "$PLAN_DIR/unet.tgrs" "esp_nn"
+
+# TFLM U-Net i8 (expected: ARENA_TOO_SMALL; peak activation 1.19 MiB >>
+# the 256 KB internal-SRAM arena)
+run_tflm_config "tflm_unet_i8" "-DBENCH_UNET=1"
 
 if [ "$TRANSPORT" = "siliconrig" ]; then
     capture_siliconrig_matrix

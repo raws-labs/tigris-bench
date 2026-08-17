@@ -195,12 +195,88 @@ def build_keras_mobilenet_v1(alpha: float = 1.0, input_size: int = 128,
     )
 
 
+def build_keras_unet(input_size: int = 256, num_classes: int = 8):
+    """Real U-Net for the int8 segmentation showcase (Keras functional API).
+
+    Input 256x256x3 (NHWC). Encoder: 4 stride-2 conv blocks (channels
+    16/24/32/48) downsampling 256->128->64->32->16, then a stride-1 bottleneck
+    (64) at 16x16. The 128x128, 64x64, and 32x32 feature maps are kept as skips.
+    Decoder: 4 blocks, each Conv2DTranspose(stride 2) -> Concatenate(skip) ->
+    Conv2D(3x3) -> ReLU, upsampling 16->32->64->128->256. The final full-res
+    block concatenates the model input (256x256x3) as its skip, then a linear
+    Conv2D emits 8 segmentation logits (256x256x8).
+
+    Upsampling uses Conv2DTranspose (-> TFLite TRANSPOSE_CONV -> ONNX
+    ConvTranspose), never bilinear resize, so the matched QDQ ONNX reconstructs
+    bit-for-bit. Random He-init only (no training); a U-Net has no global-pool
+    collapse, so the int8 output stays non-degenerate.
+    """
+    import tensorflow as tf
+    from tensorflow import keras
+
+    np.random.seed(42)
+    tf.random.set_seed(42)
+    init = keras.initializers.HeNormal(seed=42)
+
+    inp = keras.Input(shape=(input_size, input_size, 3), name="input")  # NHWC
+
+    def conv(x, c, k=3, s=1, act="relu"):
+        # activation set on the layer so TFLite fuses it into the Conv op
+        # (FusedActivationFunction), which the tflite_to_qdq_onnx tool expects.
+        return keras.layers.Conv2D(c, k, strides=s, padding="same",
+                                   activation=act, kernel_initializer=init)(x)
+
+    # Encoder: four stride-2 blocks; skips saved at 128, 64, 32.
+    s1 = conv(inp, 16, 3, 2)   # 128x128x16  skip
+    s2 = conv(s1, 24, 3, 2)    # 64x64x24    skip
+    s3 = conv(s2, 32, 3, 2)    # 32x32x32    skip
+    e4 = conv(s3, 48, 3, 2)    # 16x16x48
+    bn = conv(e4, 64, 3, 1)    # 16x16x64    bottleneck
+
+    def up(x, skip, c):
+        u = keras.layers.Conv2DTranspose(
+            c, 2, strides=2, padding="same", kernel_initializer=init)(x)
+        u = keras.layers.Concatenate(axis=-1)([u, skip])
+        return conv(u, c, 3, 1, act="relu")
+
+    d1 = up(bn, s3, 48)   # 32x32x48
+    d2 = up(d1, s2, 32)   # 64x64x32
+    d3 = up(d2, s1, 24)   # 128x128x24
+
+    # Final full-resolution block: upsample to 256, concat the input, linear conv.
+    u4 = keras.layers.Conv2DTranspose(
+        16, 2, strides=2, padding="same", kernel_initializer=init)(d3)  # 256x256x16
+    u4 = keras.layers.Concatenate(axis=-1)([u4, inp])                    # 256x256x19
+    out = conv(u4, num_classes, 3, 1, act=None)                         # 256x256x8 logits
+
+    return keras.Model(inputs=inp, outputs=out, name="unet")
+
+
+def _to_runtime_layout(result: np.ndarray) -> np.ndarray:
+    """Match the TiGrIS runtime's output tensor layout.
+
+    ONNX Runtime executes Conv-family ops as NCHW, so a rank-4 result comes
+    back [N, C, H, W]. The TiGrIS runtime emits rank-4 tensors as NHWC
+    [N, H, W, C], so a reference written straight from ORT would be the same
+    values in a different element order. Transpose rank-4 results to NHWC
+    before flatten/quantize so the reference bytes line up with the device's
+    OUTPUT_I8 order. Rank-2 outputs ([N, C], e.g. DS-CNN/MobileNet
+    classifiers) are unaffected: NCHW == NHWC there, so this is a no-op.
+    """
+    if result.ndim == 4:
+        return np.ascontiguousarray(np.transpose(result, (0, 2, 3, 1)))
+    return result
+
+
 def generate_reference(onnx_path: Path, output_path: Path):
     """Run ONNX model and save reference output bytes.
 
     For quantized (i8) models: fills input with int8 value 1 (dequantized
     via the model's input QuantizeLinear params), saves raw int8 output.
     For float models: fills input with 1.0f, saves raw float32 output.
+
+    Rank-4 outputs are transposed from ORT's NCHW to the runtime's NHWC
+    before being written; see `_to_runtime_layout`.
     """
     import onnx as _onnx
     import onnxruntime as ort
@@ -254,7 +330,7 @@ def generate_reference(onnx_path: Path, output_path: Path):
     if is_quantized and out_scale is not None:
         inp_data = np.full(shape, float_val, dtype=np.float32)
         results = sess.run(None, {inp_meta.name: inp_data})
-        float_out = results[0].flatten().astype(np.float64)
+        float_out = _to_runtime_layout(results[0]).flatten().astype(np.float64)
         int8_out = np.clip(np.round(float_out / out_scale) + out_zp, -128, 127).astype(np.int8)
         ref_data = int8_out.tobytes()
         output_path.write_bytes(ref_data)
@@ -263,7 +339,7 @@ def generate_reference(onnx_path: Path, output_path: Path):
     else:
         inp_data = np.ones(shape, dtype=np.float32)
         results = sess.run(None, {inp_meta.name: inp_data})
-        ref_data = b"".join(r.astype(np.float32).tobytes() for r in results)
+        ref_data = b"".join(_to_runtime_layout(r).astype(np.float32).tobytes() for r in results)
         output_path.write_bytes(ref_data)
         print(f"  Reference: {output_path} ({len(ref_data)} bytes, {len(ref_data)//4} floats)")
 
@@ -419,6 +495,68 @@ def reconstruct_matched_onnx(tflite_path: Path, output_path: Path):
     subprocess.run([sys.executable, str(tool), str(tflite_path), str(output_path)], check=True)
 
 
+def _tflite_int8_output_distinct(tflite_path: Path, seed: int = 123) -> int:
+    """Run the int8 tflite interpreter on a random input; count distinct outputs.
+
+    Guards against a degenerate (near-constant) quantized output, which would
+    make the downstream int8 parity comparison meaningless.
+    """
+    import tensorflow as tf
+
+    interp = tf.lite.Interpreter(model_path=str(tflite_path))
+    interp.allocate_tensors()
+    inp = interp.get_input_details()[0]
+    outp = interp.get_output_details()[0]
+    rng = np.random.default_rng(seed)
+    x = rng.integers(-128, 128, size=inp["shape"], dtype=np.int8)
+    interp.set_tensor(inp["index"], x)
+    interp.invoke()
+    y = interp.get_tensor(outp["index"])
+    return int(np.unique(y).size)
+
+
+def build_unet_artifacts(out: Path, tflm_main: Path):
+    """Build the int8 U-Net and emit tflite, C header, and matched QDQ ONNX."""
+    print("\n[U-Net] Building Keras U-Net (256x256x3 -> 256x256x8)...")
+    keras_unet = build_keras_unet()
+
+    tflite_i8 = out / "unet_i8.tflite"
+    convert_tflite_i8(keras_unet, tflite_i8)
+
+    print("[U-Net] Generating C header for TFLM...")
+    header = tflm_main / "unet_i8.h"
+    generate_c_header(tflite_i8, header, "unet_i8")
+
+    print("[U-Net] Checking int8 output is non-degenerate...")
+    n_distinct = _tflite_int8_output_distinct(tflite_i8)
+    print(f"  int8 output distinct values: {n_distinct} (need > 16)")
+    assert n_distinct > 16, (
+        f"U-Net int8 output collapsed to {n_distinct} distinct values (<= 16); "
+        f"tune He-init scale or add synthetic-data gradient steps to break symmetry.")
+
+    print("[U-Net] Reconstructing matched QDQ ONNX...")
+    matched = out / "unet_matched.onnx"
+    reconstruct_matched_onnx(tflite_i8, matched)
+    onnx.checker.check_model(onnx.load(str(matched)))
+    print(f"  matched ONNX valid: {matched} ({matched.stat().st_size} bytes)")
+
+    # TiGrIS executes this TFLite-reconstructed QDQ graph, so its accuracy
+    # gate must use a reference from the same graph, matching the
+    # MobileNetV1 pattern above.
+    print("[U-Net] Generating ORT reference (i8)...")
+    generate_reference(matched, out / "unet_matched_ref.bin")
+    return tflite_i8, header, matched
+
+
+def compile_tigris_plan(onnx_path: Path, output_path: Path, mem: str):
+    """Compile an ONNX model to a TiGrIS .tgrs plan via the tigris CLI."""
+    subprocess.run(
+        ["tigris", "compile", str(onnx_path), "-m", mem, "-o", str(output_path)],
+        check=True,
+    )
+    print(f"  Plan: {output_path} (-m {mem})")
+
+
 def main():
     out = Path(__file__).parent / "output"
     out.mkdir(exist_ok=True)
@@ -502,8 +640,21 @@ def main():
         generate_reference(out / "mobilenet_v1_matched.onnx",
                            out / "mobilenet_v1_matched_ref.bin")
 
+    # U-Net segmentation showcase (256x256x3 -> 256x256x8): TRANSPOSE_CONV +
+    # CONCATENATION decoder whose full-resolution activations exceed MCU SRAM.
+    if has_tf:
+        print("\n[U-Net] Building U-Net int8 artifacts...")
+        tflm_main = Path(__file__).parent.parent / "tflm-esp" / "main"
+        build_unet_artifacts(out, tflm_main)
+
     print(f"\nDone. All outputs in {out}/")
 
 
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) > 1 and sys.argv[1] == "unet":
+        out = Path(__file__).parent / "output"
+        out.mkdir(exist_ok=True)
+        tflm_main = Path(__file__).parent.parent / "tflm-esp" / "main"
+        build_unet_artifacts(out, tflm_main)
+    else:
+        main()

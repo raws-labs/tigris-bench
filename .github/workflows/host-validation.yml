@@ -50,6 +50,23 @@ jobs:
           python -W error -m unittest discover
           -s tests -p 'test_*.py' -v
 
+      - name: Run QDQ decoder-op reconstruction test
+        # Needs TensorFlow to build the test fixture; TensorFlow is not in
+        # requirements-host-validation.txt (kept light for this fast job), so
+        # pytest.importorskip in the test skips it here rather than erroring.
+        # A module skipped entirely at collection time is reported by pytest
+        # as exit code 5 (NO_TESTS_COLLECTED), not 0, so treat that one code
+        # as success too; any other nonzero code (a real failure) still fails
+        # the step.
+        shell: bash
+        run: |
+          python -m pytest cortex-m-deployability/tools/test_decoder_ops.py -v
+          rc=$?
+          if [ "$rc" -eq 0 ] || [ "$rc" -eq 5 ]; then
+            exit 0
+          fi
+          exit "$rc"
+
       - name: Check benchmark shell syntax
         shell: bash
         run: |

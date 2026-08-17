@@ -5,8 +5,10 @@
  * Reports min/max/mean/stdev latency in machine-parseable format.
  *
  * Model selection via build define:
- *   -DBENCH_INT8=1   int8 quantized model
- *   default          f32 model
+ *   -DBENCH_WIDE=1   MobileNetV1 int8 (ARENA_TOO_SMALL showcase)
+ *   -DBENCH_UNET=1   U-Net int8 segmentation (ARENA_TOO_SMALL showcase)
+ *   -DBENCH_INT8=1   int8 quantized DS-CNN
+ *   default          f32 DS-CNN
  *
  * Machine-parseable output:
  *   BENCH_RESULT:latency_mean_ms=X,latency_min_ms=X,...
@@ -34,6 +36,12 @@ static const unsigned char *model_data = mobilenet_v1_tflite_i8;
 static const unsigned int model_data_len = mobilenet_v1_tflite_i8_len;
 static const char *dtype_name = "int8";
 static const char *model_name = "mobilenet_v1";
+#elif defined(BENCH_UNET)
+#include "unet_i8.h"
+static const unsigned char *model_data = unet_i8;
+static const unsigned int model_data_len = unet_i8_len;
+static const char *dtype_name = "int8";
+static const char *model_name = "unet";
 #elif defined(BENCH_INT8)
 #include "ds_cnn_tflite_i8.h"
 static const unsigned char *model_data = ds_cnn_tflite_i8;
@@ -95,7 +103,7 @@ void app_main(void) {
     }
 
     /* 2. Set up op resolver with DS-CNN operations */
-    static tflite::MicroMutableOpResolver<12> resolver;
+    static tflite::MicroMutableOpResolver<16> resolver;
     resolver.AddConv2D();
     resolver.AddDepthwiseConv2D();
     resolver.AddFullyConnected();
@@ -107,6 +115,9 @@ void app_main(void) {
     resolver.AddQuantize();
     resolver.AddDequantize();
     resolver.AddAdd();           /* MobileNetV2 residuals / padding ops */
+    resolver.AddTransposeConv();       /* U-Net decoder upsampling */
+    resolver.AddConcatenation();       /* U-Net skip connections */
+    resolver.AddResizeNearestNeighbor(); /* U-Net decoder upsampling */
 
     /* 3. Build interpreter */
     static tflite::MicroInterpreter interpreter(
@@ -144,7 +155,7 @@ void app_main(void) {
     printf("\nWarmup (%d runs)...\n", WARMUP_RUNS);
     for (int i = 0; i < WARMUP_RUNS; i++) {
         /* Fill input with deterministic data */
-#if defined(BENCH_INT8) || defined(BENCH_WIDE)
+#if defined(BENCH_INT8) || defined(BENCH_WIDE) || defined(BENCH_UNET)
         int8_t *in_data = input->data.int8;
         for (size_t j = 0; j < input->bytes; j++)
             in_data[j] = 1;
@@ -170,7 +181,7 @@ void app_main(void) {
     float latencies[BENCH_RUNS];
 
     for (int i = 0; i < BENCH_RUNS; i++) {
-#if defined(BENCH_INT8) || defined(BENCH_WIDE)
+#if defined(BENCH_INT8) || defined(BENCH_WIDE) || defined(BENCH_UNET)
         int8_t *in_data = input->data.int8;
         for (size_t j = 0; j < input->bytes; j++)
             in_data[j] = 1;
@@ -210,7 +221,7 @@ void app_main(void) {
 
     /* 7. Print output values (for accuracy validation) */
     printf("\nOutput values:\n");
-#if defined(BENCH_INT8) || defined(BENCH_WIDE)
+#if defined(BENCH_INT8) || defined(BENCH_WIDE) || defined(BENCH_UNET)
     int8_t *out = output->data.int8;
     printf("  OUTPUT_I8:");
     for (size_t j = 0; j < output->bytes; j++)
