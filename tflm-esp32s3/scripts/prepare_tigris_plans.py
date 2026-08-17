@@ -18,6 +18,7 @@ PLAN_SPECS = (
     ("mobilenet_v1_matched.onnx", "128K", "mobilenet_v1_i8_128k.tgrs"),
     ("mobilenet_v1_matched.onnx", "64K", "mobilenet_v1_i8_64k.tgrs"),
     ("mobilenet_v1_matched.onnx", "32K", "mobilenet_v1_i8_32k.tgrs"),
+    ("unet_matched.onnx", "232K+6M", "unet.tgrs"),
 )
 
 

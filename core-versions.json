@@ -1,22 +1,22 @@
 {
   "format_version": 1,
-  "profile": "plan-sized-workspace-2026-07-19",
-  "plan_schema": 4,
+  "profile": "plan-sized-workspace-2026-08-16",
+  "plan_schema": 5,
   "compatibility_manifest": {
     "repository": "https://github.com/raws-labs/tigris.git",
     "path": "compatibility.json",
-    "commit": "5bb335405e155644ffd496b126dc9d4540760525"
+    "commit": "a19f882d95fb10de94cf0a83e65355c7bcc12bf7"
   },
   "compiler": {
     "repository": "https://github.com/raws-labs/tigris.git",
     "branch": "develop",
-    "commit": "5bb335405e155644ffd496b126dc9d4540760525",
-    "emits_schema": 4
+    "commit": "a19f882d95fb10de94cf0a83e65355c7bcc12bf7",
+    "emits_schema": 5
   },
   "runtime": {
     "repository": "https://github.com/raws-labs/tigris-runtime.git",
     "branch": "develop",
-    "commit": "8d444c2cd122cfca5caa9009343e1febc071b1bc",
-    "accepts_schemas": [2, 3, 4]
+    "commit": "18c4ee19e1847dd06e729dd6733393c54162bdad",
+    "accepts_schemas": [2, 3, 4, 5]
   }
 }

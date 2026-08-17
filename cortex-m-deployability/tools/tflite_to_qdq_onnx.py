@@ -22,6 +22,10 @@ from tflite.Conv2DOptions import Conv2DOptions
 from tflite.DepthwiseConv2DOptions import DepthwiseConv2DOptions
 from tflite.FullyConnectedOptions import FullyConnectedOptions
 from tflite.AddOptions import AddOptions
+from tflite.TransposeConvOptions import TransposeConvOptions
+from tflite.ConcatenationOptions import ConcatenationOptions
+from tflite.ResizeNearestNeighborOptions import ResizeNearestNeighborOptions
+from tflite.ResizeBilinearOptions import ResizeBilinearOptions
 from tflite.ActivationFunctionType import ActivationFunctionType
 
 def conv_opts(op, dw=False):
@@ -40,6 +44,21 @@ def add_fused(op):
     o = AddOptions()
     o.Init(op.BuiltinOptions().Bytes, op.BuiltinOptions().Pos)
     return o.FusedActivationFunction()
+
+def tconv_opts(op):
+    o = TransposeConvOptions()
+    o.Init(op.BuiltinOptions().Bytes, op.BuiltinOptions().Pos)
+    return o.StrideH(), o.StrideW(), o.FusedActivationFunction()
+
+def concat_opts(op):
+    o = ConcatenationOptions()
+    o.Init(op.BuiltinOptions().Bytes, op.BuiltinOptions().Pos)
+    return o.Axis(), o.FusedActivationFunction()
+
+def resize_opts(op, bilinear):
+    o = (ResizeBilinearOptions if bilinear else ResizeNearestNeighborOptions)()
+    o.Init(op.BuiltinOptions().Bytes, op.BuiltinOptions().Pos)
+    return o.AlignCorners(), o.HalfPixelCenters()
 
 tfl_path, onnx_path = sys.argv[1], sys.argv[2]
 buf = open(tfl_path, 'rb').read()
@@ -218,6 +237,104 @@ for oi in range(G.OperatorsLength()):
         nodes.append(helper.make_node("Softmax", [tmap[ins[0]]], [softmax], axis=1))
         tmap[out_ti] = act_qdq(softmax, out_ti, tag)
 
+    elif name == "TRANSPOSE_CONV":
+        # U-Net decoder upconvolution. TFLite TRANSPOSE_CONV input order is
+        # [output_shape(int32), weights, input, bias?] - the real activation is
+        # input 2; input 0 is a (sometimes runtime-built via SHAPE/PACK) output
+        # shape we ignore, taking the static output dims from the op's output
+        # tensor. Weights are OHWI [C_out, kH, kW, C_in], per-C_out quantized.
+        x = tmap[ins[2]]
+        w_ti = ins[1]
+        w = data(w_ti); ws, wz = qparams(w_ti)
+        # OHWI -> ONNX ConvTranspose weight layout IOHW [C_in, C_out, kH, kW]. The
+        # TiGrIS compiler does its own IOHW->OHWI transpose internally
+        # (writer._transpose_weight_nhwc), so emit standard ONNX order here.
+        w_onnx = np.transpose(w, (3, 0, 1, 2))
+        kh, kw = w_onnx.shape[2], w_onnx.shape[3]
+        sh, sw, fused = tconv_opts(op)
+        in_h, in_w = shape(ins[2])[1], shape(ins[2])[2]
+        out_h, out_w = shape(out_ti)[1], shape(out_ti)[2]
+        # ConvTranspose output = stride*(in-1) + k - pad_begin - pad_end + out_pad.
+        # TFLite transpose_conv uses one origin pad = total//2 (floor at begin) and
+        # clamps total >= 0; when the requested output exceeds the natural
+        # transposed size the surplus is output_padding at the end.
+        def split_pad(base, out):
+            tot = base - out
+            if tot >= 0:
+                return tot // 2, tot - tot // 2, 0
+            return 0, 0, -tot
+        pb_h, pe_h, opad_h = split_pad((in_h - 1) * sh + kh, out_h)
+        pb_w, pe_w, opad_w = split_pad((in_w - 1) * sw + kw, out_w)
+        # Per-channel weight axis is C_out = axis 1 in the IOHW layout.
+        w_dq = dq(tag + "_w", w_onnx, ws, np.zeros_like(wz), axis=1)
+        ct_inputs = [x, w_dq]
+        if len(ins) > 3 and ins[3] >= 0:
+            b_ti = ins[3]; b = data(b_ti); bs, bz = qparams(b_ti)
+            ct_inputs.append(dq(tag + "_b", b.astype(np.int32), bs,
+                                np.zeros_like(bz).astype(np.int32),
+                                axis=0 if bs.size > 1 else None, zp_dtype=np.int32))
+        ct_out = tag + "_ct"
+        nodes.append(helper.make_node("ConvTranspose", ct_inputs, [ct_out],
+                     kernel_shape=[kh, kw], strides=[sh, sw],
+                     pads=[pb_h, pb_w, pe_h, pe_w],
+                     output_padding=[opad_h, opad_w], group=1))
+        tmap[out_ti] = act_qdq(fused_act(ct_out, fused, tag), out_ti, tag)
+
+    elif name == "CONCATENATION":
+        # U-Net skip merge. Each int8 operand is already dequantized (via its
+        # producer's Q/DQ) to real values; concatenate in float, then requantize to
+        # the concat output scale - exactly tflite's quantized concat, which
+        # requantizes every input to the output scale.
+        ax, fused = concat_opts(op)
+        rank = len(shape(out_ti))
+        if ax < 0:
+            ax += rank
+        if rank == 4:                    # tflite NHWC axis index -> ONNX NCHW index
+            ax = (0, 2, 3, 1)[ax]
+        cc = tag + "_concat"
+        nodes.append(helper.make_node("Concat", [tmap[i] for i in ins], [cc], axis=ax))
+        tmap[out_ti] = act_qdq(fused_act(cc, fused, tag), out_ti, tag)
+
+    elif name == "RESIZE_NEAREST_NEIGHBOR":
+        # U-Net decoder upsample. input 0 = data, input 1 = target [h, w] (const).
+        # Nearest is an exact int8 copy, so it reconstructs bit-for-bit. For an
+        # integer upscale with align_corners=False, tflite nearest (half_pixel or
+        # not) reduces to out_coord // factor, which ONNX asymmetric +
+        # nearest_mode=floor reproduces exactly.
+        x = tmap[ins[0]]
+        in_h, in_w = shape(ins[0])[1], shape(ins[0])[2]
+        out_h, out_w = shape(out_ti)[1], shape(out_ti)[2]
+        align, half = resize_opts(op, bilinear=False)
+        if out_h % in_h or out_w % in_w:
+            raise ValueError(
+                f"tflite_to_qdq_onnx: {name} (op #{oi}) is not an integer upscale "
+                f"({in_h}x{in_w} -> {out_h}x{out_w}); only integer upscale is "
+                f"reconstructed bit-exactly.")
+        if align:
+            raise ValueError(
+                f"tflite_to_qdq_onnx: {name} (op #{oi}) has align_corners=True, "
+                f"which is not reproduced by the integer-upscale nearest path.")
+        scales = np.array([1.0, 1.0, out_h / in_h, out_w / in_w], dtype=np.float32)
+        add_init(scales, tag + "_scl")
+        rz = tag + "_resize"
+        nodes.append(helper.make_node("Resize", [x, "", tag + "_scl"], [rz],
+                     mode="nearest", coordinate_transformation_mode="asymmetric",
+                     nearest_mode="floor"))
+        tmap[out_ti] = act_qdq(rz, out_ti, tag)
+
+    elif name == "RESIZE_BILINEAR":
+        # Fail loud: tflite's INT8 bilinear kernel interpolates in integer
+        # fixed-point, so its output differs from a float bilinear (the only form
+        # expressible with the QDQ pattern) by up to 1 LSB per element - verified
+        # against an ideal float bilinear. That per-element loss breaks the
+        # bit-exact "numerically identical model" basis of the parity comparison
+        # and accumulates through downstream ops. Use nearest upsampling in the
+        # decoder (U-Net skip decoders do), which reconstructs exactly.
+        raise ValueError(
+            f"tflite_to_qdq_onnx: RESIZE_BILINEAR (op #{oi}) is not reconstructed: "
+            f"tflite's integer bilinear kernel is not bit-exactly reproducible with "
+            f"a float QDQ graph. Use nearest-neighbor upsampling in the decoder.")
+
     else:
         # Fail loud: silently skipping an op makes the reconstructed ONNX diverge
         # from the .tflite, which would void the "numerically identical model"
@@ -228,9 +345,13 @@ for oi in range(G.OperatorsLength()):
             f"The reconstructor must reproduce every op that affects the compared "
             f"output; add explicit handling for '{name}'.")
 
-# model output = the subgraph's declared output tensor
+# model output = the subgraph's declared output tensor. The whole graph is NCHW,
+# so a rank-4 (spatial, e.g. U-Net) output must be declared NCHW too; the tflite
+# output shape is NHWC.
 out_ti = G.Outputs(0)
 _out_sh = list(shape(out_ti))
+if len(_out_sh) == 4:                    # NHWC -> NCHW
+    _out_sh = [_out_sh[0], _out_sh[3], _out_sh[1], _out_sh[2]]
 Y = helper.make_tensor_value_info(tmap[out_ti], TensorProto.FLOAT, _out_sh)
 g = helper.make_graph(nodes, "matched", [X], [Y], initializer=inits)
 m = helper.make_model(g, opset_imports=[helper.make_opsetid("", 17)])

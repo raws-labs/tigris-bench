@@ -59,6 +59,18 @@ EXPECTED_CELLS: dict[str, CellSpec] = {
     "tigris_mbv1_i8_espnn_32k.log": CellSpec(
         "tigris", "esp_nn", "int8", "mobilenet_v1_matched", 32,
         "i8", "mobilenet_v1_matched_ref.bin"),
+
+    # Case C: "Doesn't Fit" segmentation showcase (U-Net, 2D-tiled decoder).
+    # int8_atol=4, not the default 1: the 17-stage int8 decoder accumulates
+    # cross-engine requant rounding (ONNX Runtime and the TFLite integer
+    # oracle themselves disagree by up to 3 LSB on this model), the same
+    # deep-int8 relaxation already applied to tflm_i8 above.
+    "tigris_unet_i8_espnn.log": CellSpec(
+        "tigris", "esp_nn", "int8", "unet_matched", 232,
+        "i8", "unet_matched_ref.bin", int8_atol=4),
+    "tflm_unet_i8.log": CellSpec(
+        "tflm", "default", "int8", "unet", 256,
+        None, None, expected_status="ARENA_TOO_SMALL"),
 }
 
 
