@@ -191,6 +191,12 @@ collect_and_validate() {
     "$PYTHON" "$SCRIPT_DIR/validate_accuracy.py" \
         "$SUMMARY_CANDIDATE" "$MODELS"
 
+    # Slim any megabyte-scale dense output map (e.g. the U-Net segmentation map)
+    # down to a canary slice plus a length+sha256 digest, AFTER the accuracy gate
+    # has already checked the full vector against the model reference. Classifier
+    # cells are untouched, so a U-Net-free summary is unchanged.
+    "$PYTHON" "$SCRIPT_DIR/slim_summary.py" "$SUMMARY_CANDIDATE"
+
     # Only replace the publishable summary after both gates pass. A failed or
     # numerically incorrect capture can never overwrite the previous good result.
     mv "$SUMMARY_CANDIDATE" "$SUMMARY"
