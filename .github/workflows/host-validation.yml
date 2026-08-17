@@ -57,11 +57,12 @@ jobs:
         # A module skipped entirely at collection time is reported by pytest
         # as exit code 5 (NO_TESTS_COLLECTED), not 0, so treat that one code
         # as success too; any other nonzero code (a real failure) still fails
-        # the step.
+        # the step. Capture the code with "|| rc=$?" so the shell's errexit
+        # does not abort on the (expected) nonzero pytest exit before the check.
         shell: bash
         run: |
-          python -m pytest cortex-m-deployability/tools/test_decoder_ops.py -v
-          rc=$?
+          rc=0
+          python -m pytest cortex-m-deployability/tools/test_decoder_ops.py -v || rc=$?
           if [ "$rc" -eq 0 ] || [ "$rc" -eq 5 ]; then
             exit 0
           fi
