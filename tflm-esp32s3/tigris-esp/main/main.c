@@ -488,6 +488,10 @@ void app_main(void) {
            (unsigned)last_stats.stages_chain,
            (unsigned)last_stats.total_tiles);
 
+#if defined(BENCH_KERNEL_ESP_NN)
+    tigris_esp_nn_print_conv_stats();
+#endif
+
     printf("BENCH_DONE\n");
 
 cleanup:
