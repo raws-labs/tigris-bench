@@ -38,8 +38,12 @@
 
 static const char *TAG = "bench";
 
+#ifndef WARMUP_RUNS
 #define WARMUP_RUNS 3
+#endif
+#ifndef BENCH_RUNS
 #define BENCH_RUNS  10
+#endif
 
 /* Watchdog suppression: background task that continuously feeds and disables
  * all WDTs. This handles cases where FreeRTOS or bootloader re-enables
@@ -261,6 +265,18 @@ void app_main(void) {
         fast_size = avail_internal;
     }
 
+    void *fast_buf = heap_caps_malloc(fast_size,
+                                      MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
+    if (!fast_buf) {
+        ESP_LOGE(TAG, "alloc fast_buf failed (%lu)", (unsigned long)fast_size);
+        esp_partition_munmap(mmap_handle);
+        return;
+    }
+
+    /* Size the slow tier from what is left AFTER fast_buf is allocated. With
+     * no PSRAM the slow tier shares internal SRAM with the fast arena, so
+     * measuring the largest free block before fast_buf exists would
+     * double-count the same region and the slow_buf alloc would then fail. */
     uint32_t slow_size;
 #if CONFIG_SPIRAM
     slow_size = heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM);
@@ -276,14 +292,6 @@ void app_main(void) {
 #endif
     if (slow_size < 64 * 1024)
         slow_size = 64 * 1024;
-
-    void *fast_buf = heap_caps_malloc(fast_size,
-                                      MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
-    if (!fast_buf) {
-        ESP_LOGE(TAG, "alloc fast_buf failed (%lu)", (unsigned long)fast_size);
-        esp_partition_munmap(mmap_handle);
-        return;
-    }
 
 #if CONFIG_SPIRAM
     void *slow_buf = heap_caps_malloc(slow_size, MALLOC_CAP_SPIRAM);
