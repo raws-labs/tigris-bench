@@ -103,13 +103,16 @@ class ProvenanceContractTest(unittest.TestCase):
         self.assert_rejected_with(mutated, "revision " + "0" * 40 + " is unavailable")
 
     def test_reachable_but_incorrect_repository_revision_is_rejected(self) -> None:
+        # a5fab6ff is a reachable commit that predates the chip-major reorg, so
+        # it does not carry the result artifacts at their current paths; the
+        # validator must reject such a revision.
         mutated = copy.deepcopy(self.document)
         mutated["artifact_repository"]["revision"] = (
             "a5fab6ff574c882c756771137f9a716f3e4f5e7b"
         )
         self.assert_rejected_with(
             mutated,
-            "revision SHA-256 mismatch for "
+            "artifact_repository.revision does not contain "
             "cortex-m/deployability-hil/results/summary.json",
         )
 
