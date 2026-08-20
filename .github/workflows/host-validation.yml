@@ -43,12 +43,12 @@ jobs:
       - name: Run ESP32 result and accuracy fixtures
         run: >-
           python -W error -m unittest discover
-          -s tflm-esp32s3/tests -v
+          -s esp32s3/latency-hil/tests -v
 
       - name: Run provenance mutation tests
         run: >-
           python -W error -m unittest discover
-          -s tests -p 'test_*.py' -v
+          -s common -p 'test_*.py' -v
 
       - name: Run QDQ decoder-op reconstruction test
         # Needs TensorFlow to build the test fixture; TensorFlow is not in
@@ -62,7 +62,7 @@ jobs:
         shell: bash
         run: |
           rc=0
-          python -m pytest cortex-m-deployability/tools/test_decoder_ops.py -v || rc=$?
+          python -m pytest cortex-m/deployability-hil/tools/test_decoder_ops.py -v || rc=$?
           if [ "$rc" -eq 0 ] || [ "$rc" -eq 5 ]; then
             exit 0
           fi
@@ -89,13 +89,13 @@ jobs:
                 "$PERFORMANCE_BASELINE" != "0000000000000000000000000000000000000000" ]]; then
             args+=(--performance-baseline "$PERFORMANCE_BASELINE")
           fi
-          python -W error tests/validate_tracked_json.py "${args[@]}"
+          python -W error common/validate_tracked_json.py "${args[@]}"
 
       - name: Validate exact TiGrIS core pins
-        run: python -W error scripts/check_core_versions.py --manifest-only
+        run: python -W error common/check_core_versions.py --manifest-only
 
       - name: Validate tracked Cortex-M output parity
-        working-directory: cortex-m-deployability
+        working-directory: cortex-m/deployability-hil
         run: >-
           python -W error scripts/validate_accuracy.py
           results/summary.json
@@ -110,7 +110,7 @@ jobs:
           runtime_revision="$(python -c \
             'import json; print(json.load(open("core-versions.json"))["runtime"]["commit"])')"
           cmsis_revision="$(python -c \
-            'import json; print(json.load(open("cortex-m-deployability/results/summary.json"))["provenance"]["common"]["dependencies"]["CMSIS-NN"])')"
+            'import json; print(json.load(open("cortex-m/deployability-hil/results/summary.json"))["provenance"]["common"]["dependencies"]["CMSIS-NN"])')"
 
           checkout_revision() {
             local repository="$1" destination="$2" revision="$3"
@@ -181,7 +181,7 @@ jobs:
           PY
           tigris compile "$host_root/host_cmsis_conv.onnx" \
             --mem 4K --output "$host_root/host_cmsis_conv.tgrs"
-          cmake -S cortex-m-deployability -B "$host_root/build" \
+          cmake -S cortex-m/deployability-hil -B "$host_root/build" \
             -DCMAKE_BUILD_TYPE=Release \
             -DTIGRIS_HOST_VALIDATION=ON \
             -DTIGRIS_RUNTIME_ROOT="$host_root/runtime" \

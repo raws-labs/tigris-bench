@@ -1,0 +1,246 @@
+{
+  "schema_version": 1,
+  "suite": "cortex-m-deployability",
+  "result_artifacts": [
+    {
+      "path": "cortex-m/deployability-hil/results/summary.json",
+      "kind": "device_result_summary",
+      "sha256": "10a7d943c714f2d15014283322db625d9819a8117cbfeb867ca0c1ffa3f82d61",
+      "collector": {
+        "path": "cortex-m/deployability-hil/scripts/results.py",
+        "sha256": "dc520330f7f085343e81feabd172a71d8e3cca78baad96f12011fba0787dda02"
+      },
+      "validator": {
+        "path": "cortex-m/deployability-hil/scripts/validate_accuracy.py",
+        "sha256": "8d00b3804d324e41e8c55c68f285b59f9fce768064bd679b80c5085008eb858b"
+      },
+      "source_capture_root": "cortex-m/deployability-hil/results/raw",
+      "source_tracking": "gitignored_not_shipped",
+      "source_relation": "byte_identical_reconstruction_verified",
+      "source_captures": [
+        {
+          "path": "cortex-m/deployability-hil/results/raw/f446_ad_cmsis_nn.log",
+          "sha256": "2b9625c0599c69fefbb46125846130b8f5847d9521c5a3736ff1e2aff8a6932c"
+        },
+        {
+          "path": "cortex-m/deployability-hil/results/raw/f446_ad_s8_ref.log",
+          "sha256": "2949bffb04f03f510e7c534fa75a5399fc3300cba0809ed45bca7cc98ec1f044"
+        },
+        {
+          "path": "cortex-m/deployability-hil/results/raw/f446_ad_tflm.log",
+          "sha256": "1cbf3914d7eadbf46792dd830a4aba9c3f2ab04bffdca6955eab730c0274a663"
+        },
+        {
+          "path": "cortex-m/deployability-hil/results/raw/f446_ds_cnn_cmsis_nn.log",
+          "sha256": "cbcdc8f706d1c19ce930a5320ac2434d4dd02944dac6b458e7dafe6f73c1b5bf"
+        },
+        {
+          "path": "cortex-m/deployability-hil/results/raw/f446_ds_cnn_s8_ref.log",
+          "sha256": "b2120316311838824cf321bfc861bf3c15a9cc06af6b882988a36ea7748efbee"
+        },
+        {
+          "path": "cortex-m/deployability-hil/results/raw/f446_ds_cnn_tflm.log",
+          "sha256": "d48aa51a9cbdf90639ff9a388aad402194a4e07fcd5221f63a1e9e5794bfe04c"
+        },
+        {
+          "path": "cortex-m/deployability-hil/results/raw/f446_ts_cmsis_nn.log",
+          "sha256": "c862dd60b6864b82c1aaef42a739e52cf680b6f5de52f5e23c7fd5953c5a6486"
+        },
+        {
+          "path": "cortex-m/deployability-hil/results/raw/f446_ts_s8_ref.log",
+          "sha256": "d191a40f3fae772fddb18c9922d18cc4b5087be9b144e566fe80fbae729d32ed"
+        },
+        {
+          "path": "cortex-m/deployability-hil/results/raw/f446_ts_tflm.log",
+          "sha256": "d7c7ee8f790dd466c140aa231aca6bdf9e415d685f9aef5f93d36089090ee1ce"
+        },
+        {
+          "path": "cortex-m/deployability-hil/results/raw/h753_ad_cmsis_nn.log",
+          "sha256": "5c30fb90b3363f19cf7d92d64dd0460347622aa7b01be5d21a0fc1f9c0f29172"
+        },
+        {
+          "path": "cortex-m/deployability-hil/results/raw/h753_ad_s8_ref.log",
+          "sha256": "22dae44804f2acf9227dc659df36b5b7b7b15d8014db9201990336c6650c92ff"
+        },
+        {
+          "path": "cortex-m/deployability-hil/results/raw/h753_ad_tflm.log",
+          "sha256": "46ab1b5937306120c28309e769696d197c54ab32c6bca0da6fe91feb0831828f"
+        },
+        {
+          "path": "cortex-m/deployability-hil/results/raw/h753_ds_cnn_cmsis_nn.log",
+          "sha256": "8d077dd60cc461f387c65dfbb0e7bfcca42c032ddf904eb3c99437b69a0524d5"
+        },
+        {
+          "path": "cortex-m/deployability-hil/results/raw/h753_ds_cnn_s8_ref.log",
+          "sha256": "14d3f2fefa69ffa74efe56fae510c8c5ae7373cf8102345d03cec287b8ff81ed"
+        },
+        {
+          "path": "cortex-m/deployability-hil/results/raw/h753_ds_cnn_tflm.log",
+          "sha256": "b182c21702bdc0b1197eaf235be0b56b33618ca8298106834b39396b405322e2"
+        },
+        {
+          "path": "cortex-m/deployability-hil/results/raw/h753_mbv2_cmsis_nn.log",
+          "sha256": "f6e971f292b745f0933972e671b4d9f067a80ccd7fede1a1b978ba3b6513f3cf"
+        },
+        {
+          "path": "cortex-m/deployability-hil/results/raw/h753_mbv2_tflm.log",
+          "sha256": "dc12831c8120922be1c79a259c0e74e2551ad118890496aa07be87816d07c14e"
+        },
+        {
+          "path": "cortex-m/deployability-hil/results/raw/h753_ts_cmsis_nn.log",
+          "sha256": "11fe9cc8e454ebdda62782f2d29d78fa39a578b755b82655ace2d8d19c4d7884"
+        },
+        {
+          "path": "cortex-m/deployability-hil/results/raw/h753_ts_s8_ref.log",
+          "sha256": "522424ebf2347e338a6e8ccc30283623d760f79e5d8e3daad0f4758e3c16a512"
+        },
+        {
+          "path": "cortex-m/deployability-hil/results/raw/h753_ts_tflm.log",
+          "sha256": "7582afb6312118fd320a5719fa38d2bbdff2c1a9b0551b8ba743cfc8ef3dd44f"
+        },
+        {
+          "path": "cortex-m/deployability-hil/results/raw/rp2350_ad_cmsis_nn.log",
+          "sha256": "8358116c6108f9a5a73d0cbe621eb9a973199126f8d0d07ecbe1b6e510d5b188"
+        },
+        {
+          "path": "cortex-m/deployability-hil/results/raw/rp2350_ad_s8_ref.log",
+          "sha256": "5cb03b80f6945371d1ff41db974e8824659a38a3d56a5e910e9697684c1df8ba"
+        },
+        {
+          "path": "cortex-m/deployability-hil/results/raw/rp2350_ds_cnn_cmsis_nn.log",
+          "sha256": "71e8dcb708e0be755cbf9b847943986ee9be000f98cd972252933d02a70a4950"
+        },
+        {
+          "path": "cortex-m/deployability-hil/results/raw/rp2350_ds_cnn_s8_ref.log",
+          "sha256": "a9f57d2bfd282d5ad63d4d4dc6e8074315297fb39ea7f461d8a1946c0406b509"
+        },
+        {
+          "path": "cortex-m/deployability-hil/results/raw/rp2350_mbv2_cmsis_nn.log",
+          "sha256": "68739764b405d7c24d37daf1e4fbad73c1458fee6b67d34aaecfde19112cb4ce"
+        },
+        {
+          "path": "cortex-m/deployability-hil/results/raw/rp2350_ts_cmsis_nn.log",
+          "sha256": "9f25e4d42fcbbea82cc2e988b1f09052ce2d18fa1f55f2a7e01d4529e2a55940"
+        },
+        {
+          "path": "cortex-m/deployability-hil/results/raw/rp2350_ts_s8_ref.log",
+          "sha256": "1f6e3638d62d51a99a980096596b4a8268cdca090b788b8c0158697164f09509"
+        }
+      ]
+    },
+    {
+      "path": "esp32s3/latency-hil/results/summary.json",
+      "kind": "device_result_summary",
+      "sha256": "46dfad2d1895520a42c973a4842bf6b73b8bb0bad437665505811a3235a2b3a9",
+      "collector": {
+        "path": "esp32s3/latency-hil/scripts/results.py",
+        "sha256": "7cdd870557a5344bda9a37b8e6bfb2fbf7058647139fe33fcc188a81cf9019bd"
+      },
+      "validator": {
+        "path": "esp32s3/latency-hil/scripts/validate_accuracy.py",
+        "sha256": "9bac5e710d6246cbb5084c5c26c17210e3185300ce979919ba52c3c1a540310c"
+      },
+      "source_capture_root": "esp32s3/latency-hil/results/raw",
+      "source_tracking": "gitignored_not_shipped",
+      "source_relation": "byte_identical_reconstruction_verified",
+      "source_captures": [
+        {
+          "path": "esp32s3/latency-hil/results/raw/tflm_f32.log",
+          "sha256": "6cbfa0e39d9bb717e6eb515e08837453b85f84d7760303f41d237177856feab2"
+        },
+        {
+          "path": "esp32s3/latency-hil/results/raw/tflm_i8.log",
+          "sha256": "8469bf0a4f55bdf332341622d19eef17bc8f194b258400bcfc2cab2b5fc2c3fd"
+        },
+        {
+          "path": "esp32s3/latency-hil/results/raw/tflm_mbv1_i8.log",
+          "sha256": "57a04205eed4dbcf11490184f353150b43479beeb48e6a7a444af1deb6d9082e"
+        },
+        {
+          "path": "esp32s3/latency-hil/results/raw/tigris_f32_ref.log",
+          "sha256": "efab4526c6f5769e3663cd607eeeacb79541cc74ea620be6bf7fc872c1a3d814"
+        },
+        {
+          "path": "esp32s3/latency-hil/results/raw/tigris_i8_espnn.log",
+          "sha256": "2ac9267fc7de4381c5b856d1a13ef3ec109ca25636f0da7e6a37f0d971a789d3"
+        },
+        {
+          "path": "esp32s3/latency-hil/results/raw/tigris_i8_ref.log",
+          "sha256": "f18e3c1c0e18a608df37014300286832933e31934db3054f95db2087230cc507"
+        },
+        {
+          "path": "esp32s3/latency-hil/results/raw/tigris_mbv1_i8_espnn.log",
+          "sha256": "8c331b9f8170d379408fc9c413ac05ea0fc70a55d65e89e4f418b43f47a548fe"
+        },
+        {
+          "path": "esp32s3/latency-hil/results/raw/tigris_mbv1_i8_espnn_128k.log",
+          "sha256": "6a37ca3bcb67db41d6db671324d4fc03d3b040587c9a111246ebe32208f2cc09"
+        },
+        {
+          "path": "esp32s3/latency-hil/results/raw/tigris_mbv1_i8_espnn_32k.log",
+          "sha256": "528402cef22c337fb710076ade8259ef02cabbfd6726f347cb2ed4df97662bc8"
+        },
+        {
+          "path": "esp32s3/latency-hil/results/raw/tigris_mbv1_i8_espnn_64k.log",
+          "sha256": "ced51c1feedb940d999f7cc2beaa1208fcbe09ff8239513dc33f309f792921d7"
+        }
+      ]
+    }
+  ],
+  "artifact_repository": {
+    "revision": "2f0f29e6c9ceb7a6f5e07c387c15cbd27c13d96b",
+    "basis": "commit_containing_byte_identical_artifact_and_tools"
+  },
+  "execution_provenance": {
+    "capture_timestamp_utc": "recorded_in_result_artifact",
+    "benchmark_repository_revision": "recorded_in_result_artifact",
+    "tigris_compiler_revision": "recorded_in_result_artifact",
+    "tigris_runtime_revision": "recorded_in_result_artifact",
+    "tflite_micro_revision": "recorded_in_result_artifact",
+    "arm_none_eabi_toolchain_version": "recorded_in_result_artifact",
+    "siliconrig_revision": "recorded_in_result_artifact",
+    "pico_sdk_revision": "recorded_in_result_artifact",
+    "build_flags": "recorded_in_result_artifact",
+    "model_artifact_hashes": "recorded_in_result_artifact",
+    "firmware_hashes": "recorded_in_result_artifact",
+    "board_identifiers": "recorded_in_result_artifact",
+    "clock_state": "recorded_per_cell"
+  },
+  "declared_dependencies": [
+    {
+      "name": "CMSIS-NN",
+      "revision": "6d9d61d8a586c39160d0c1ba58f6948e4cf61ad0",
+      "basis": "declared_pin",
+      "evidence_path": "cortex-m/deployability-hil/third_party/fetch.sh",
+      "evidence_sha256": "05d5cf94ea5ed9484ef01bd22eb7a1ac3c3914ea46499fe95332dfd5b6f67f4b"
+    },
+    {
+      "name": "CMSIS-Core",
+      "revision": "45dab712ad84f8cbbf2b7bfc089c19088507df6f",
+      "basis": "declared_pin",
+      "evidence_path": "cortex-m/deployability-hil/third_party/fetch.sh",
+      "evidence_sha256": "05d5cf94ea5ed9484ef01bd22eb7a1ac3c3914ea46499fe95332dfd5b6f67f4b"
+    },
+    {
+      "name": "cmsis-device-f4",
+      "revision": "3c77349ce04c8af401454cc51f85ea9a50e34fc1",
+      "basis": "declared_pin",
+      "evidence_path": "cortex-m/deployability-hil/third_party/fetch.sh",
+      "evidence_sha256": "05d5cf94ea5ed9484ef01bd22eb7a1ac3c3914ea46499fe95332dfd5b6f67f4b"
+    },
+    {
+      "name": "cmsis-device-h7",
+      "revision": "de8243d2c15f87936f28a49fcd9e6f5ba10fc233",
+      "basis": "declared_pin",
+      "evidence_path": "cortex-m/deployability-hil/third_party/fetch.sh",
+      "evidence_sha256": "05d5cf94ea5ed9484ef01bd22eb7a1ac3c3914ea46499fe95332dfd5b6f67f4b"
+    },
+    {
+      "name": "tflite-micro",
+      "revision": "074b75f8ec873cd6a8ebbd2d971b277e135e059e",
+      "basis": "declared_pin",
+      "evidence_path": "cortex-m/deployability-hil/third_party/fetch.sh",
+      "evidence_sha256": "05d5cf94ea5ed9484ef01bd22eb7a1ac3c3914ea46499fe95332dfd5b6f67f4b"
+    }
+  ]
+}

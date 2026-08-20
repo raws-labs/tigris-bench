@@ -12,3 +12,7 @@ venv/
 .*
 !.gitignore
 !.github/
+
+# repo-wide: build outputs + generated model artifacts (any suite/dir)
+build/
+output/
