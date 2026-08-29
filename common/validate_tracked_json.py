@@ -439,8 +439,12 @@ def _git_json(revision: str, path: Path) -> object:
         text=True,
     )
     if completed.returncode != 0:
-        raise ValueError(
-            f"cannot read {path} at {revision}: {completed.stderr.strip()}")
+        stderr = completed.stderr.strip()
+        # The path is absent from the baseline commit (e.g. the artifact was
+        # renamed in this change): there is no prior version to compare against.
+        if "does not exist" in stderr or "exists on disk, but not in" in stderr:
+            raise FileNotFoundError(f"{path} is absent from {revision}")
+        raise ValueError(f"cannot read {path} at {revision}: {stderr}")
     return json.loads(completed.stdout, parse_constant=reject_nonstandard_number)
 
 
@@ -673,6 +677,12 @@ def main() -> None:
                 continue
             try:
                 baseline = _git_json(args.performance_baseline, path)
+            except FileNotFoundError:
+                # No baseline at this path (the artifact is new here or was
+                # renamed in this change); nothing to regress against, so skip.
+                print(f"PERF: no baseline for {path} at "
+                      f"{args.performance_baseline} (new or renamed); skipping")
+                continue
             except (ValueError, json.JSONDecodeError) as exc:
                 errors.append(f"Performance contract: {exc}")
                 continue
