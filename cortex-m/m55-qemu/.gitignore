@@ -1,0 +1,5 @@
+firmware.elf
+*.log
+*.tgrs
+*.onnx
+*.onnx.data

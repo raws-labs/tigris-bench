@@ -1,52 +1,79 @@
 # tigris-bench
 
-[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
-[![Docs](https://img.shields.io/badge/docs-tigris--ml.dev-green)](https://tigris-ml.dev/docs)
+Reproducible benchmarks for **TiGrIS** — a tiling ahead-of-time compiler + INT8 runtime for
+microcontrollers — against **TFLite Micro**, across MCU targets. Every number below comes from a
+pinned on-device run recorded in this repo.
 
-**Reproducible benchmarks for TiGrIS.** The source of truth behind every number quoted in the [TiGrIS](https://github.com/raws-labs/tigris) docs and blog.
+> Looking for the *story* behind the numbers? Read the [TiGrIS blog and docs](https://tigris-ml.dev).
+> This repo is the reproducible evidence; the site is the narrative.
 
-Each benchmark suite is self-contained and lives in its own subdirectory: model preparation on the host, a device harness, and scripts that collect machine-parseable results. Anyone with the matching hardware should be able to reproduce any number end-to-end.
+## Headline results
 
-Canonical device runs use the exact compiler and runtime commits recorded in
-[`core-versions.json`](core-versions.json). Both hardware orchestrators verify
-the sibling checkouts, accepted plan schema, and clean tracked state before
-building or flashing. A development-only run may set
-`TIGRIS_ALLOW_UNPINNED_CORE=1`, but results from that override are not canonical
-until their exact revisions are recorded and validated.
+### Cortex-M — deployability (does it fit and run?)
 
-## How it is organized
+NUCLEO-H753ZI (Cortex-M7, on-chip SRAM only), INT8, CMSIS-NN. Same weights on both sides — TiGrIS
+runs the exact model reconstructed from TFLM's own TFLite file.
 
-Every suite follows the same three-step shape:
+| Model | TFLite Micro | TiGrIS |
+|---|---|---|
+| **MobileNetV2** (α0.35, 224²) | **OOM** — `AllocateTensors` → `ARENA_TOO_SMALL` | **runs** — tiled to 299 KB SRAM, 1.43 s |
+| DS-CNN (keyword spotting) | 22.7 KB SRAM · 12.8 ms | 17.0 KB · 11.1 ms |
+| Anomaly detection | 15.8 KB SRAM · 1.2 ms | 2.9 KB · 1.2 ms |
+| Time-series forecast | 3.0 KB SRAM · 0.3 ms | 2.4 KB · 0.3 ms |
 
-1. **Prepare** models on the host: ONNX, quantization, TiGrIS compilation, and reference outputs from ONNX Runtime.
-2. **Run** the device harness for each configuration under test.
-3. **Collect** results into JSON, format them as tables, and validate device outputs against the reference to catch numerical drift.
+TiGrIS tiles activations so the working set fits on-chip SRAM. TFLM's single contiguous arena
+can't, so **MobileNetV2 does not run at all** — the headline: tiling turns "won't fit" into "runs."
 
-Suites are grouped by what they are measuring (e.g. latency against a peer framework, tiling overhead across memory budgets, end-to-end demos). See each suite's own README for its benchmark matrix, hardware, and exact commands.
+### ESP32-S3 — latency (how fast, with acceleration?)
 
-## Quick start
+ESP32-S3, INT8. TiGrIS dispatches to ESP-NN; TFLM uses its optimized kernels.
 
-```bash
-# Prepare sibling compiler/runtime checkouts at the commits in core-versions.json
-python scripts/check_core_versions.py
+| Model | TFLite Micro | TiGrIS (ESP-NN) | TiGrIS (portable ref) |
+|---|---|---|---|
+| DS-CNN | 30.4 ms | **29.4 ms** | 629 ms |
 
-# Enter the suite you want to run, then follow its README
-cd <suite>/
-pip install -r requirements.txt
-python models/prepare.py
-./scripts/run_all.sh /dev/ttyUSB0
-python scripts/results.py results/raw/ -o results/summary.json
+The ESP-NN path brings TiGrIS to parity with TFLM — and is **21× faster** than its own portable
+reference kernel, showing the accelerated dispatch works.
+
+### Emulated Cortex-M55 — capability (functional)
+
+Larger models on an emulated Arm Cortex-M55 (QEMU Corstone-300). QEMU is functional, **not
+cycle-accurate**, so these are correctness + memory-fit results, not latency.
+
+| Model | Result |
+|---|---|
+| ResNet-50 (25 M params) | runs, 508 KB fast-SRAM working set, bit-exact vs host |
+| MobileNetV2-0.35 | runs SRAM-only in 127 KB (tiled 5.8× from a 735 KB peak), bit-exact |
+
+## Reproduce
+
+Each target is a self-contained "clone → build → flash → same numbers" unit:
+
+| Path | Target | How |
+|---|---|---|
+| [`cortex-m/deployability-hil/`](cortex-m/deployability-hil) | H753 · F446 · RP2350 | real hardware (SiliconRig HIL) |
+| [`esp32s3/latency-hil/`](esp32s3/latency-hil) | ESP32-S3 | real hardware (SiliconRig HIL) |
+| [`cortex-m/m55-qemu/`](cortex-m/m55-qemu) | emulated Cortex-M55 | QEMU, no hardware needed |
+
+Models are prepared once in [`models/`](models) and shared by every target. Compiler/runtime
+versions are pinned in `core-versions.json` and enforced by the tooling in `common/`.
+
+## Methodology
+
+- **Weight-matched.** TiGrIS runs the *identical* INT8 weights as TFLM, reconstructed from the same
+  TFLite file, so every cell is apples-to-apples.
+- **Honest RAM.** SRAM figures are the measured working set, not a provisioned arena.
+- **Provenance.** Every result carries the compiler/runtime commit and plan schema, validated in CI.
+
+## Layout
+
 ```
-
-Accuracy validation is part of the pipeline: `validate_accuracy.py` compares device outputs against the ORT reference, so a run is rejected if the numbers do not match within tolerance.
-
-## Common dependencies
-
-- Host: Python 3.10+, `onnx`, `onnxruntime`, `tigris-ml`, plus whatever a specific suite needs
-- Device: ESP-IDF 5.x for ESP32 suites; toolchains for other targets as applicable
-- Hardware: varies per suite, listed in each suite's README
-
-## Further reading
-
-- [Introducing TiGrIS](https://tigris-ml.dev/blog/introducing-tigris): context for the numbers and how tiling works
-- [TiGrIS](https://github.com/raws-labs/tigris) and [tigris-runtime](https://github.com/raws-labs/tigris-runtime): the toolchain and runtime being benchmarked
+cortex-m/
+  deployability-hil/   # H753/F446/RP2350 on real hardware
+  m55-qemu/            # emulated Cortex-M55
+esp32s3/
+  latency-hil/         # ESP32-S3 on real hardware
+models/                # shared model prep (one source of truth)
+common/                # version + provenance tooling
+core-versions.json     # pinned compiler/runtime
+```

@@ -1,0 +1,5 @@
+# SRAM-only build for QEMU functional validation: no external PSRAM.
+# Both the fast (tile) arena and the slow tier come from the ESP32-S3's
+# internal SRAM, so the whole model runs in on-chip SRAM (no PSRAM chip,
+# which QEMU does not emulate).
+CONFIG_SPIRAM=n
