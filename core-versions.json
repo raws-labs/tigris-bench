@@ -5,18 +5,18 @@
   "compatibility_manifest": {
     "repository": "https://github.com/raws-labs/tigris.git",
     "path": "compatibility.json",
-    "commit": "a19f882d95fb10de94cf0a83e65355c7bcc12bf7"
+    "commit": "cf08cbe3fd37ac7672e77aee59d4c4854809199a"
   },
   "compiler": {
     "repository": "https://github.com/raws-labs/tigris.git",
     "branch": "develop",
-    "commit": "a19f882d95fb10de94cf0a83e65355c7bcc12bf7",
+    "commit": "cf08cbe3fd37ac7672e77aee59d4c4854809199a",
     "emits_schema": 5
   },
   "runtime": {
     "repository": "https://github.com/raws-labs/tigris-runtime.git",
     "branch": "develop",
-    "commit": "18c4ee19e1847dd06e729dd6733393c54162bdad",
+    "commit": "08f5d2b0a69ae73d4e0ec2eb0ac22476300a9971",
     "accepts_schemas": [2, 3, 4, 5]
   }
 }
