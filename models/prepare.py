@@ -597,7 +597,7 @@ def main():
 
         # 6. Generate C headers for TFLM (into tflm-esp/main/ for the build)
         print("\n[6/9] Generating C headers for TFLM...")
-        tflm_main = Path(__file__).parent.parent / "tflm-esp" / "main"
+        tflm_main = Path(__file__).parent.parent / "esp32s3" / "latency-hil" / "tflm-esp" / "main"
         generate_c_header(out / "ds_cnn.tflite", tflm_main / "ds_cnn_tflite.h", "ds_cnn_tflite")
         generate_c_header(out / "ds_cnn_i8.tflite", tflm_main / "ds_cnn_tflite_i8.h", "ds_cnn_tflite_i8")
         generate_tflite_reference(
@@ -629,7 +629,7 @@ def main():
     if has_tf:
         keras_mbv1 = build_keras_mobilenet_v1()
         convert_tflite_i8(keras_mbv1, out / "mobilenet_v1_i8.tflite")
-        tflm_main = Path(__file__).parent.parent / "tflm-esp" / "main"
+        tflm_main = Path(__file__).parent.parent / "esp32s3" / "latency-hil" / "tflm-esp" / "main"
         generate_c_header(out / "mobilenet_v1_i8.tflite",
                           tflm_main / "mobilenet_v1_tflite_i8.h", "mobilenet_v1_tflite_i8")
         reconstruct_matched_onnx(out / "mobilenet_v1_i8.tflite",
@@ -644,7 +644,7 @@ def main():
     # CONCATENATION decoder whose full-resolution activations exceed MCU SRAM.
     if has_tf:
         print("\n[U-Net] Building U-Net int8 artifacts...")
-        tflm_main = Path(__file__).parent.parent / "tflm-esp" / "main"
+        tflm_main = Path(__file__).parent.parent / "esp32s3" / "latency-hil" / "tflm-esp" / "main"
         build_unet_artifacts(out, tflm_main)
 
     print(f"\nDone. All outputs in {out}/")
@@ -654,7 +654,7 @@ if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "unet":
         out = Path(__file__).parent / "output"
         out.mkdir(exist_ok=True)
-        tflm_main = Path(__file__).parent.parent / "tflm-esp" / "main"
+        tflm_main = Path(__file__).parent.parent / "esp32s3" / "latency-hil" / "tflm-esp" / "main"
         build_unet_artifacts(out, tflm_main)
     else:
         main()

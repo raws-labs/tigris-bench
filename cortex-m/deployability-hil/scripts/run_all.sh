@@ -162,6 +162,7 @@ import importlib.metadata
 import json
 import subprocess
 import sys
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -226,7 +227,7 @@ def checked_python_environment(path):
 
 
 repositories = {
-    "benchmark": git_state(bench_root.parent),
+    "benchmark": git_state(bench_root.parents[1]),
     "tigris_compiler": git_state(compiler_root),
     "tigris_runtime": git_state(runtime_root),
     "tflite_micro": git_state(bench_root / "third_party/tflite-micro"),
@@ -267,10 +268,37 @@ for line in open(manifest):
     cells[bt].append((fw, name, float(to), model, configure))
 
 c = Client()
+
+
+def open_session(bt, tries=5, delay=8):
+    """Open a board session, retrying transient SiliconRig handshake timeouts.
+
+    The remote lab occasionally times out the websocket handshake when a board
+    session is opened (seen intermittently across boards). The per-cell loop
+    already tolerates capture timeouts; this makes the session open itself
+    resilient so one flaky connect does not abort the whole matrix.
+    """
+    for attempt in range(tries):
+        cm = c.session(board=bt)
+        try:
+            return cm.__enter__(), cm
+        except Exception as exc:
+            try:
+                cm.__exit__(type(exc), exc, exc.__traceback__)
+            except Exception:
+                pass
+            if attempt == tries - 1:
+                raise
+            print(f"  {bt}: session open failed ({type(exc).__name__}); "
+                  f"retry {attempt + 1}/{tries - 1} in {delay}s")
+            time.sleep(delay)
+
+
 try:
     for bt, items in cells.items():
         print(f"-- {bt} ({len(items)} cells) --")
-        with c.session(board=bt) as s:          # one session per board: avoids 503 on rapid realloc
+        s, session_cm = open_session(bt)        # one session per board: avoids 503 on rapid realloc
+        try:
             info = s.info()
             specs = info.get("board_specs")
             if isinstance(specs, str):
@@ -313,6 +341,11 @@ try:
                     f.write(log)
                 rl = next((l for l in log.splitlines() if l.startswith("BENCH_RESULT")), f"status={status}")
                 print(f"  {name}: {rl[:140]}")
+        finally:
+            try:
+                session_cm.__exit__(None, None, None)
+            except Exception:
+                pass
 finally:
     c.close()
 PY

@@ -157,6 +157,37 @@ def validate_checkout(
     return errors
 
 
+CORTEX_SUMMARY = ROOT / "cortex-m/deployability-hil/results/summary.json"
+
+
+def validate_pins_match_producing(document: object) -> list[str]:
+    """The pinned core must be the core that produced the tracked device numbers.
+
+    Advancing the pins without a rerun (or vice versa) would advertise a core the
+    committed results did not come from. This ties the pins to the summary's
+    embedded producing revisions."""
+    if not isinstance(document, dict):
+        return []
+    try:
+        summary = json.loads(CORTEX_SUMMARY.read_text())
+        repos = summary["provenance"]["common"]["repositories"]
+        producing = {
+            "compiler": repos["tigris_compiler"]["revision"],
+            "runtime": repos["tigris_runtime"]["revision"],
+        }
+    except (OSError, json.JSONDecodeError, KeyError, TypeError) as exc:
+        return [f"cannot read producing revisions from {CORTEX_SUMMARY.name}: {exc}"]
+    errors: list[str] = []
+    for label in ("compiler", "runtime"):
+        pinned = document.get(label)
+        if isinstance(pinned, dict) and pinned.get("commit") != producing[label]:
+            errors.append(
+                f"{label} pin {pinned.get('commit')} does not match the core that "
+                f"produced the tracked results ({producing[label]}); re-pin with a "
+                f"rerun so the pins and the committed numbers agree")
+    return errors
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--manifest", type=Path, default=ROOT / "core-versions.json")
@@ -177,6 +208,7 @@ def main() -> int:
         print(f"ERROR: cannot read {args.manifest}: {exc}")
         return 1
     errors = validate_manifest(document)
+    errors.extend(validate_pins_match_producing(document))
     if not errors and not args.manifest_only:
         errors.extend(
             validate_checkout(
