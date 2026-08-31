@@ -113,6 +113,7 @@ def validate_sources(
         artifact: dict[str, object],
         artifact_path: Path,
         collector_path: Path | None,
+        post_processor_path: Path | None,
         root: Path,
         tracked_paths: set[Path],
 ) -> list[str]:
@@ -215,10 +216,28 @@ def validate_sources(
                 errors.append(
                     "source reconstruction failed: "
                     f"{completed.stdout}{completed.stderr}".strip())
-            elif rebuilt.read_bytes() != summary_path.read_bytes():
-                errors.append(
-                    "source reconstruction is not byte-identical to "
-                    f"{artifact_path}")
+            else:
+                # Some summaries carry a post-processing step (e.g. slimming a
+                # megabyte-scale dense output to a canary + digest) that runs
+                # after the accuracy gate. Replaying it keeps the reconstruction
+                # byte-identical to the committed, post-processed summary.
+                if post_processor_path is not None:
+                    post = subprocess.run(
+                        [sys.executable, str(root / post_processor_path),
+                         str(rebuilt)],
+                        cwd=root,
+                        check=False,
+                        capture_output=True,
+                        text=True,
+                    )
+                    if post.returncode != 0:
+                        errors.append(
+                            "source post-processing failed: "
+                            f"{post.stdout}{post.stderr}".strip())
+                if rebuilt.read_bytes() != summary_path.read_bytes():
+                    errors.append(
+                        "source reconstruction is not byte-identical to "
+                        f"{artifact_path}")
     return errors
 
 
@@ -400,6 +419,7 @@ def validate_provenance(
         "sha256",
         "collector",
         "validator",
+        "post_processor",
         "source_capture_root",
         "source_tracking",
         "source_relation",
@@ -413,10 +433,11 @@ def validate_provenance(
             if not isinstance(artifact, dict):
                 errors.append(f"{label} must be an object")
                 continue
-            if set(artifact) != artifact_fields:
+            required_fields = artifact_fields - {"post_processor"}
+            if set(artifact) - {"post_processor"} != required_fields:
                 errors.append(
-                    f"{label} fields={sorted(artifact)}, "
-                    f"expected {sorted(artifact_fields)}")
+                    f"{label} fields={sorted(artifact)}, expected "
+                    f"{sorted(required_fields)} plus optional post_processor")
             relative, path_errors = parse_repo_path(
                 artifact.get("path"), f"{label}.path")
             errors.extend(path_errors)
@@ -453,12 +474,22 @@ def validate_provenance(
                 artifact.get("validator"), f"{label}.validator", root)
             errors.extend(collector_errors)
             errors.extend(validator_errors)
+            post_processor_path = None
+            if artifact.get("post_processor") is not None:
+                post_processor_path, post_processor_errors = validate_hashed_path(
+                    artifact.get("post_processor"),
+                    f"{label}.post_processor", root)
+                errors.extend(post_processor_errors)
+                if post_processor_path is not None and not post_processor_errors:
+                    revision_records[post_processor_path] = (
+                        artifact["post_processor"]["sha256"])
             if collector_path is not None and not collector_errors:
                 revision_records[collector_path] = artifact["collector"]["sha256"]
             if validator_path is not None and not validator_errors:
                 revision_records[validator_path] = artifact["validator"]["sha256"]
             errors.extend(validate_sources(
-                artifact, relative, collector_path, root, tracked_paths))
+                artifact, relative, collector_path, post_processor_path,
+                root, tracked_paths))
 
     for missing in sorted(expected_artifacts - listed_artifacts):
         errors.append(f"missing result artifact provenance {missing}")

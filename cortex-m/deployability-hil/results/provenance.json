@@ -140,6 +140,10 @@
         "path": "esp32s3/latency-hil/scripts/validate_accuracy.py",
         "sha256": "9bac5e710d6246cbb5084c5c26c17210e3185300ce979919ba52c3c1a540310c"
       },
+      "post_processor": {
+        "path": "esp32s3/latency-hil/scripts/slim_summary.py",
+        "sha256": "3344b3501869f1b5e3d5ab5b8a909961a848cfeafd8505b4753c3858c9334265"
+      },
       "source_capture_root": "esp32s3/latency-hil/results/raw",
       "source_tracking": "gitignored_not_shipped",
       "source_relation": "byte_identical_reconstruction_verified",
