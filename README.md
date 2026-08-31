@@ -16,7 +16,7 @@ runs the exact model reconstructed from TFLM's own TFLite file.
 
 | Model | TFLite Micro | TiGrIS |
 |---|---|---|
-| **MobileNetV2** (α0.35, 224²) | **OOM** — `AllocateTensors` → `ARENA_TOO_SMALL` | **runs** — tiled to 299 KB SRAM, 1.43 s |
+| **MobileNetV2** (α0.35, 224²) | **OOM** — `AllocateTensors` → `ARENA_TOO_SMALL` | **runs** — tiled to 299 KB SRAM, 0.37 s |
 | DS-CNN (keyword spotting) | 22.7 KB SRAM · 12.8 ms | 17.0 KB · 11.1 ms |
 | Anomaly detection | 15.8 KB SRAM · 1.2 ms | 2.9 KB · 1.2 ms |
 | Time-series forecast | 3.0 KB SRAM · 0.3 ms | 2.4 KB · 0.3 ms |

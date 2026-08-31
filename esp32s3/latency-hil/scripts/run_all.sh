@@ -59,6 +59,7 @@ queue_siliconrig_firmware() {
     local project_dir="$2"
     local app_name="$3"
     local plan_file="${4:-}"
+    local capture_timeout="${5:-180}"
     local firmware="$MERGED_DIR/${name}.bin"
     local segments=(
         0x0 "$project_dir/build/bootloader/bootloader.bin"
@@ -77,7 +78,7 @@ queue_siliconrig_firmware() {
     "$ESPTOOL" --chip esp32s3 merge_bin --format raw \
         -o "$firmware" --flash_mode dio --flash_freq 80m --flash_size 16MB \
         "${segments[@]}"
-    printf '%s\t%s\t180\n' "$firmware" "$name" >> "$SRIG_MANIFEST"
+    printf '%s\t%s\t%s\n' "$firmware" "$name" "$capture_timeout" >> "$SRIG_MANIFEST"
     echo "  Queued SiliconRig image: $firmware"
 }
 
@@ -122,6 +123,7 @@ run_tigris_config() {
     local name="$1"
     local plan_file="$2"
     local kernel="$3"  # f32, s8, esp_nn
+    local capture_timeout="${4:-180}"  # slow models (U-Net prints a 512K output map) need more
     local log_file="$RAW_DIR/${name}.log"
 
     echo ""
@@ -138,13 +140,13 @@ run_tigris_config() {
     fi
     if [ "$TRANSPORT" = "siliconrig" ]; then
         queue_siliconrig_firmware \
-            "$name" "$BENCH_DIR/tigris-esp" "tigris_bench" "$plan_file"
+            "$name" "$BENCH_DIR/tigris-esp" "tigris_bench" "$plan_file" "$capture_timeout"
     else
         idf.py -p "$PORT" flash
         flash_plan "$plan_file"
         "$ESPTOOL" --port "$PORT" run 2>/dev/null || true
         sleep 1
-        capture_until_done "$log_file" 120
+        capture_until_done "$log_file" "$capture_timeout"
     fi
 
     echo "  Log: $log_file"
@@ -300,7 +302,7 @@ done
 # back to s8_ref; the surrounding Conv stages still dispatch to ESP-NN.
 
 # TiGrIS U-Net i8 (ESP-NN, falls back to s8_ref per-op)
-run_tigris_config "tigris_unet_i8_espnn" "$PLAN_DIR/unet.tgrs" "esp_nn"
+run_tigris_config "tigris_unet_i8_espnn" "$PLAN_DIR/unet.tgrs" "esp_nn" 1200
 
 # TFLM U-Net i8 (expected: ARENA_TOO_SMALL; peak activation 1.19 MiB >>
 # the 256 KB internal-SRAM arena)

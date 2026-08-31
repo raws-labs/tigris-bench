@@ -369,16 +369,42 @@ def _cell_label(suite: str, cell: dict[str, object]) -> str:
     return "/".join(parts)
 
 
+def _producing_core(summary: object) -> tuple[str, str] | None:
+    """The (compiler, runtime) revisions that produced a summary's captures."""
+    try:
+        repos = summary["provenance"]["common"]["repositories"]  # type: ignore[index]
+        return (repos["tigris_compiler"]["revision"],
+                repos["tigris_runtime"]["revision"])
+    except (KeyError, TypeError):
+        return None
+
+
 def compare_performance_summaries(
         current: object, baseline: object, suite: str,
 ) -> tuple[list[str], list[str]]:
-    """Compare committed device captures, returning observations and failures."""
+    """Compare committed device captures, returning observations and failures.
+
+    Firmware size and latency are only comparable within the same producing
+    core. A deliberate rerun on a new compiler/runtime re-baselines those
+    metrics, so metric drift is reported as an observation rather than a
+    regression when the producing core changed."""
     current_cells, current_errors = _performance_cells(current, suite)
     baseline_cells, baseline_errors = _performance_cells(baseline, suite)
     errors = current_errors + baseline_errors
     observations: list[str] = []
     if not isinstance(current, dict) or not isinstance(baseline, dict):
         return observations, errors
+
+    cur_core = _producing_core(current)
+    base_core = _producing_core(baseline)
+    core_changed = (
+        cur_core is not None and base_core is not None and cur_core != base_core)
+    if core_changed:
+        observations.append(
+            f"{suite}: producing core changed since baseline "
+            f"(compiler {base_core[0][:12]}->{cur_core[0][:12]}, "
+            f"runtime {base_core[1][:12]}->{cur_core[1][:12]}); firmware-size "
+            f"and latency drift re-baselined, not treated as regressions")
 
     for log_file in sorted(baseline_cells.keys() - current_cells.keys()):
         cell = baseline_cells[log_file]
@@ -399,6 +425,8 @@ def compare_performance_summaries(
                 f"{label}: status regressed from ok to {new_status!r}")
             continue
         if old_status != "ok" or new_status != "ok":
+            continue
+        if core_changed:
             continue
 
         old_metrics = _performance_metrics(baseline, old_cell, suite)
