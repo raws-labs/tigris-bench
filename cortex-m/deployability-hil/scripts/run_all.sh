@@ -226,7 +226,7 @@ def checked_python_environment(path):
 
 
 repositories = {
-    "benchmark": git_state(bench_root.parent),
+    "benchmark": git_state(bench_root.parents[1]),
     "tigris_compiler": git_state(compiler_root),
     "tigris_runtime": git_state(runtime_root),
     "tflite_micro": git_state(bench_root / "third_party/tflite-micro"),
