@@ -242,8 +242,8 @@ case "$TRANSPORT" in
         ;;
 esac
 
-TIGRIS_COMPILER_ROOT="${TIGRIS_COMPILER_ROOT:-$(cd "$BENCH_DIR/../../tigris" && pwd)}"
-TIGRIS_RUNTIME_ROOT="${TIGRIS_RUNTIME_ROOT:-$(cd "$BENCH_DIR/../../tigris-runtime" && pwd)}"
+TIGRIS_COMPILER_ROOT="${TIGRIS_COMPILER_ROOT:-$(cd "$BENCH_DIR/../../../tigris" && pwd)}"
+TIGRIS_RUNTIME_ROOT="${TIGRIS_RUNTIME_ROOT:-$(cd "$BENCH_DIR/../../../tigris-runtime" && pwd)}"
 TIGRIS_COMPILER="${TIGRIS_COMPILER:-$TIGRIS_COMPILER_ROOT/.venv/bin/tigris}"
 CORE_CHECK_ARGS=(
     --compiler-root "$TIGRIS_COMPILER_ROOT"
