@@ -34,6 +34,17 @@ Model is close to the SRAM ceiling. Measures tiling overhead as the budget shrin
 | 9 | TiGrIS MBV1 i8 ESP-NN | TiGrIS | 64K | Runs, 1 normal + 12 tiled stages |
 | 10 | TiGrIS MBV1 i8 ESP-NN | TiGrIS | 32K | Runs, 1 normal + 24 tiled stages |
 
+### Segmentation deployability (U-Net 256×256×3 → 256×256×8)
+
+A full-resolution TRANSPOSE_CONV + CONCATENATION decoder whose activations exceed
+the internal SRAM. TiGrIS 2D-tiles the decoder and co-tiles the skip concats to
+fit; TFLM cannot allocate its arena.
+
+| # | Config | Framework | Budget | Expected |
+|---|--------|-----------|--------|----------|
+| 11 | TiGrIS U-Net i8 ESP-NN | TiGrIS | 232K+6M | Runs, 4 tiled + 10 co-tiled chain stages (fits internal SRAM + PSRAM) |
+| 12 | TFLM U-Net i8 | TFLite Micro | 256K | Fails (arena too small) |
+
 ## Hardware
 
 ESP32-S3-DevKitC-1 (N16R8): dual Xtensa LX7 at 240 MHz, 512 KB SRAM, 8 MB PSRAM, 16 MB flash.
