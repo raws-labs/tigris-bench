@@ -15,6 +15,10 @@ set(TIGRIS_CODEGEN "${CMAKE_CURRENT_SOURCE_DIR}/../../tigris/.venv/bin/tigris"
     CACHE FILEPATH "TiGrIS codegen executable")
 set(TIGRIS_RUNTIME_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../../tigris-runtime"
     CACHE PATH "pinned TiGrIS runtime checkout")
+# The board bring-up (clock/UART/timing/linker + the HAL) now comes from the
+# tigris-cortex-m target-support package instead of boards/<board>/bsp.c.
+set(TIGRIS_CORTEX_M_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../../../tigris-cortex-m"
+    CACHE PATH "pinned tigris-cortex-m target-support checkout")
 option(TIGRIS_HOST_VALIDATION
     "Build the hardware-free CMSIS-NN adapter parity executable" OFF)
 # Optimization level for ALL benchmark code (TiGrIS runtime, CMSIS-NN, harness, TFLM
