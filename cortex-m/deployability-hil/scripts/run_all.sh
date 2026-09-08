@@ -23,6 +23,7 @@ set -euo pipefail
 HERE="$(cd "$(dirname "$0")/.." && pwd)"
 TIGRIS_COMPILER_ROOT="${TIGRIS_COMPILER_ROOT:-$(cd "$HERE/../../../tigris" && pwd)}"
 TIGRIS_RUNTIME_ROOT="${TIGRIS_RUNTIME_ROOT:-$(cd "$HERE/../../../tigris-runtime" && pwd)}"
+TIGRIS_CORTEX_M_ROOT="${TIGRIS_CORTEX_M_ROOT:-$(cd "$HERE/../../../tigris-cortex-m" && pwd)}"
 TC="$TIGRIS_RUNTIME_ROOT/cmake/arm-none-eabi.cmake"
 MODELS_DIR="$(cd "$HERE/../../models/output" && pwd)"
 PLAN_DIR="${TIGRIS_PLAN_DIR:-$HERE/build/plans}"
@@ -36,6 +37,7 @@ NPROC="$(nproc)"
 CORE_CHECK_ARGS=(
     --compiler-root "$TIGRIS_COMPILER_ROOT"
     --runtime-root "$TIGRIS_RUNTIME_ROOT"
+    --cortex-m-root "$TIGRIS_CORTEX_M_ROOT"
 )
 if [ "${TIGRIS_ALLOW_UNPINNED_CORE:-0}" = 1 ]; then
     CORE_CHECK_ARGS+=(--allow-unpinned)
@@ -103,6 +105,7 @@ build_cell() {   # board model config
             -Dpicotool_DIR="$PICOTOOL" -DBENCH_KERNEL="$cfg" -DTIGRIS_PLAN="$plan" \
             -DTIGRIS_CODEGEN="$TIGRIS_COMPILER" \
             -DTIGRIS_RUNTIME_ROOT="$TIGRIS_RUNTIME_ROOT" \
+            -DTIGRIS_CORTEX_M_ROOT="$TIGRIS_CORTEX_M_ROOT" \
             -DTIGRIS_FAST_ARENA_BYTES=$fast -DTIGRIS_SLOW_ARENA_BYTES=$slow)
         command_string "${configure[@]}"; local configure_command="$REPLY"
         PICO_SDK_PATH="$PICO_SDK" "${configure[@]}" >/dev/null
@@ -114,6 +117,7 @@ build_cell() {   # board model config
 
     local common=(-S "$HERE" -B "$bd" -DCMAKE_TOOLCHAIN_FILE="$TC"
                   -DTIGRIS_RUNTIME_ROOT="$TIGRIS_RUNTIME_ROOT"
+                  -DTIGRIS_CORTEX_M_ROOT="$TIGRIS_CORTEX_M_ROOT"
                   -DTIGRIS_BOARD="${TB[$board]}")
     if [ "$cfg" = tflm ]; then
         local arena=32768; [ "$model" = mbv2 ] && arena=491520   # ~480 KB: most of the H753 SRAM, still OOMs
@@ -155,7 +159,7 @@ done
 
 echo "Flashing + capturing on SiliconRig..."
 python3 - "$MANIFEST" "$RUN_RAW" "$HERE" "$TIGRIS_COMPILER_ROOT" \
-    "$TIGRIS_RUNTIME_ROOT" "$PICO_SDK" "$HERE/../../esp32s3/latency-hil/requirements.txt" <<'PY'
+    "$TIGRIS_RUNTIME_ROOT" "$TIGRIS_CORTEX_M_ROOT" "$PICO_SDK" "$HERE/../../esp32s3/latency-hil/requirements.txt" <<'PY'
 import collections
 import hashlib
 import importlib.metadata
@@ -169,7 +173,7 @@ from pathlib import Path
 from siliconrig import Client
 from siliconrig.serial import SerialTimeout
 
-manifest, raw, bench_root, compiler_root, runtime_root, pico_sdk, requirements = map(
+manifest, raw, bench_root, compiler_root, runtime_root, cortex_m_root, pico_sdk, requirements = map(
     Path, sys.argv[1:])
 
 
@@ -230,9 +234,10 @@ repositories = {
     "benchmark": git_state(bench_root.parents[1]),
     "tigris_compiler": git_state(compiler_root),
     "tigris_runtime": git_state(runtime_root),
+    "tigris_cortex_m": git_state(cortex_m_root),
     "tflite_micro": git_state(bench_root / "third_party/tflite-micro"),
 }
-for name in ("benchmark", "tigris_compiler", "tigris_runtime"):
+for name in ("benchmark", "tigris_compiler", "tigris_runtime", "tigris_cortex_m"):
     if repositories[name] is None:
         raise RuntimeError(f"{name} is not a Git checkout")
 

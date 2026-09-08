@@ -13,10 +13,11 @@ set(BOARD_DEFINES STM32F446xx)
 
 set(BOARD_STARTUP       ${CMSIS_DEVICE_F4_DIR}/Source/Templates/gcc/startup_stm32f446xx.s)
 set(BOARD_SYSTEM        ${CMSIS_DEVICE_F4_DIR}/Source/Templates/system_stm32f4xx.c)
-set(BOARD_BSP           ${CMAKE_CURRENT_LIST_DIR}/bsp.c)
-set(BOARD_LINKER_SCRIPT ${CMAKE_CURRENT_LIST_DIR}/STM32F446RETx_FLASH.ld)
+set(BOARD_BSP           ${TIGRIS_CORTEX_M_ROOT}/src/hal/platform/nucleo_f446re/tigris_hal_f446.c)
+set(BOARD_LINKER_SCRIPT ${TIGRIS_CORTEX_M_ROOT}/src/hal/platform/nucleo_f446re/stm32f446re.ld)
 
 set(BOARD_INCLUDES
+    ${TIGRIS_CORTEX_M_ROOT}/include
     ${CMSIS_CORE_DIR}/Include
     ${CMSIS_DEVICE_F4_DIR}/Include)
 
