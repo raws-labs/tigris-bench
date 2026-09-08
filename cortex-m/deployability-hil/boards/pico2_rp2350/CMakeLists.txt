@@ -25,6 +25,8 @@ pico_sdk_init()
 set(BENCH_ROOT ${CMAKE_CURRENT_LIST_DIR}/../..)
 set(TIGRIS_RUNTIME_ROOT "${BENCH_ROOT}/../../tigris-runtime"
     CACHE PATH "pinned TiGrIS runtime checkout")
+set(TIGRIS_CORTEX_M_ROOT "${BENCH_ROOT}/../../../tigris-cortex-m"
+    CACHE PATH "pinned tigris-cortex-m target-support checkout")
 set(RT_DIR     ${TIGRIS_RUNTIME_ROOT})
 set(NN_DIR     ${BENCH_ROOT}/third_party/CMSIS-NN)
 
@@ -73,12 +75,13 @@ add_custom_command(
 
 add_executable(tigris_pico_bench
     ${BENCH_ROOT}/harness/main.c
-    ${CMAKE_CURRENT_LIST_DIR}/platform_pico.c
+    ${TIGRIS_CORTEX_M_ROOT}/src/hal/platform/pico2/tigris_hal_pico2.c
     ${PLAN_BLOB} ${CODEGEN_CORE}
     ${RT_SRC} ${NN_SRC})
 
 target_include_directories(tigris_pico_bench PRIVATE
     ${BENCH_ROOT}/harness
+    ${TIGRIS_CORTEX_M_ROOT}/include
     ${CMAKE_BINARY_DIR}
     ${RT_DIR}/include
     ${NN_DIR}/Include)

@@ -127,10 +127,16 @@ class ReadmeResultContractTest(unittest.TestCase):
             validate_readme_results(self.summary, self.readme), [])
 
     def test_mutated_readme_result_is_rejected(self) -> None:
-        mutated = self.readme.replace("11.14 ms", "11.15 ms", 1)
+        # A latency beyond the run-variance tolerance must still be rejected.
+        mutated = self.readme.replace("11.14 ms", "12.00 ms", 1)
         errors = validate_readme_results(self.summary, mutated)
         self.assertTrue(
             any("11.14 ms" in error for error in errors), errors)
+
+    def test_small_readme_latency_drift_is_tolerated(self) -> None:
+        # Sub-tolerance run-to-run drift must NOT force a README edit.
+        mutated = self.readme.replace("11.14 ms", "11.15 ms", 1)
+        self.assertEqual(validate_readme_results(self.summary, mutated), [])
 
     def test_mutated_summary_result_is_rejected(self) -> None:
         mutated = copy.deepcopy(self.summary)

@@ -46,18 +46,25 @@ def validate_manifest(document: object) -> list[str]:
     compatibility = document.get("compatibility_manifest")
     compiler = document.get("compiler")
     runtime = document.get("runtime")
-    if not all(isinstance(item, dict) for item in (compatibility, compiler, runtime)):
+    cortex_m = document.get("tigris_cortex_m")
+    if not all(
+        isinstance(item, dict)
+        for item in (compatibility, compiler, runtime, cortex_m)
+    ):
         return errors + [
-            "compatibility_manifest, compiler, and runtime must be objects"
+            "compatibility_manifest, compiler, runtime, and tigris_cortex_m "
+            "must be objects"
         ]
     assert isinstance(compatibility, dict)
     assert isinstance(compiler, dict)
     assert isinstance(runtime, dict)
+    assert isinstance(cortex_m, dict)
 
     for label, component in (
         ("compatibility_manifest", compatibility),
         ("compiler", compiler),
         ("runtime", runtime),
+        ("tigris_cortex_m", cortex_m),
     ):
         commit = component.get("commit")
         if not isinstance(commit, str) or not COMMIT_RE.fullmatch(commit):
@@ -75,6 +82,8 @@ def validate_manifest(document: object) -> list[str]:
     for label, component in (("compiler", compiler), ("runtime", runtime)):
         if component.get("branch") != "develop":
             errors.append(f"{label}.branch must be develop")
+    if cortex_m.get("branch") != "main":
+        errors.append("tigris_cortex_m.branch must be main")
 
     emitted = compiler.get("emits_schema")
     accepted = _schema_list(
@@ -100,12 +109,14 @@ def _git(path: Path, *args: str) -> str:
 
 
 def validate_checkout(
-    document: dict[str, object], compiler_root: Path, runtime_root: Path
+    document: dict[str, object], compiler_root: Path, runtime_root: Path,
+    cortex_m_root: Path
 ) -> list[str]:
     errors: list[str] = []
     for label, path, expected in (
         ("compiler", compiler_root, document["compiler"]),
         ("runtime", runtime_root, document["runtime"]),
+        ("tigris_cortex_m", cortex_m_root, document["tigris_cortex_m"]),
     ):
         assert isinstance(expected, dict)
         try:
@@ -174,11 +185,12 @@ def validate_pins_match_producing(document: object) -> list[str]:
         producing = {
             "compiler": repos["tigris_compiler"]["revision"],
             "runtime": repos["tigris_runtime"]["revision"],
+            "tigris_cortex_m": repos["tigris_cortex_m"]["revision"],
         }
     except (OSError, json.JSONDecodeError, KeyError, TypeError) as exc:
         return [f"cannot read producing revisions from {CORTEX_SUMMARY.name}: {exc}"]
     errors: list[str] = []
-    for label in ("compiler", "runtime"):
+    for label in ("compiler", "runtime", "tigris_cortex_m"):
         pinned = document.get(label)
         if isinstance(pinned, dict) and pinned.get("commit") != producing[label]:
             errors.append(
@@ -197,6 +209,9 @@ def main() -> int:
         "--runtime-root", type=Path, default=ROOT.parent / "tigris-runtime"
     )
     parser.add_argument(
+        "--cortex-m-root", type=Path, default=ROOT.parent / "tigris-cortex-m"
+    )
+    parser.add_argument(
         "--allow-unpinned",
         action="store_true",
         help="warn instead of failing checkout mismatches for development runs",
@@ -212,7 +227,8 @@ def main() -> int:
     if not errors and not args.manifest_only:
         errors.extend(
             validate_checkout(
-                document, args.compiler_root.resolve(), args.runtime_root.resolve()
+                document, args.compiler_root.resolve(), args.runtime_root.resolve(),
+                args.cortex_m_root.resolve()
             )
         )
     if errors and args.allow_unpinned:
@@ -226,12 +242,14 @@ def main() -> int:
         return 1
     compiler = document["compiler"]
     runtime = document["runtime"]
+    cortex_m = document["tigris_cortex_m"]
     assert isinstance(compiler, dict)
     assert isinstance(runtime, dict)
+    assert isinstance(cortex_m, dict)
     print(
         "Pinned TiGrIS core verified: "
         f"compiler={compiler['commit']} runtime={runtime['commit']} "
-        f"schema={document['plan_schema']}"
+        f"tigris_cortex_m={cortex_m['commit']} schema={document['plan_schema']}"
     )
     return 0
 
