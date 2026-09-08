@@ -23,5 +23,10 @@
       4,
       5
     ]
+  },
+  "tigris_cortex_m": {
+    "repository": "https://github.com/raws-labs/tigris-cortex-m.git",
+    "branch": "main",
+    "commit": "9d0501e72e2c390eeca5df853cbf5b079fe811db"
   }
 }
