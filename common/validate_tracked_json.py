@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import subprocess
 from pathlib import Path
 
@@ -603,14 +604,54 @@ def expected_readme_result_rows(
     return rows, []
 
 
+# The README result table is a human-facing illustration; summary.json is the
+# authoritative, provenance-tracked source. Run-to-run latency variance on these
+# deterministic workloads is well under 1%, so the contract accepts a README
+# latency within this tolerance of the summary rather than forcing a README edit
+# on every tiny drift. A real change (or the perf-regression gate's 5%) is well
+# outside it.
+README_LATENCY_TOLERANCE = 0.03
+
+_LATENCY_CELL = re.compile(r"^([0-9]+(?:\.[0-9]+)?) ms$")
+
+
+def _row_cells(row: str) -> list[str]:
+    return [cell.strip() for cell in row.strip().strip("|").split("|")]
+
+
+def _row_matches_within_tolerance(expected: str, actual: str) -> bool:
+    """True if `actual` matches `expected` cell-for-cell, allowing latency cells
+    (``<n> ms``) to differ by up to README_LATENCY_TOLERANCE; all other cells
+    (cycles, RAM, firmware) must match exactly."""
+    expected_cells, actual_cells = _row_cells(expected), _row_cells(actual)
+    if len(expected_cells) != len(actual_cells):
+        return False
+    for want, have in zip(expected_cells, actual_cells):
+        want_ms, have_ms = _LATENCY_CELL.match(want), _LATENCY_CELL.match(have)
+        if want_ms and have_ms:
+            want_v, have_v = float(want_ms.group(1)), float(have_ms.group(1))
+            if want_v <= 0 or abs(have_v - want_v) / want_v > README_LATENCY_TOLERANCE:
+                return False
+        elif want != have:
+            return False
+    return True
+
+
 def validate_readme_results(document: object, readme: str) -> list[str]:
     rows, errors = expected_readme_result_rows(document)
+    readme_rows = [
+        line for line in readme.splitlines() if line.lstrip().startswith("|")]
     for row in rows:
-        count = readme.count(row)
-        if count != 1:
+        if readme.count(row) == 1:
+            continue  # exact match, fast path
+        matches = [
+            candidate for candidate in readme_rows
+            if _row_matches_within_tolerance(row, candidate)]
+        if len(matches) != 1:
             errors.append(
-                f"derived result row occurs {count} times; expected exactly once: "
-                f"{row}")
+                f"no README result row matches (within "
+                f"{README_LATENCY_TOLERANCE:.0%} latency tolerance) the "
+                f"summary-derived row: {row}")
     return errors
 
 

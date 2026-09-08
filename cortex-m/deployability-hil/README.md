@@ -63,7 +63,7 @@ int8 weights plus biases, measured from the committed plans.
 
 | Framework | Kernel | Latency | Cycles | RAM (work. set) | Flash (firmware) |
 |---|---|---|---|---|---|
-| TiGrIS | cmsis_nn | 0.299 ms | 143 K | 2.8 KB | 95 KB |
+| TiGrIS | cmsis_nn | 0.298 ms | 143 K | 2.8 KB | 95 KB |
 | TFLM | cmsis_nn | 0.345 ms | 166 K | 2.9 KB | 145 KB |
 | TiGrIS | s8_ref | 1.81 ms | 870 K | 2.1 KB | 70 KB |
 
@@ -97,7 +97,7 @@ byte-identical to the H753 and F446. Weights are read from QSPI flash via XIP.
 |---|---|---|---|
 | TS | 2.76 ms | 10.08 ms | 2.8 KB |
 | AD | 35.03 ms | 36.94 ms | 3.1 KB |
-| DS-CNN | 67.65 ms | 463.68 ms | 17.0 KB |
+| DS-CNN | 67.67 ms | 463.70 ms | 17.0 KB |
 
 The FC-heavy AD is slower here (35.01 ms vs 4.98 ms on the F446): each of its
 265 KB of weights is read once per inference from XIP flash with no reuse, so it
