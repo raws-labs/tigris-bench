@@ -45,9 +45,11 @@ class CoreVersionContractTest(unittest.TestCase):
     def test_sibling_checkouts_match_when_present(self) -> None:
         compiler = ROOT.parent / "tigris"
         runtime = ROOT.parent / "tigris-runtime"
-        if not (compiler / ".git").exists() or not (runtime / ".git").exists():
+        cortex_m = ROOT.parent / "tigris-cortex-m"
+        if not all((p / ".git").exists() for p in (compiler, runtime, cortex_m)):
             self.skipTest("sibling core checkouts are not present")
-        self.assertEqual(validate_checkout(self.document, compiler, runtime), [])
+        self.assertEqual(
+            validate_checkout(self.document, compiler, runtime, cortex_m), [])
 
 
 if __name__ == "__main__":
