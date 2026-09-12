@@ -11,12 +11,12 @@ Two demonstrations, both verified bit-exact against a host reference:
 | Model | What it shows | On-chip SRAM | Output |
 |-------|---------------|--------------|--------|
 | **ResNet-50** backbone @224 | A 25M-param model runs on an MCU | 508 KB fast working set (slow tier in DDR) | checksum `-1942099862`, bit-exact |
-| **MobileNetV2-0.35** @224 (full model) | Clean SRAM-only feasibility barrier | **127 KB total** (fast+slow both on-chip), tiled 5.8× from the 735 KB naive peak | checksum `5740`, bit-exact |
+| **MobileNetV2-0.35** @224 (full model) | Clean SRAM-only feasibility barrier | **127 KB total** (fast+slow both on-chip), tiled 5.8x from the 735 KB naive peak | checksum `5740`, bit-exact |
 
 The MobileNetV2-0.35 run is the interesting one: its whole working set tiles into
 127 KB of on-chip SRAM, whereas a non-tiling runtime (TFLM) needs the full
 735 KB arena contiguous and OOMs on the chip's SRAM. The bench already measures
-that OOM on real hardware (NUCLEO-H753ZI: `AllocateTensors` → `ARENA_TOO_SMALL`).
+that OOM on real hardware (NUCLEO-H753ZI: `AllocateTensors` -> `ARENA_TOO_SMALL`).
 
 ## Honest caveats
 

@@ -34,7 +34,7 @@ Model is close to the SRAM ceiling. Measures tiling overhead as the budget shrin
 | 9 | TiGrIS MBV1 i8 ESP-NN | TiGrIS | 64K | Runs, 1 normal + 12 tiled stages |
 | 10 | TiGrIS MBV1 i8 ESP-NN | TiGrIS | 32K | Runs, 1 normal + 24 tiled stages |
 
-### Segmentation deployability (U-Net 256×256×3 → 256×256×8)
+### Segmentation deployability (U-Net 256x256x3 -> 256x256x8)
 
 A full-resolution TRANSPOSE_CONV + CONCATENATION decoder whose activations exceed
 the internal SRAM. TiGrIS 2D-tiles the decoder and co-tiles the skip concats to
