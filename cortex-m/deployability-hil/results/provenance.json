@@ -5,10 +5,10 @@
     {
       "path": "cortex-m/deployability-hil/results/summary.json",
       "kind": "device_result_summary",
-      "sha256": "cffc68c341c6834be41dee5031938dde4abf5d41a41b688c171670aabedfb172",
+      "sha256": "59ef0f47386a26625f378c643d939f702c9a9eda28861ace14d8a088c19a0039",
       "collector": {
         "path": "cortex-m/deployability-hil/scripts/results.py",
-        "sha256": "dc520330f7f085343e81feabd172a71d8e3cca78baad96f12011fba0787dda02"
+        "sha256": "3a3634d6dd710778faca6c94ebfc50f364d6503a650bc3ae0f6aa3d5bccf3793"
       },
       "validator": {
         "path": "cortex-m/deployability-hil/scripts/validate_accuracy.py",
@@ -200,7 +200,7 @@
     }
   ],
   "artifact_repository": {
-    "revision": "00599fc9d4b6bf503f86f10a61aba3672778f907",
+    "revision": "bdc29e428b763fc4cc3a82989ea299ac8de8a6cc",
     "basis": "commit_containing_byte_identical_artifact_and_tools"
   },
   "execution_provenance": {
