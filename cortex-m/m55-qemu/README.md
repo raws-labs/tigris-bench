@@ -8,10 +8,16 @@ external XIP flash; activations are tiled into on-chip SRAM.
 
 Two demonstrations, both verified bit-exact against a host reference:
 
-| Model | What it shows | On-chip SRAM | Output |
-|-------|---------------|--------------|--------|
-| **ResNet-50** backbone @224 | A 25M-param model runs on an MCU | 508 KB fast working set (slow tier in DDR) | checksum `-1942099862`, bit-exact |
-| **MobileNetV2-0.35** @224 (full model) | Clean SRAM-only feasibility barrier | **127 KB total** (fast+slow both on-chip), tiled 5.8x from the 735 KB naive peak | checksum `5740`, bit-exact |
+| Model | What it shows | On-chip SRAM |
+|-------|---------------|--------------|
+| **ResNet-50** backbone @224 | A 25M-param model runs on an MCU | 508 KB fast working set (slow tier in DDR) |
+| **MobileNetV2-0.35** @224 (full model) | Clean SRAM-only feasibility barrier | **127 KB total** (fast+slow both on-chip), tiled 5.8x from the 735 KB naive peak |
+
+Output checksums for specific runs are in `results/provenance.json`, next to the
+sha256 of the plan that produced each one. A checksum only means something
+against that exact plan: these plans are gitignored build artifacts, rebuilt
+from models whose heads are freshly initialized, so regenerating one changes
+the checksum while leaving the memory profile identical.
 
 The MobileNetV2-0.35 run is the interesting one: its whole working set tiles into
 127 KB of on-chip SRAM, whereas a non-tiling runtime (TFLM) needs the full
@@ -52,7 +58,7 @@ Uses the bench flagship plan directly:
 PLAN=../deployability-hil/build/plans/mbv2_a35.tgrs
 ./build.sh "$PLAN" MobileNetV2-0.35 -DFAST_KB=192 -DSLOW_KB=256
 ./run.sh   "$PLAN"
-# -> OUTPUT n=10 checksum=5740 ... total_sram=130192 bytes
+# -> OUTPUT n=10 ... ARENA total_sram=130192 bytes
 ```
 
 ### ResNet-50 (capability demo)
@@ -64,7 +70,7 @@ tigris compile /tmp/r50/resnet50_bb_224.onnx -m 512K -m 4M -o /tmp/r50/resnet50.
 # 2. Fast arena in on-chip SRAM, slow tier in DDR (the backbone's intermediates are large).
 ./build.sh /tmp/r50/resnet50.tgrs ResNet-50 -DFAST_KB=640 -DSLOW_DDR
 ./run.sh   /tmp/r50/resnet50.tgrs
-# -> OUTPUT n=100352 checksum=-1942099862 ... fast_peak=~508K
+# -> OUTPUT n=100352 ... ARENA fast_peak=~508K
 ```
 
 ### Check a plan's memory profile on the host
