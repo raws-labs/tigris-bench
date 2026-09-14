@@ -16,7 +16,7 @@
   "runtime": {
     "repository": "https://github.com/raws-labs/tigris-runtime.git",
     "branch": "develop",
-    "commit": "f21201851297e0aacb4d7ecb79750ff953097bb1",
+    "commit": "ff115f6d173ddf73f56e9b99b043570f8cb65f3b",
     "accepts_schemas": [
       2,
       3,
