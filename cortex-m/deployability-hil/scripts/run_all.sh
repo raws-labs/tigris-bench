@@ -10,7 +10,9 @@
 #   env:   BENCH_MODELS="ds_cnn ad ts mbv2"         # subset of models
 #          BENCH_CONFIGS="cmsis_nn s8_ref tflm"     # subset of configs
 #          SRIG_API_KEY=...                         # required (rig auth)
+#          TIGRIS_ALLOW_UNPINNED_CORE=1             # dev run off the pinned core
 # Output:  results/raw/<board>_<model>_<config>.log -> results/summary.json
+#          An unpinned run writes results/unpinned-raw/ and promotes nothing.
 #
 # Needs: arm-none-eabi-gcc, cmake, the pico-sdk (RP2350), the release_with_logs
 # TFLM libs (see BUILD.md), and python3 with the `siliconrig` SDK + numpy / rich.
@@ -29,6 +31,7 @@ MODELS_DIR="$(cd "$HERE/../../models/output" && pwd)"
 PLAN_DIR="${TIGRIS_PLAN_DIR:-$HERE/build/plans}"
 TIGRIS_COMPILER="${TIGRIS_COMPILER:-$TIGRIS_COMPILER_ROOT/.venv/bin/tigris}"
 RAW="$HERE/results/raw"
+UNPINNED="$HERE/results/unpinned-raw"
 PICO_SDK="${PICO_SDK_PATH:-$HOME/pico/pico-sdk}"
 PICOTOOL="${PICOTOOL_DIR:-$HOME/pico/picotool/install/lib/cmake/picotool}"
 PICO_SDK_COMMIT="a1438dff1d38bd9c65dbd693f0e5db4b9ae91779"
@@ -39,8 +42,10 @@ CORE_CHECK_ARGS=(
     --runtime-root "$TIGRIS_RUNTIME_ROOT"
     --cortex-m-root "$TIGRIS_CORTEX_M_ROOT"
 )
+UNPINNED_RUN=0
 if [ "${TIGRIS_ALLOW_UNPINNED_CORE:-0}" = 1 ]; then
     CORE_CHECK_ARGS+=(--allow-unpinned)
+    UNPINNED_RUN=1
 fi
 python3 "$HERE/../../common/check_core_versions.py" "${CORE_CHECK_ARGS[@]}"
 
@@ -371,6 +376,19 @@ fi
 
 # Promote only a completely collected invocation. A subset updates its selected
 # raw logs but cannot silently replace the canonical 27-cell summary.
+#
+# An unpinned run publishes neither. Its captures name core commits that
+# contradict core-versions.json, and results/raw is what the tracked summary's
+# provenance record is reconstructed from, so a single unpinned cell landing
+# there makes that reconstruction fail. Such captures go to results/unpinned-raw
+# instead, where they stay readable without standing in for a pinned result.
+if [ "$UNPINNED_RUN" -eq 1 ]; then
+    mkdir -p "$UNPINNED"
+    cp "$RUN_RAW"/*.log "$UNPINNED"/
+    echo "Unpinned run: captures in $UNPINNED; results/raw and the summary are unchanged."
+    exit 0
+fi
+
 cp "$RUN_RAW"/*.log "$RAW"/
 SUMMARY_OUTPUT="${BENCH_SUMMARY_OUTPUT:-}"
 if [ "$CANONICAL_RUN" -eq 1 ]; then
