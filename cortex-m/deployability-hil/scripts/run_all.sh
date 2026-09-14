@@ -10,9 +10,10 @@
 #   env:   BENCH_MODELS="ds_cnn ad ts mbv2"         # subset of models
 #          BENCH_CONFIGS="cmsis_nn s8_ref tflm"     # subset of configs
 #          SRIG_API_KEY=...                         # required (rig auth)
-#          TIGRIS_ALLOW_UNPINNED_CORE=1             # dev run off the pinned core
+#          TIGRIS_ALLOW_UNPINNED_CORE=1             # start off the pinned core
 # Output:  results/raw/<board>_<model>_<config>.log -> results/summary.json
-#          An unpinned run writes results/unpinned-raw/ and promotes nothing.
+#          Captures naming a core other than the pins land in
+#          results/unpinned-raw/ and promote nothing.
 #
 # Needs: arm-none-eabi-gcc, cmake, the pico-sdk (RP2350), the release_with_logs
 # TFLM libs (see BUILD.md), and python3 with the `siliconrig` SDK + numpy / rich.
@@ -42,10 +43,8 @@ CORE_CHECK_ARGS=(
     --runtime-root "$TIGRIS_RUNTIME_ROOT"
     --cortex-m-root "$TIGRIS_CORTEX_M_ROOT"
 )
-UNPINNED_RUN=0
 if [ "${TIGRIS_ALLOW_UNPINNED_CORE:-0}" = 1 ]; then
     CORE_CHECK_ARGS+=(--allow-unpinned)
-    UNPINNED_RUN=1
 fi
 python3 "$HERE/../../common/check_core_versions.py" "${CORE_CHECK_ARGS[@]}"
 
@@ -401,15 +400,46 @@ fi
 # Promote only a completely collected invocation. A subset updates its selected
 # raw logs but cannot silently replace the canonical 27-cell summary.
 #
-# An unpinned run publishes neither. Its captures name core commits that
-# contradict core-versions.json, and results/raw is what the tracked summary's
-# provenance record is reconstructed from, so a single unpinned cell landing
-# there makes that reconstruction fail. Such captures go to results/unpinned-raw
-# instead, where they stay readable without standing in for a pinned result.
-if [ "$UNPINNED_RUN" -eq 1 ]; then
+# What decides publication is the core the captures actually name, not the
+# startup override. TIGRIS_ALLOW_UNPINNED_CORE lets a run begin against
+# checkouts that differ from core-versions.json, which is also the state of a
+# re-pin rerun: the pins move first and the old summary still names the old
+# core, so the startup check cannot tell that case from a scratch build. After
+# collection the captures settle it. results/raw is what the tracked summary's
+# provenance record is reconstructed from, so captures naming anything other
+# than the pinned core go to results/unpinned-raw and promote nothing.
+if ! python3 - "$COLLECTED_SUMMARY" "$HERE/../../core-versions.json" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+summary = json.loads(Path(sys.argv[1]).read_text())
+pins = json.loads(Path(sys.argv[2]).read_text())
+try:
+    captured = summary["provenance"]["common"]["repositories"]
+except (KeyError, TypeError):
+    print("captures carry no common provenance block", file=sys.stderr)
+    raise SystemExit(1)
+
+mismatched = []
+for pin_key, capture_key in (
+        ("compiler", "tigris_compiler"),
+        ("runtime", "tigris_runtime"),
+        ("tigris_cortex_m", "tigris_cortex_m")):
+    want = pins[pin_key]["commit"]
+    got = (captured.get(capture_key) or {}).get("revision")
+    if got != want:
+        mismatched.append(f"{pin_key}: captured {got}, pinned {want}")
+if mismatched:
+    for line in mismatched:
+        print(line, file=sys.stderr)
+    raise SystemExit(1)
+PY
+then
+    echo "Captures do not name the pinned core; not publishing." >&2
     mkdir -p "$UNPINNED"
     cp "$RUN_RAW"/*.log "$UNPINNED"/
-    echo "Unpinned run: captures in $UNPINNED; results/raw and the summary are unchanged."
+    echo "Captures in $UNPINNED; results/raw and the summary are unchanged." >&2
     exit 0
 fi
 
