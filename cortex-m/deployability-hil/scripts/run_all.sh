@@ -49,6 +49,30 @@ if [ "${TIGRIS_ALLOW_UNPINNED_CORE:-0}" = 1 ]; then
 fi
 python3 "$HERE/../../common/check_core_versions.py" "${CORE_CHECK_ARGS[@]}"
 
+# Every capture embeds repositories.<repo>.dirty and the collector rejects a
+# dirty run, so a tracked modification anywhere here voids the whole matrix.
+# Find that now rather than after 27 flashes. These are the four repositories
+# results.py requires to be clean; check_core_versions.py covers tigris-cortex-m.
+DIRTY_REPOS=()
+for entry in \
+        "benchmark:$HERE/../.." \
+        "tigris_compiler:$TIGRIS_COMPILER_ROOT" \
+        "tigris_runtime:$TIGRIS_RUNTIME_ROOT" \
+        "tflite_micro:$HERE/third_party/tflite-micro"; do
+    name="${entry%%:*}"; path="${entry#*:}"
+    [ -e "$path/.git" ] || continue
+    path="$(cd "$path" && pwd)"
+    if [ -n "$(git -C "$path" status --short --untracked-files=no)" ]; then
+        DIRTY_REPOS+=("$name ($path)")
+    fi
+done
+if [ "${#DIRTY_REPOS[@]}" -gt 0 ]; then
+    echo "ERROR: tracked modifications would be recorded as a dirty capture:" >&2
+    for repo in "${DIRTY_REPOS[@]}"; do echo "  $repo" >&2; done
+    echo "Commit or stash before running; the collector rejects dirty captures." >&2
+    exit 1
+fi
+
 CANONICAL_RUN=0
 if [ "$#" -eq 0 ] \
         && [ -z "${BENCH_MODELS+x}" ] \
@@ -395,6 +419,28 @@ if [ "$CANONICAL_RUN" -eq 1 ]; then
     SUMMARY_OUTPUT="${SUMMARY_OUTPUT:-$HERE/results/summary.json}"
 fi
 if [ -n "$SUMMARY_OUTPUT" ]; then
+    # A run that lost cells to a wedged programmer still reaches this point with
+    # a well-formed summary. Promotion is what makes it the tracked result, so
+    # the expected matrix is checked here and not only after the fact.
+    python3 - "$COLLECTED_SUMMARY" "$HERE/results/expected-matrix.json" \
+            "$HERE/../../common" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+sys.path.insert(0, sys.argv[3])
+from validate_tracked_json import validate_matrix_coverage  # noqa: E402
+
+summary = json.loads(Path(sys.argv[1]).read_text())
+expected = json.loads(Path(sys.argv[2]).read_text())
+errors = validate_matrix_coverage(summary, expected)
+if errors:
+    print("ERROR: refusing to promote an incomplete matrix:", file=sys.stderr)
+    for error in errors:
+        print(f"  {error}", file=sys.stderr)
+    raise SystemExit(1)
+print(f"Matrix complete: {len(expected['cells'])} expected cells all present.")
+PY
     mkdir -p "$(dirname "$SUMMARY_OUTPUT")"
     cp "$COLLECTED_SUMMARY" "$SUMMARY_OUTPUT"
     echo "Promoted summary to $SUMMARY_OUTPUT"
