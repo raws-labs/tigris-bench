@@ -12,7 +12,7 @@
       },
       "validator": {
         "path": "cortex-m/deployability-hil/scripts/validate_accuracy.py",
-        "sha256": "8d00b3804d324e41e8c55c68f285b59f9fce768064bd679b80c5085008eb858b"
+        "sha256": "ce8354cbda97565826bdc0ee9ff9ed189cdf65b2a058138122e553f336843ec2"
       },
       "source_capture_root": "cortex-m/deployability-hil/results/raw",
       "source_tracking": "gitignored_not_shipped",
@@ -200,7 +200,7 @@
     }
   ],
   "artifact_repository": {
-    "revision": "cf0305e78784f54a7a24bd402c3ba032ad126d96",
+    "revision": "f77a4dd70d3a590a79606fc0b2bbeb088f2d0ea7",
     "basis": "commit_containing_byte_identical_artifact_and_tools"
   },
   "execution_provenance": {

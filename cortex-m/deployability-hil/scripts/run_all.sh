@@ -360,11 +360,13 @@ echo "Collecting + validating..."
 python3 "$HERE/scripts/results.py" "$RUN_RAW" \
     -o "$COLLECTED_SUMMARY" --require-provenance
 
-if [[ " ${CONFIGS[*]} " == *" cmsis_nn "* ]] \
-        && [[ " ${CONFIGS[*]} " == *" tflm "* ]]; then
+# cmsis_nn is the common member of both parity pairs (vs tflm across frameworks,
+# vs s8_ref within TiGrIS), so it alone decides whether anything is comparable.
+# The validator reports a missing TFLM baseline as INCOMPLETE.
+if [[ " ${CONFIGS[*]} " == *" cmsis_nn "* ]]; then
     python3 "$HERE/scripts/validate_accuracy.py" "$COLLECTED_SUMMARY"
 else
-    echo "Skipping cross-framework parity: this subset has no TFLM/CMSIS pair."
+    echo "Skipping parity: this subset has no cmsis_nn cell to compare against."
 fi
 
 # Promote only a completely collected invocation. A subset updates its selected
