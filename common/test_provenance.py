@@ -121,6 +121,16 @@ class ReadmeResultContractTest(unittest.TestCase):
     def setUp(self) -> None:
         self.summary = json.loads(SUMMARY_PATH.read_text())
         self.readme = README_PATH.read_text()
+        # Taken from the summary rather than written in, so a rerun that moves
+        # this cell does not silently turn the mutation tests into no-ops.
+        cell = next(
+            config for config in self.summary["configs"]
+            if (config["board"], config["model"], config["framework"],
+                config["kernel"])
+            == ("nucleo_h753zi", "ds_cnn_matched", "tigris", "cmsis_nn"))
+        self.latency_ms = cell["latency_mean_ms"]
+        self.literal = f"{self.latency_ms:.2f} ms"
+        self.assertIn(self.literal, self.readme)
 
     def test_current_readme_matches_summary(self) -> None:
         self.assertEqual(
@@ -128,14 +138,17 @@ class ReadmeResultContractTest(unittest.TestCase):
 
     def test_mutated_readme_result_is_rejected(self) -> None:
         # A latency beyond the run-variance tolerance must still be rejected.
-        mutated = self.readme.replace("11.14 ms", "12.00 ms", 1)
+        beyond = f"{self.latency_ms * 1.10:.2f} ms"
+        mutated = self.readme.replace(self.literal, beyond, 1)
+        self.assertNotEqual(mutated, self.readme)
         errors = validate_readme_results(self.summary, mutated)
         self.assertTrue(
-            any("11.14 ms" in error for error in errors), errors)
+            any(self.literal in error for error in errors), errors)
 
     def test_small_readme_latency_drift_is_tolerated(self) -> None:
         # Sub-tolerance run-to-run drift must NOT force a README edit.
-        mutated = self.readme.replace("11.14 ms", "11.15 ms", 1)
+        within = f"{self.latency_ms * 1.001:.2f} ms"
+        mutated = self.readme.replace(self.literal, within, 1)
         self.assertEqual(validate_readme_results(self.summary, mutated), [])
 
     def test_mutated_summary_result_is_rejected(self) -> None:
