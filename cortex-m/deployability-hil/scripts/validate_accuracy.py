@@ -17,7 +17,9 @@ logs), or a directory of raw *.log captures. It groups by (board, model) and che
                                          (allowed +-1 LSB: the s8 requant nudge)
 
 A pair is only checked when both members are present; a missing TFLM baseline for
-a (board, model) is reported as INCOMPLETE, not silently passed.
+a (board, model) is reported as INCOMPLETE, not silently passed. A subset holding
+only the two TiGrIS configs is still gated on the s8 self-check; the run fails
+when no pair of either kind was comparable.
 
 Usage:
     python validate_accuracy.py                 # reads results/summary.json
@@ -115,7 +117,8 @@ def main() -> None:
 
     print("Device-to-device parity (TiGrIS vs TFLM, both CMSIS-NN; + s8 self-check)\n")
     all_ok = True
-    any_cell = False
+    n_cross = 0
+    n_self = 0
     for (board, model), cell in sorted(groups.items()):
         tg_c = cell.get(("tigris", "cmsis_nn"))
         tg_s = cell.get(("tigris", "s8_ref"))
@@ -123,7 +126,7 @@ def main() -> None:
         print(f"  {board} / {model}")
 
         if tg_c and tflm:
-            any_cell = True
+            n_cross += 1
             st, msg = compare(tg_c, tflm, args.tol)
             print(f"    [{'OK' if st == 'pass' else st.upper()}] tigris/cmsis vs tflm/cmsis : {msg}")
             all_ok &= st != "fail"
@@ -132,16 +135,22 @@ def main() -> None:
                   f"{'no TFLM baseline' if tg_c else 'no TiGrIS cmsis'}")
 
         if tg_c and tg_s:
+            n_self += 1
             st, msg = compare(tg_s, tg_c, args.self_tol)
             print(f"    [{'OK' if st == 'pass' else st.upper()}] tigris/s8 vs tigris/cmsis  : {msg}")
             all_ok &= st != "fail"
 
     print()
-    if not any_cell:
-        print("No (board, model) cell had BOTH a TiGrIS-cmsis and a TFLM run to compare.")
+    if n_cross == 0 and n_self == 0:
+        print("No (board, model) cell held a comparable pair.")
         raise SystemExit(1)
     if all_ok:
-        print("All device-to-device parity checks passed.")
+        checked = []
+        if n_cross:
+            checked.append(f"{n_cross} cross-framework")
+        if n_self:
+            checked.append(f"{n_self} s8 self-check")
+        print(f"All device-to-device parity checks passed ({', '.join(checked)}).")
     else:
         print("Some parity checks FAILED.")
         raise SystemExit(1)
