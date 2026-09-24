@@ -160,8 +160,8 @@ class ReadmeResultContractTest(unittest.TestCase):
             and config["kernel"] == "cmsis_nn")
         cell["latency_median_ms"] += 1
         errors = validate_readme_results(mutated, self.readme)
-        self.assertTrue(
-            any("| TS | 2.56 ms" in error for error in errors), errors)
+        expected = f"| TS | {cell['latency_median_ms']:.2f} ms"
+        self.assertTrue(any(expected in error for error in errors), errors)
 
 
 class PerformanceRegressionContractTest(unittest.TestCase):
