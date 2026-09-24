@@ -30,10 +30,10 @@ ESP32-S3, INT8. TiGrIS dispatches to ESP-NN; TFLM uses its optimized kernels.
 
 | Model | TFLite Micro | TiGrIS (ESP-NN) | TiGrIS (portable ref) |
 |---|---|---|---|
-| DS-CNN | 30.5 ms | **29.4 ms** | 630 ms |
+| DS-CNN | 23.3 ms | 29.3 ms | 569 ms |
 
-The ESP-NN path brings TiGrIS to parity with TFLM, and is **21x faster** than its own portable
-reference kernel, showing the accelerated dispatch works.
+The ESP-NN path is **19x faster** than TiGrIS's own portable reference kernel. TFLM is 1.26x
+faster on DS-CNN.
 
 ### Emulated Cortex-M55: capability (functional)
 
