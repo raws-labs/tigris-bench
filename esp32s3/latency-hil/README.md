@@ -55,8 +55,8 @@ Before running the device builds, you also need the TiGrIS C runtime source tree
 
 ```bash
 # From the directory that contains tigris-bench, check out the exact compiler
-# and runtime commits recorded in ../tigris-bench/core-versions.json
-python tigris-bench/scripts/check_core_versions.py
+# and runtime commits recorded for this suite in tigris-bench/core-versions.json
+python tigris-bench/common/check_core_versions.py --suite esp32s3/latency-hil
 ```
 
 By default the build looks for `tigris-runtime/` as a sibling of `tigris-bench/`. Override with `-DTIGRIS_RUNTIME_DIR=/path/to/tigris-runtime` on the `idf.py build` invocation if you keep it elsewhere.

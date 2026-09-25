@@ -12,6 +12,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import subprocess
 from pathlib import Path
 
 from rich.console import Console
@@ -158,6 +159,21 @@ def render_table(configs: list[dict]) -> Table:
     return table
 
 
+def clean_revision(root: Path) -> str:
+    """HEAD of a core checkout, refusing tracked modifications."""
+    def git(*args: str) -> str:
+        return subprocess.run(["git", "-C", str(root), *args], text=True,
+                              capture_output=True, check=True).stdout.strip()
+    try:
+        revision = git("rev-parse", "HEAD")
+        dirty = git("status", "--porcelain", "--untracked-files=no")
+    except (OSError, subprocess.CalledProcessError) as exc:
+        raise BenchmarkDataError(f"cannot read revision of {root}: {exc}") from exc
+    if dirty:
+        raise BenchmarkDataError(f"{root} has tracked modifications")
+    return revision
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Parse benchmark logs and print a results table")
     parser.add_argument("path", type=Path, help="Directory of .log files or a single log file")
@@ -166,7 +182,13 @@ def main() -> None:
         "--allow-partial", action="store_true",
         help="Allow missing canonical cells when collecting a directory (unexpected or malformed "
              "cells still fail).")
+    parser.add_argument("--compiler-root", type=Path,
+                        help="Compiler checkout the captures were built with; recorded in the summary")
+    parser.add_argument("--runtime-root", type=Path,
+                        help="Runtime checkout the captures were built with; recorded in the summary")
     args = parser.parse_args()
+    if (args.compiler_root is None) != (args.runtime_root is None):
+        parser.error("--compiler-root and --runtime-root go together")
 
     console = Console()
     try:
@@ -181,8 +203,18 @@ def main() -> None:
     console.print(render_table(configs))
 
     if args.output:
+        document = {"configs": configs, "count": len(configs)}
+        if args.compiler_root is not None:
+            try:
+                document["provenance"] = {"repositories": {
+                    "tigris_compiler": {"revision": clean_revision(args.compiler_root)},
+                    "tigris_runtime": {"revision": clean_revision(args.runtime_root)},
+                }}
+            except BenchmarkDataError as exc:
+                console.print(f"[bold red]RESULT GATE FAILED[/bold red] {exc}")
+                raise SystemExit(1) from exc
         args.output.parent.mkdir(parents=True, exist_ok=True)
-        args.output.write_text(json.dumps({"configs": configs, "count": len(configs)}, indent=2) + "\n")
+        args.output.write_text(json.dumps(document, indent=2) + "\n")
         console.print(f"\nWrote {len(configs)} results to {args.output}")
 
 

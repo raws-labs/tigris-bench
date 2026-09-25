@@ -31,41 +31,31 @@ def _schema_list(value: object, label: str, errors: list[str]) -> list[int]:
     return result
 
 
-def validate_manifest(document: object) -> list[str]:
+# Each suite pins the core that produced its tracked numbers, so a change that
+# only affects one target reruns only that target's suite.
+SUITES = {
+    "cortex-m/deployability-hil": ("compiler", "runtime", "tigris_cortex_m"),
+    "esp32s3/latency-hil": ("compiler", "runtime"),
+}
+
+
+def validate_suite_pins(pins: object, components: tuple[str, ...]) -> list[str]:
     errors: list[str] = []
-    if not isinstance(document, dict):
-        return ["top level must be an object"]
-    if document.get("format_version") != 1:
-        errors.append("format_version must be 1")
-    if not isinstance(document.get("profile"), str) or not document["profile"]:
-        errors.append("profile must be a non-empty string")
-    plan_schema = document.get("plan_schema")
+    if not isinstance(pins, dict):
+        return ["must be an object"]
+    plan_schema = pins.get("plan_schema")
     if not isinstance(plan_schema, int) or plan_schema < 1:
         errors.append("plan_schema must be a positive integer")
 
-    compatibility = document.get("compatibility_manifest")
-    compiler = document.get("compiler")
-    runtime = document.get("runtime")
-    cortex_m = document.get("tigris_cortex_m")
-    if not all(
-        isinstance(item, dict)
-        for item in (compatibility, compiler, runtime, cortex_m)
-    ):
-        return errors + [
-            "compatibility_manifest, compiler, runtime, and tigris_cortex_m "
-            "must be objects"
-        ]
-    assert isinstance(compatibility, dict)
-    assert isinstance(compiler, dict)
-    assert isinstance(runtime, dict)
-    assert isinstance(cortex_m, dict)
+    labels = ("compatibility_manifest", *components)
+    if not all(isinstance(pins.get(label), dict) for label in labels):
+        return errors + [f"{', '.join(labels)} must be objects"]
+    compatibility = pins["compatibility_manifest"]
+    compiler = pins["compiler"]
+    runtime = pins["runtime"]
 
-    for label, component in (
-        ("compatibility_manifest", compatibility),
-        ("compiler", compiler),
-        ("runtime", runtime),
-        ("tigris_cortex_m", cortex_m),
-    ):
+    for label in labels:
+        component = pins[label]
         commit = component.get("commit")
         if not isinstance(commit, str) or not COMMIT_RE.fullmatch(commit):
             errors.append(f"{label}.commit must be a full Git SHA")
@@ -82,7 +72,7 @@ def validate_manifest(document: object) -> list[str]:
     for label, component in (("compiler", compiler), ("runtime", runtime)):
         if component.get("branch") != "develop":
             errors.append(f"{label}.branch must be develop")
-    if cortex_m.get("branch") != "main":
+    if "tigris_cortex_m" in components and pins["tigris_cortex_m"].get("branch") != "main":
         errors.append("tigris_cortex_m.branch must be main")
 
     emitted = compiler.get("emits_schema")
@@ -93,6 +83,24 @@ def validate_manifest(document: object) -> list[str]:
         errors.append("compiler schema must match plan_schema")
     if isinstance(emitted, int) and emitted not in accepted:
         errors.append("pinned runtime does not accept the compiler schema")
+    return errors
+
+
+def validate_manifest(document: object) -> list[str]:
+    errors: list[str] = []
+    if not isinstance(document, dict):
+        return ["top level must be an object"]
+    if document.get("format_version") != 2:
+        errors.append("format_version must be 2")
+    if not isinstance(document.get("profile"), str) or not document["profile"]:
+        errors.append("profile must be a non-empty string")
+    suites = document.get("suites")
+    if not isinstance(suites, dict) or set(suites) != set(SUITES):
+        return errors + [f"suites must pin exactly {', '.join(sorted(SUITES))}"]
+    for suite, components in SUITES.items():
+        errors.extend(
+            f"{suite}: {problem}"
+            for problem in validate_suite_pins(suites[suite], components))
     return errors
 
 
@@ -109,15 +117,19 @@ def _git(path: Path, *args: str) -> str:
 
 
 def validate_checkout(
-    document: dict[str, object], compiler_root: Path, runtime_root: Path,
-    cortex_m_root: Path
+    pins: dict[str, object], compiler_root: Path, runtime_root: Path,
+    cortex_m_root: Path | None = None
 ) -> list[str]:
     errors: list[str] = []
-    for label, path, expected in (
-        ("compiler", compiler_root, document["compiler"]),
-        ("runtime", runtime_root, document["runtime"]),
-        ("tigris_cortex_m", cortex_m_root, document["tigris_cortex_m"]),
-    ):
+    checkouts = [
+        ("compiler", compiler_root, pins["compiler"]),
+        ("runtime", runtime_root, pins["runtime"]),
+    ]
+    if "tigris_cortex_m" in pins:
+        if cortex_m_root is None:
+            return ["this suite pins tigris_cortex_m; pass --cortex-m-root"]
+        checkouts.append(("tigris_cortex_m", cortex_m_root, pins["tigris_cortex_m"]))
+    for label, path, expected in checkouts:
         assert isinstance(expected, dict)
         try:
             actual = _git(path, "rev-parse", "HEAD")
@@ -139,8 +151,8 @@ def validate_checkout(
         errors.append(f"cannot read compiler compatibility manifest: {exc}")
     else:
         integration = compatibility.get("integration", {})
-        compiler = document["compiler"]
-        runtime = document["runtime"]
+        compiler = pins["compiler"]
+        runtime = pins["runtime"]
         assert isinstance(compiler, dict)
         assert isinstance(runtime, dict)
         if integration.get("compiler_emits_schema") != compiler.get("emits_schema"):
@@ -158,7 +170,7 @@ def validate_checkout(
     except OSError as exc:
         errors.append(f"cannot read runtime schema header: {exc}")
     else:
-        runtime = document["runtime"]
+        runtime = pins["runtime"]
         assert isinstance(runtime, dict)
         if accepted != runtime.get("accepts_schemas"):
             errors.append(
@@ -168,35 +180,43 @@ def validate_checkout(
     return errors
 
 
-CORTEX_SUMMARY = ROOT / "cortex-m/deployability-hil/results/summary.json"
+def producing_revisions(suite: str) -> dict[str, object]:
+    """The core revisions a suite's tracked summary records it was produced with."""
+    summary = json.loads((ROOT / suite / "results/summary.json").read_text())
+    if suite == "cortex-m/deployability-hil":
+        repos = summary["provenance"]["common"]["repositories"]
+    else:
+        repos = summary["provenance"]["repositories"]
+    return {
+        label: repos[f"tigris_{label}" if label != "tigris_cortex_m" else label]["revision"]
+        for label in SUITES[suite]
+    }
 
 
 def validate_pins_match_producing(document: object) -> list[str]:
-    """The pinned core must be the core that produced the tracked device numbers.
+    """Each suite's pins must be the core that produced its tracked numbers.
 
-    Advancing the pins without a rerun (or vice versa) would advertise a core the
-    committed results did not come from. This ties the pins to the summary's
-    embedded producing revisions."""
-    if not isinstance(document, dict):
+    Advancing a pin without a rerun (or vice versa) would advertise a core the
+    committed results did not come from."""
+    if not isinstance(document, dict) or not isinstance(document.get("suites"), dict):
         return []
-    try:
-        summary = json.loads(CORTEX_SUMMARY.read_text())
-        repos = summary["provenance"]["common"]["repositories"]
-        producing = {
-            "compiler": repos["tigris_compiler"]["revision"],
-            "runtime": repos["tigris_runtime"]["revision"],
-            "tigris_cortex_m": repos["tigris_cortex_m"]["revision"],
-        }
-    except (OSError, json.JSONDecodeError, KeyError, TypeError) as exc:
-        return [f"cannot read producing revisions from {CORTEX_SUMMARY.name}: {exc}"]
     errors: list[str] = []
-    for label in ("compiler", "runtime", "tigris_cortex_m"):
-        pinned = document.get(label)
-        if isinstance(pinned, dict) and pinned.get("commit") != producing[label]:
-            errors.append(
-                f"{label} pin {pinned.get('commit')} does not match the core that "
-                f"produced the tracked results ({producing[label]}); re-pin with a "
-                f"rerun so the pins and the committed numbers agree")
+    for suite in SUITES:
+        pins = document["suites"].get(suite)
+        if not isinstance(pins, dict):
+            continue
+        try:
+            producing = producing_revisions(suite)
+        except (OSError, json.JSONDecodeError, KeyError, TypeError) as exc:
+            errors.append(f"{suite}: cannot read producing revisions from its summary: {exc}")
+            continue
+        for label, revision in producing.items():
+            pinned = pins.get(label)
+            if isinstance(pinned, dict) and pinned.get("commit") != revision:
+                errors.append(
+                    f"{suite}: {label} pin {pinned.get('commit')} does not match the "
+                    f"core that produced its tracked results ({revision}); re-pin "
+                    f"with a rerun so the pins and the committed numbers agree")
     return errors
 
 
@@ -204,6 +224,8 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--manifest", type=Path, default=ROOT / "core-versions.json")
     parser.add_argument("--manifest-only", action="store_true")
+    parser.add_argument("--suite", choices=sorted(SUITES),
+                        help="suite whose pins the checkouts must match")
     parser.add_argument("--compiler-root", type=Path, default=ROOT.parent / "tigris")
     parser.add_argument(
         "--runtime-root", type=Path, default=ROOT.parent / "tigris-runtime"
@@ -217,6 +239,8 @@ def main() -> int:
         help="warn instead of failing checkout mismatches for development runs",
     )
     args = parser.parse_args()
+    if not args.manifest_only and not args.suite:
+        parser.error("--suite is required unless --manifest-only is given")
     try:
         document = json.loads(args.manifest.read_text())
     except (OSError, json.JSONDecodeError) as exc:
@@ -227,8 +251,8 @@ def main() -> int:
     if not errors and not args.manifest_only:
         errors.extend(
             validate_checkout(
-                document, args.compiler_root.resolve(), args.runtime_root.resolve(),
-                args.cortex_m_root.resolve()
+                document["suites"][args.suite], args.compiler_root.resolve(),
+                args.runtime_root.resolve(), args.cortex_m_root.resolve()
             )
         )
     if errors and args.allow_unpinned:
@@ -240,17 +264,12 @@ def main() -> int:
         for error in errors:
             print(f"ERROR: {error}")
         return 1
-    compiler = document["compiler"]
-    runtime = document["runtime"]
-    cortex_m = document["tigris_cortex_m"]
-    assert isinstance(compiler, dict)
-    assert isinstance(runtime, dict)
-    assert isinstance(cortex_m, dict)
-    print(
-        "Pinned TiGrIS core verified: "
-        f"compiler={compiler['commit']} runtime={runtime['commit']} "
-        f"tigris_cortex_m={cortex_m['commit']} schema={document['plan_schema']}"
-    )
+    for suite in ([args.suite] if args.suite else sorted(SUITES)):
+        pins = document["suites"][suite]
+        commits = " ".join(
+            f"{label}={pins[label]['commit']}" for label in SUITES[suite])
+        print(f"Pinned TiGrIS core verified for {suite}: {commits} "
+              f"schema={pins['plan_schema']}")
     return 0
 
 

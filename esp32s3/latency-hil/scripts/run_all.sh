@@ -186,8 +186,15 @@ collect_and_validate() {
     echo "Collecting the complete matrix..."
     SUMMARY_CANDIDATE="$(mktemp "$(dirname "$SUMMARY")/.summary.XXXXXX.json")"
     trap 'rm -f "$SUMMARY_CANDIDATE"' EXIT
+    # Record the producing core; validate-only runs have no checkouts, and a
+    # summary without it fails the suite's pin check.
+    local core_args=()
+    if [ -n "${TIGRIS_COMPILER_ROOT:-}" ]; then
+        core_args=(--compiler-root "$TIGRIS_COMPILER_ROOT"
+                   --runtime-root "$TIGRIS_RUNTIME_ROOT")
+    fi
     "$PYTHON" "$SCRIPT_DIR/results.py" "$RAW_DIR" \
-        -o "$SUMMARY_CANDIDATE"
+        -o "$SUMMARY_CANDIDATE" "${core_args[@]}"
 
     echo ""
     echo "Validating device outputs..."
@@ -249,6 +256,7 @@ TIGRIS_COMPILER_ROOT="${TIGRIS_COMPILER_ROOT:-$(cd "$BENCH_DIR/../../../tigris" 
 TIGRIS_RUNTIME_ROOT="${TIGRIS_RUNTIME_ROOT:-$(cd "$BENCH_DIR/../../../tigris-runtime" && pwd)}"
 TIGRIS_COMPILER="${TIGRIS_COMPILER:-$TIGRIS_COMPILER_ROOT/.venv/bin/tigris}"
 CORE_CHECK_ARGS=(
+    --suite esp32s3/latency-hil
     --compiler-root "$TIGRIS_COMPILER_ROOT"
     --runtime-root "$TIGRIS_RUNTIME_ROOT"
 )

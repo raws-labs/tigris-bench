@@ -39,6 +39,7 @@ PICO_SDK_COMMIT="a1438dff1d38bd9c65dbd693f0e5db4b9ae91779"
 NPROC="$(nproc)"
 
 CORE_CHECK_ARGS=(
+    --suite cortex-m/deployability-hil
     --compiler-root "$TIGRIS_COMPILER_ROOT"
     --runtime-root "$TIGRIS_RUNTIME_ROOT"
     --cortex-m-root "$TIGRIS_CORTEX_M_ROOT"
@@ -414,7 +415,7 @@ import sys
 from pathlib import Path
 
 summary = json.loads(Path(sys.argv[1]).read_text())
-pins = json.loads(Path(sys.argv[2]).read_text())
+pins = json.loads(Path(sys.argv[2]).read_text())["suites"]["cortex-m/deployability-hil"]
 try:
     captured = summary["provenance"]["common"]["repositories"]
 except (KeyError, TypeError):

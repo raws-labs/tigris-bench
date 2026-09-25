@@ -56,7 +56,7 @@ Each target is a self-contained "clone, build, flash, same numbers" unit:
 | [`cortex-m/m55-qemu/`](cortex-m/m55-qemu) | emulated Cortex-M55 | QEMU, no hardware needed |
 
 Models are prepared once in [`models/`](models) and shared by every target. Compiler/runtime
-versions are pinned in `core-versions.json` and enforced by the tooling in `common/`.
+versions are pinned per suite in `core-versions.json` and enforced by the tooling in `common/`.
 
 ## Methodology
 
@@ -75,5 +75,5 @@ esp32s3/
   latency-hil/         # ESP32-S3 on real hardware
 models/                # shared model prep (one source of truth)
 common/                # version + provenance tooling
-core-versions.json     # pinned compiler/runtime
+core-versions.json     # per-suite compiler/runtime pins
 ```
