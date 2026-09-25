@@ -11,7 +11,7 @@ Reproducible benchmarks of TiGrIS (tiling ahead-of-time compiler plus INT8 runti
 
 ## Layout
 - `common/`: core-version pin checks and provenance validation shared by every suite.
-- `core-versions.json`: exact compiler, runtime and tigris-cortex-m commits the tracked results were produced with.
+- `core-versions.json`: per suite, the exact compiler, runtime and (Cortex-M) tigris-cortex-m commits that suite's tracked results were produced with.
 - `<target>/results/summary.json` is the tracked artifact; `results/raw/` serial logs are gitignored.
 - `cortex-m/deployability-hil/tools/tflite_to_qdq_onnx.py`: reconstructs the TiGrIS ONNX model from the TFLite file TFLM runs, so both sides share weights.
 
@@ -19,8 +19,8 @@ Reproducible benchmarks of TiGrIS (tiling ahead-of-time compiler plus INT8 runti
 - Cells are weight-matched: TiGrIS INT8 models come from the exact TFLite file embedded in the TFLM firmware. Float cells are independently initialized and are never used for cross-framework claims.
 - RAM figures are the measured working set (TiGrIS `sram_peak` vs TFLM `arena_used`), not a provisioned arena; weights and stack are excluded.
 - Plans are always recompiled into gitignored `build/plans/` with the active local compiler; a pre-existing `.tgrs` is never benchmarked.
-- The compiler and runtime checkouts sit next to this repo at the commits in `core-versions.json`; `run_all.sh` refuses anything else. `TIGRIS_ALLOW_UNPINNED_CORE=1` is for non-canonical development runs only, and such results are not promoted to a tracked summary.
-- Tracked summaries keep the commits that produced them. Re-pinning `core-versions.json` without rerunning hardware is only valid for CI-safe maintenance (host CMSIS parity uses a synthetic fixture, not tracked plans); the compatibility-manifest and compiler pins move together.
+- The compiler and runtime checkouts sit next to this repo at the suite's commits in `core-versions.json`; `run_all.sh` refuses anything else. `TIGRIS_ALLOW_UNPINNED_CORE=1` is for non-canonical development runs only, and such results are not promoted to a tracked summary.
+- Tracked summaries keep the commits that produced them, and each suite's pins must match its own summary. A change that cannot move a suite's numbers leaves that suite's pins and summary alone; rerun only the suites it affects. Re-pinning a suite without rerunning its hardware is only valid for CI-safe maintenance (host CMSIS parity uses a synthetic fixture, not tracked plans); the compatibility-manifest and compiler pins move together.
 - Every raw capture carries a provenance record (repos, dependencies, tools, build invocation, model, firmware, board); collection fails without it.
 
 ## Gotchas

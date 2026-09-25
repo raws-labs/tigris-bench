@@ -86,6 +86,7 @@ capture_siliconrig_matrix() {
     echo ""
     echo "Flashing + capturing all configurations on SiliconRig..."
     "$PYTHON" -u - "$SRIG_MANIFEST" "$RAW_DIR" <<'PY'
+import os
 import pathlib
 import sys
 
@@ -108,6 +109,8 @@ try:
                 raise RuntimeError(f"{name}: capture ended without BENCH_DONE")
             if not log.endswith("\n"):
                 log += "\n"
+            if name.startswith("tigris_"):
+                log += os.environ["BENCH_CORE_PROVENANCE"] + "\n"
             (raw_dir / f"{name}.log").write_text(log)
             result = next(
                 (line for line in log.splitlines() if "BENCH_RESULT:" in line),
@@ -148,6 +151,7 @@ run_tigris_config() {
         "$ESPTOOL" --port "$PORT" run 2>/dev/null || true
         sleep 1
         capture_until_done "$log_file" "$capture_timeout"
+        printf '%s\n' "$BENCH_CORE_PROVENANCE" >> "$log_file"
     fi
 
     echo "  Log: $log_file"
@@ -249,6 +253,7 @@ TIGRIS_COMPILER_ROOT="${TIGRIS_COMPILER_ROOT:-$(cd "$BENCH_DIR/../../../tigris" 
 TIGRIS_RUNTIME_ROOT="${TIGRIS_RUNTIME_ROOT:-$(cd "$BENCH_DIR/../../../tigris-runtime" && pwd)}"
 TIGRIS_COMPILER="${TIGRIS_COMPILER:-$TIGRIS_COMPILER_ROOT/.venv/bin/tigris}"
 CORE_CHECK_ARGS=(
+    --suite esp32s3/latency-hil
     --compiler-root "$TIGRIS_COMPILER_ROOT"
     --runtime-root "$TIGRIS_RUNTIME_ROOT"
 )
@@ -256,6 +261,11 @@ if [ "${TIGRIS_ALLOW_UNPINNED_CORE:-0}" = 1 ]; then
     CORE_CHECK_ARGS+=(--allow-unpinned)
 fi
 "$PYTHON" "$BENCH_DIR/../../common/check_core_versions.py" "${CORE_CHECK_ARGS[@]}"
+# Every TiGrIS capture names the core it was built from; the collector derives
+# the summary's producing revisions from these lines.
+BENCH_CORE_PROVENANCE="$("$PYTHON" "$SCRIPT_DIR/results.py" \
+    --provenance-line "$TIGRIS_COMPILER_ROOT" "$TIGRIS_RUNTIME_ROOT")"
+export BENCH_CORE_PROVENANCE
 
 echo "Compiling current TiGrIS plans..."
 "$PYTHON" "$SCRIPT_DIR/prepare_tigris_plans.py" \

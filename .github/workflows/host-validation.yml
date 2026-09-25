@@ -106,9 +106,9 @@ jobs:
           set -euo pipefail
           host_root="$RUNNER_TEMP/tigris-host-validation"
           compiler_revision="$(python -c \
-            'import json; print(json.load(open("core-versions.json"))["compiler"]["commit"])')"
+            'import json; print(json.load(open("core-versions.json"))["suites"]["cortex-m/deployability-hil"]["compiler"]["commit"])')"
           runtime_revision="$(python -c \
-            'import json; print(json.load(open("core-versions.json"))["runtime"]["commit"])')"
+            'import json; print(json.load(open("core-versions.json"))["suites"]["cortex-m/deployability-hil"]["runtime"]["commit"])')"
           cmsis_revision="$(python -c \
             'import json; print(json.load(open("cortex-m/deployability-hil/results/summary.json"))["provenance"]["common"]["dependencies"]["CMSIS-NN"])')"
 
