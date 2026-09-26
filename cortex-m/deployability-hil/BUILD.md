@@ -22,10 +22,12 @@ pip install numpy rich
 `SRIG_API_KEY` in the environment (and `SRIG_BASE_URL` if self-hosted). To
 reproduce on a locally-attached board instead, see "Manual steps" below.
 
-The compiler and runtime must be sibling checkouts at this suite's exact commits
-in `../../core-versions.json`. `run_all.sh` checks them before building. Set
-`TIGRIS_ALLOW_UNPINNED_CORE=1` only for an explicitly non-canonical development
-run; the resulting revisions must be pinned before any summary is promoted.
+`run_all.sh` builds from this suite's pinned releases in `../../core-versions.json`:
+`../../common/fetch_core.py` clones the TiGrIS compiler, runtime and
+tigris-cortex-m at their release tags into `../../build/core/` and installs the
+compiler from the published `tigris-ml` wheel. Setting `TIGRIS_*_ROOT` yourself,
+with `TIGRIS_ALLOW_UNPINNED_CORE=1`, is only for an explicitly non-canonical
+development run, whose captures are never promoted.
 
 ## One-shot: build, flash, capture, validate the whole matrix
 

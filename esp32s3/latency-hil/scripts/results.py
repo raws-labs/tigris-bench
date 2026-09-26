@@ -120,8 +120,8 @@ PROVENANCE_PREFIX = "BENCH_PROVENANCE:"
 def provenance_line(compiler_root: Path, runtime_root: Path) -> str:
     """The line run_all.sh appends to every TiGrIS capture it saves."""
     record = {"repositories": {
-        "tigris_compiler": {"revision": clean_revision(compiler_root)},
-        "tigris_runtime": {"revision": clean_revision(runtime_root)},
+        "tigris_compiler": core_state(compiler_root),
+        "tigris_runtime": core_state(runtime_root),
     }}
     return PROVENANCE_PREFIX + json.dumps(record, sort_keys=True, separators=(",", ":"))
 
@@ -196,8 +196,8 @@ def render_table(configs: list[dict]) -> Table:
     return table
 
 
-def clean_revision(root: Path) -> str:
-    """HEAD of a core checkout, refusing tracked modifications."""
+def core_state(root: Path) -> dict:
+    """Revision and release tag of a core checkout, refusing tracked modifications."""
     def git(*args: str) -> str:
         return subprocess.run(["git", "-C", str(root), *args], text=True,
                               capture_output=True, check=True).stdout.strip()
@@ -208,7 +208,12 @@ def clean_revision(root: Path) -> str:
         raise BenchmarkDataError(f"cannot read revision of {root}: {exc}") from exc
     if dirty:
         raise BenchmarkDataError(f"{root} has tracked modifications")
-    return revision
+    state = {"revision": revision}
+    try:
+        state["tag"] = git("describe", "--tags", "--exact-match")
+    except subprocess.CalledProcessError:
+        pass
+    return state
 
 
 def main() -> None:

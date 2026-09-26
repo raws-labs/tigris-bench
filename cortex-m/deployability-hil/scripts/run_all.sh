@@ -24,9 +24,15 @@ set -euo pipefail
 : "${SRIG_API_KEY:?set SRIG_API_KEY (SiliconRig auth) before running}"
 
 HERE="$(cd "$(dirname "$0")/.." && pwd)"
-TIGRIS_COMPILER_ROOT="${TIGRIS_COMPILER_ROOT:-$(cd "$HERE/../../../tigris" && pwd)}"
-TIGRIS_RUNTIME_ROOT="${TIGRIS_RUNTIME_ROOT:-$(cd "$HERE/../../../tigris-runtime" && pwd)}"
-TIGRIS_CORTEX_M_ROOT="${TIGRIS_CORTEX_M_ROOT:-$(cd "$HERE/../../../tigris-cortex-m" && pwd)}"
+# The pinned releases are fetched into build/core unless every root is given
+# explicitly (development runs; the pin check then refuses a canonical run).
+if [ -z "${TIGRIS_COMPILER_ROOT:-}${TIGRIS_RUNTIME_ROOT:-}${TIGRIS_CORTEX_M_ROOT:-}" ]; then
+    core_env="$(python3 "$HERE/../../common/fetch_core.py" --suite cortex-m/deployability-hil)"
+    eval "$core_env"
+fi
+: "${TIGRIS_COMPILER_ROOT:?set every core root or none}"
+: "${TIGRIS_RUNTIME_ROOT:?set every core root or none}"
+: "${TIGRIS_CORTEX_M_ROOT:?set every core root or none}"
 TC="$TIGRIS_RUNTIME_ROOT/cmake/arm-none-eabi.cmake"
 MODELS_DIR="$(cd "$HERE/../../models/output" && pwd)"
 PLAN_DIR="${TIGRIS_PLAN_DIR:-$HERE/build/plans}"
@@ -222,12 +228,18 @@ def command(*args):
 def git_state(path):
     if not (path / ".git").exists():
         return None
-    return {
+    state = {
         "revision": command("git", "-C", str(path), "rev-parse", "HEAD"),
         "dirty": bool(command(
             "git", "-C", str(path), "status", "--short",
             "--untracked-files=no")),
     }
+    tag = subprocess.run(
+        ["git", "-C", str(path), "describe", "--tags", "--exact-match"],
+        text=True, capture_output=True)
+    if tag.returncode == 0:
+        state["tag"] = tag.stdout.strip()
+    return state
 
 
 def artifact(path):
@@ -409,10 +421,13 @@ fi
 # collection the captures settle it. results/raw is what the tracked summary's
 # provenance record is reconstructed from, so captures naming anything other
 # than the pinned core go to results/unpinned-raw and promote nothing.
-if ! python3 - "$COLLECTED_SUMMARY" "$HERE/../../core-versions.json" <<'PY'
+if ! python3 - "$COLLECTED_SUMMARY" "$HERE/../../core-versions.json" "$HERE/../../common" <<'PY'
 import json
 import sys
 from pathlib import Path
+
+sys.path.insert(0, sys.argv[3])
+from check_core_versions import suite_repositories
 
 summary = json.loads(Path(sys.argv[1]).read_text())
 pins = json.loads(Path(sys.argv[2]).read_text())["suites"]["cortex-m/deployability-hil"]
@@ -423,14 +438,10 @@ except (KeyError, TypeError):
     raise SystemExit(1)
 
 mismatched = []
-for pin_key, capture_key in (
-        ("compiler", "tigris_compiler"),
-        ("runtime", "tigris_runtime"),
-        ("tigris_cortex_m", "tigris_cortex_m")):
-    want = pins[pin_key]["commit"]
-    got = (captured.get(capture_key) or {}).get("revision")
+for repo, (_, want) in suite_repositories(pins).items():
+    got = (captured.get(repo) or {}).get("tag")
     if got != want:
-        mismatched.append(f"{pin_key}: captured {got}, pinned {want}")
+        mismatched.append(f"{repo}: captured {got}, pinned {want}")
 if mismatched:
     for line in mismatched:
         print(line, file=sys.stderr)
