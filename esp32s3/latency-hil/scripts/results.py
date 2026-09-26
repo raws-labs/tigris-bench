@@ -13,12 +13,16 @@ import argparse
 import json
 import re
 import subprocess
+import sys
 from pathlib import Path
 
 from rich.console import Console
 from rich.table import Table
 
 from benchmark_matrix import BenchmarkDataError, EXPECTED_CELLS, validate_matrix
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "common"))
+from check_core_versions import ESP_COMPONENT, esp_component  # noqa: E402
 
 
 def parse_bench_result(line: str) -> dict | None:
@@ -119,9 +123,18 @@ PROVENANCE_PREFIX = "BENCH_PROVENANCE:"
 
 def provenance_line(compiler_root: Path, runtime_root: Path) -> str:
     """The line run_all.sh appends to every TiGrIS capture it saves."""
+    component = esp_component()
+    if component["version"] is None or component["component_hash"] is None:
+        raise BenchmarkDataError("tigris-esp dependencies.lock holds no registry runtime")
+    runtime = core_state(runtime_root)
+    runtime["esp_component"] = {
+        "name": ESP_COMPONENT,
+        "version": component["version"],
+        "component_hash": component["component_hash"],
+    }
     record = {"repositories": {
         "tigris_compiler": core_state(compiler_root),
-        "tigris_runtime": core_state(runtime_root),
+        "tigris_runtime": runtime,
     }}
     return PROVENANCE_PREFIX + json.dumps(record, sort_keys=True, separators=(",", ":"))
 

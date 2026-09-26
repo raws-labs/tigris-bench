@@ -54,8 +54,11 @@ ESP32-S3-DevKitC-1 (N16R8): dual Xtensa LX7 at 240 MHz, 512 KB SRAM, 8 MB PSRAM,
 The suite builds from the TiGrIS release pinned for it in `../../core-versions.json`.
 `run_all.sh` fetches it with `../../common/fetch_core.py`: the compiler and runtime
 are cloned at the release tag into `../../build/core/`, and the compiler is
-installed from the published `tigris-ml` wheel. The ESP-IDF components compile
-the runtime from that checkout (`-DTIGRIS_RUNTIME_DIR`).
+installed from the published `tigris-ml` wheel. The firmware takes the runtime
+from the ESP Component Registry: `tigris-esp/main/idf_component.yml` requires
+`raws-labs/tigris-runtime` at exactly the pinned release, and
+`tigris-esp/dependencies.lock` records the resolved component and its hash.
+`check_core_versions.py` holds both to the pin.
 
 ```bash
 python ../../common/fetch_core.py --suite esp32s3/latency-hil

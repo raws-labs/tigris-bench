@@ -227,9 +227,9 @@
       "kernel": "esp_nn",
       "dtype": "int8",
       "model": "mobilenet_v1_matched",
-      "latency_mean_ms": 957.58,
+      "latency_mean_ms": 957.59,
       "latency_min_ms": 957.52,
-      "latency_max_ms": 957.65,
+      "latency_max_ms": 957.63,
       "latency_stdev_ms": 0.03,
       "sram_budget_kb": 128,
       "sram_actual_kb": 128,
@@ -262,9 +262,9 @@
       "dtype": "int8",
       "model": "mobilenet_v1_matched",
       "latency_mean_ms": 1612.7,
-      "latency_min_ms": 1612.43,
-      "latency_max_ms": 1612.78,
-      "latency_stdev_ms": 0.1,
+      "latency_min_ms": 1612.4,
+      "latency_max_ms": 1612.79,
+      "latency_stdev_ms": 0.11,
       "sram_budget_kb": 32,
       "sram_actual_kb": 32,
       "executor_workspace_bytes": 747,
@@ -296,9 +296,9 @@
       "dtype": "int8",
       "model": "mobilenet_v1_matched",
       "latency_mean_ms": 904.01,
-      "latency_min_ms": 903.87,
+      "latency_min_ms": 903.86,
       "latency_max_ms": 904.13,
-      "latency_stdev_ms": 0.08,
+      "latency_stdev_ms": 0.09,
       "sram_budget_kb": 64,
       "sram_actual_kb": 64,
       "executor_workspace_bytes": 979,
@@ -376,6 +376,11 @@
         "tag": "v0.11.0"
       },
       "tigris_runtime": {
+        "esp_component": {
+          "component_hash": "17cf7cd50944545ca98b6234f053752c6897ac23c501d8e043179fea46a78d7e",
+          "name": "raws-labs/tigris-runtime",
+          "version": "0.11.0"
+        },
         "revision": "18f5e66eae8ee26f99a3f3b908b895e9f5aaaac3",
         "tag": "v0.11.0"
       }
