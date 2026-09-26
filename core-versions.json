@@ -1,69 +1,13 @@
 {
-  "format_version": 2,
+  "format_version": 3,
   "profile": "plan-sized-workspace-2026-08-16",
   "suites": {
     "cortex-m/deployability-hil": {
-      "plan_schema": 9,
-      "compatibility_manifest": {
-        "repository": "https://github.com/raws-labs/tigris.git",
-        "path": "compatibility.json",
-        "commit": "f64f57d17d934624dede338060fca008f9e7930c"
-      },
-      "compiler": {
-        "repository": "https://github.com/raws-labs/tigris.git",
-        "branch": "develop",
-        "commit": "f64f57d17d934624dede338060fca008f9e7930c",
-        "emits_schema": 9
-      },
-      "runtime": {
-        "repository": "https://github.com/raws-labs/tigris-runtime.git",
-        "branch": "develop",
-        "commit": "ccec237fa5897d33c3f9958a567e05220f6e6966",
-        "accepts_schemas": [
-          2,
-          3,
-          4,
-          5,
-          6,
-          7,
-          8,
-          9
-        ]
-      },
-      "tigris_cortex_m": {
-        "repository": "https://github.com/raws-labs/tigris-cortex-m.git",
-        "branch": "main",
-        "commit": "f77bee69faf631f018968801b4386eb66761f14a"
-      }
+      "tigris": "0.11.0",
+      "tigris_cortex_m": "0.1.0"
     },
     "esp32s3/latency-hil": {
-      "plan_schema": 9,
-      "compatibility_manifest": {
-        "repository": "https://github.com/raws-labs/tigris.git",
-        "path": "compatibility.json",
-        "commit": "f64f57d17d934624dede338060fca008f9e7930c"
-      },
-      "compiler": {
-        "repository": "https://github.com/raws-labs/tigris.git",
-        "branch": "develop",
-        "commit": "f64f57d17d934624dede338060fca008f9e7930c",
-        "emits_schema": 9
-      },
-      "runtime": {
-        "repository": "https://github.com/raws-labs/tigris-runtime.git",
-        "branch": "develop",
-        "commit": "326945fc22972bc89859b17859c52ada6327e80f",
-        "accepts_schemas": [
-          2,
-          3,
-          4,
-          5,
-          6,
-          7,
-          8,
-          9
-        ]
-      }
+      "tigris": "0.11.0"
     }
   }
 }

@@ -249,8 +249,14 @@ case "$TRANSPORT" in
         ;;
 esac
 
-TIGRIS_COMPILER_ROOT="${TIGRIS_COMPILER_ROOT:-$(cd "$BENCH_DIR/../../../tigris" && pwd)}"
-TIGRIS_RUNTIME_ROOT="${TIGRIS_RUNTIME_ROOT:-$(cd "$BENCH_DIR/../../../tigris-runtime" && pwd)}"
+# The pinned release is fetched into build/core unless both roots are given
+# explicitly (development runs; the pin check then refuses a canonical run).
+if [ -z "${TIGRIS_COMPILER_ROOT:-}${TIGRIS_RUNTIME_ROOT:-}" ]; then
+    core_env="$("$PYTHON" "$BENCH_DIR/../../common/fetch_core.py" --suite esp32s3/latency-hil)"
+    eval "$core_env"
+fi
+: "${TIGRIS_COMPILER_ROOT:?set both core roots or neither}"
+: "${TIGRIS_RUNTIME_ROOT:?set both core roots or neither}"
 TIGRIS_COMPILER="${TIGRIS_COMPILER:-$TIGRIS_COMPILER_ROOT/.venv/bin/tigris}"
 CORE_CHECK_ARGS=(
     --suite esp32s3/latency-hil

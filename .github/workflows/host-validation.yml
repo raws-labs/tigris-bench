@@ -105,10 +105,9 @@ jobs:
         run: |
           set -euo pipefail
           host_root="$RUNNER_TEMP/tigris-host-validation"
-          compiler_revision="$(python -c \
-            'import json; print(json.load(open("core-versions.json"))["suites"]["cortex-m/deployability-hil"]["compiler"]["commit"])')"
-          runtime_revision="$(python -c \
-            'import json; print(json.load(open("core-versions.json"))["suites"]["cortex-m/deployability-hil"]["runtime"]["commit"])')"
+          # Compiler and runtime of the Cortex-M suite's pinned release.
+          release_tag="v$(python -c \
+            'import json; print(json.load(open("core-versions.json"))["suites"]["cortex-m/deployability-hil"]["tigris"])')"
           cmsis_revision="$(python -c \
             'import json; print(json.load(open("cortex-m/deployability-hil/results/summary.json"))["provenance"]["common"]["dependencies"]["CMSIS-NN"])')"
 
@@ -120,10 +119,14 @@ jobs:
             git -C "$destination" checkout --detach FETCH_HEAD
             test "$(git -C "$destination" rev-parse HEAD)" = "$revision"
           }
-          checkout_revision https://github.com/raws-labs/tigris.git \
-            "$host_root/compiler" "$compiler_revision"
-          checkout_revision https://github.com/raws-labs/tigris-runtime.git \
-            "$host_root/runtime" "$runtime_revision"
+          checkout_release() {
+            local repository="$1" destination="$2" tag="$3"
+            git clone --quiet --depth 1 --branch "$tag" "$repository" "$destination"
+          }
+          checkout_release https://github.com/raws-labs/tigris.git \
+            "$host_root/compiler" "$release_tag"
+          checkout_release https://github.com/raws-labs/tigris-runtime.git \
+            "$host_root/runtime" "$release_tag"
           checkout_revision https://github.com/ARM-software/CMSIS-NN.git \
             "$host_root/CMSIS-NN" "$cmsis_revision"
 

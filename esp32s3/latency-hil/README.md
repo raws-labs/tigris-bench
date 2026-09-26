@@ -51,19 +51,19 @@ ESP32-S3-DevKitC-1 (N16R8): dual Xtensa LX7 at 240 MHz, 512 KB SRAM, 8 MB PSRAM,
 
 ## Prerequisites
 
-Before running the device builds, you also need the TiGrIS C runtime source tree next to this repo. The ESP-IDF components pull headers and source files from it at build time:
+The suite builds from the TiGrIS release pinned for it in `../../core-versions.json`.
+`run_all.sh` fetches it with `../../common/fetch_core.py`: the compiler and runtime
+are cloned at the release tag into `../../build/core/`, and the compiler is
+installed from the published `tigris-ml` wheel. The ESP-IDF components compile
+the runtime from that checkout (`-DTIGRIS_RUNTIME_DIR`).
 
 ```bash
-# From the directory that contains tigris-bench, check out the exact compiler
-# and runtime commits recorded for this suite in tigris-bench/core-versions.json
-python tigris-bench/common/check_core_versions.py --suite esp32s3/latency-hil
+python ../../common/fetch_core.py --suite esp32s3/latency-hil
 ```
 
-By default the build looks for `tigris-runtime/` as a sibling of `tigris-bench/`. Override with `-DTIGRIS_RUNTIME_DIR=/path/to/tigris-runtime` on the `idf.py build` invocation if you keep it elsewhere.
-
-The orchestration script refuses mismatched or modified compiler/runtime
-checkouts before flashing. `TIGRIS_ALLOW_UNPINNED_CORE=1` is available only for
-non-canonical development runs.
+Setting `TIGRIS_COMPILER_ROOT` and `TIGRIS_RUNTIME_ROOT` yourself, with
+`TIGRIS_ALLOW_UNPINNED_CORE=1`, is available only for non-canonical development
+runs.
 
 ## Quick start
 
