@@ -1,0 +1,4 @@
+## The runtime under test comes from the ESP Component Registry at the suite's
+## pinned release in core-versions.json; check_core_versions.py keeps them equal.
+dependencies:
+  raws-labs/tigris-runtime: "==0.11.0"

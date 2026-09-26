@@ -110,5 +110,21 @@ class CoreVersionContractTest(unittest.TestCase):
                                 for e in validate_checkout(pins, roots)))
 
 
+    def test_esp_registry_runtime_must_match_the_pin(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            (project / "main").mkdir()
+            (project / "main/idf_component.yml").write_text(
+                'dependencies:\n  raws-labs/tigris-runtime: "==1.2.3"\n')
+            (project / "dependencies.lock").write_text(
+                "dependencies:\n  raws-labs/tigris-runtime:\n"
+                f"    component_hash: {'a' * 64}\n    version: 1.2.3\n"
+                "direct_dependencies:\n")
+            self.assertEqual(
+                check_core_versions.validate_esp_component("1.2.3", project), [])
+            errors = check_core_versions.validate_esp_component("1.2.4", project)
+            self.assertEqual(len(errors), 2)
+
+
 if __name__ == "__main__":
     unittest.main()

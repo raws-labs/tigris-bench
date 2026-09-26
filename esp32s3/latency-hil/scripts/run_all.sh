@@ -136,11 +136,12 @@ run_tigris_config() {
     cd "$BENCH_DIR/tigris-esp"
     idf.py fullclean 2>/dev/null || true
     idf.py set-target esp32s3
-    # Build the runtime the version check verified, not whatever sits next door.
+    # The runtime is the registry component locked in dependencies.lock, which
+    # check_core_versions.py holds to the suite's pinned release.
     if [ "$kernel" = "f32" ]; then
-        idf.py build -DTIGRIS_RUNTIME_DIR="$TIGRIS_RUNTIME_ROOT"
+        idf.py build
     else
-        idf.py build -DTIGRIS_RUNTIME_DIR="$TIGRIS_RUNTIME_ROOT" -DBENCH_KERNEL="$kernel"
+        idf.py build -DBENCH_KERNEL="$kernel"
     fi
     if [ "$TRANSPORT" = "siliconrig" ]; then
         queue_siliconrig_firmware \

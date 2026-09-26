@@ -50,6 +50,45 @@ def suite_repositories(pins: dict[str, str]) -> dict[str, tuple[str, str]]:
     }
 
 
+ESP_PROJECT = ROOT / "esp32s3/latency-hil/tigris-esp"
+ESP_COMPONENT = "raws-labs/tigris-runtime"
+
+
+def esp_component(project: Path = ESP_PROJECT) -> dict[str, str | None]:
+    """The registry runtime the ESP project requires and the one its lock holds."""
+    manifest = (project / "main/idf_component.yml").read_text()
+    lock = (project / "dependencies.lock").read_text()
+    required = re.search(
+        rf'^\s*{re.escape(ESP_COMPONENT)}:\s*"==([0-9.]+)"', manifest, re.MULTILINE)
+    block = re.search(
+        rf"^  {re.escape(ESP_COMPONENT)}:\n((?:    .*\n)+)", lock, re.MULTILINE)
+    locked = re.search(r"^    version: ([0-9.]+)$", block.group(1), re.MULTILINE) if block else None
+    digest = re.search(r"^    component_hash: ([0-9a-f]{64})$", block.group(1),
+                       re.MULTILINE) if block else None
+    return {
+        "required": required.group(1) if required else None,
+        "version": locked.group(1) if locked else None,
+        "component_hash": digest.group(1) if digest else None,
+    }
+
+
+def validate_esp_component(version: str, project: Path = ESP_PROJECT) -> list[str]:
+    """The ESP firmware compiles the registry runtime, so its exact requirement
+    and its lock must name the suite's pinned release."""
+    try:
+        component = esp_component(project)
+    except OSError as exc:
+        return [f"cannot read the ESP project's component files: {exc}"]
+    errors = []
+    if component["required"] != version:
+        errors.append(f"tigris-esp requires {ESP_COMPONENT} =={component['required']}, "
+                      f"the suite pins {version}")
+    if component["version"] != version or component["component_hash"] is None:
+        errors.append(f"tigris-esp dependencies.lock holds {ESP_COMPONENT} "
+                      f"{component['version']}, the suite pins {version}")
+    return errors
+
+
 def validate_manifest(document: object) -> list[str]:
     errors: list[str] = []
     if not isinstance(document, dict):
@@ -69,6 +108,10 @@ def validate_manifest(document: object) -> list[str]:
         for name in names:
             if not isinstance(pins[name], str) or not VERSION_RE.fullmatch(pins[name]):
                 errors.append(f"{suite}: {name} must be a release version X.Y.Z")
+    esp = suites.get("esp32s3/latency-hil")
+    if isinstance(esp, dict) and isinstance(esp.get("tigris"), str):
+        errors.extend(f"esp32s3/latency-hil: {problem}"
+                      for problem in validate_esp_component(esp["tigris"]))
     return errors
 
 
