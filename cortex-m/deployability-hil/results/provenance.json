@@ -200,7 +200,7 @@
     }
   ],
   "artifact_repository": {
-    "revision": "de404430f283cfcd11e89dc342f1e40fb58d8753",
+    "revision": "9bc12800046b41127bae52ac231bcfcac7586bdb",
     "basis": "commit_containing_byte_identical_artifact_and_tools"
   },
   "execution_provenance": {
