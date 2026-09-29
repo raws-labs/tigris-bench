@@ -12,7 +12,7 @@
       },
       "validator": {
         "path": "cortex-m/deployability-hil/scripts/validate_accuracy.py",
-        "sha256": "ce8354cbda97565826bdc0ee9ff9ed189cdf65b2a058138122e553f336843ec2"
+        "sha256": "72fb73925b91343ef83827689aec5c1973be272528f0446ddb7b6c0badf77c20"
       },
       "source_capture_root": "cortex-m/deployability-hil/results/raw",
       "source_tracking": "gitignored_not_shipped",

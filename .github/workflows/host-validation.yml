@@ -45,6 +45,11 @@ jobs:
           python -W error -m unittest discover
           -s esp32s3/latency-hil/tests -v
 
+      - name: Run Cortex-M parity validator tests
+        run: >-
+          python -W error -m unittest discover
+          -s cortex-m/deployability-hil/tests -v
+
       - name: Run provenance mutation tests
         run: >-
           python -W error -m unittest discover

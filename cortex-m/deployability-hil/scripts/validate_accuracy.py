@@ -66,8 +66,11 @@ def parse_log(path: Path) -> dict | None:
 def compare(a: dict, b: dict, tol: int) -> tuple[str, str]:
     """Return (status, message) for an int8 output-vector comparison."""
     va, vb = a["output"], b["output"]
+    # Both records reported a successful inference, so an absent vector is
+    # missing evidence, not a reason to skip the comparison.
     if not va or not vb:
-        return "skip", "missing OUTPUT_I8"
+        missing = " and ".join(r["log"] for r in (a, b) if not r["output"])
+        return "fail", f"successful record without OUTPUT_I8 ({missing})"
     if len(va) != len(vb):
         return "fail", f"length mismatch: {len(va)} vs {len(vb)}"
     diff = np.abs(np.array(va, np.int32) - np.array(vb, np.int32))
@@ -129,7 +132,7 @@ def main() -> None:
             n_cross += 1
             st, msg = compare(tg_c, tflm, args.tol)
             print(f"    [{'OK' if st == 'pass' else st.upper()}] tigris/cmsis vs tflm/cmsis : {msg}")
-            all_ok &= st != "fail"
+            all_ok &= st == "pass"
         else:
             print(f"    [INCOMPLETE] tigris/cmsis vs tflm/cmsis : "
                   f"{'no TFLM baseline' if tg_c else 'no TiGrIS cmsis'}")
@@ -138,7 +141,7 @@ def main() -> None:
             n_self += 1
             st, msg = compare(tg_s, tg_c, args.self_tol)
             print(f"    [{'OK' if st == 'pass' else st.upper()}] tigris/s8 vs tigris/cmsis  : {msg}")
-            all_ok &= st != "fail"
+            all_ok &= st == "pass"
 
     print()
     if n_cross == 0 and n_self == 0:
