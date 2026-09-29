@@ -12,14 +12,15 @@ pinned on-device run recorded in this repo.
 ### Cortex-M: deployability (does it fit and run?)
 
 NUCLEO-H753ZI (Cortex-M7, on-chip SRAM only), INT8, CMSIS-NN. Same weights on both sides. TiGrIS
-runs the exact model reconstructed from TFLM's own TFLite file.
+runs the exact model reconstructed from TFLM's own TFLite file. SRAM is the measured peak from
+`cortex-m/deployability-hil/results/summary.json`, in KB of 1000 bytes.
 
 | Model | TFLite Micro | TiGrIS |
 |---|---|---|
-| **MobileNetV2** (alpha 0.35, 224x224) | **OOM**, `AllocateTensors` -> `ARENA_TOO_SMALL` | **runs**, tiled to 301 KB SRAM, 0.37 s |
-| DS-CNN (keyword spotting) | 22.7 KB SRAM, 12.8 ms | 17.0 KB, 11.1 ms |
-| Anomaly detection | 15.8 KB SRAM, 1.2 ms | 2.9 KB, 1.2 ms |
-| Time-series forecast | 3.0 KB SRAM, 0.3 ms | 2.4 KB, 0.3 ms |
+| **MobileNetV2** (alpha 0.35, 224x224) | **OOM**, `AllocateTensors` -> `ARENA_TOO_SMALL` | **runs**, tiled to 308 KB SRAM, 0.37 s |
+| DS-CNN (keyword spotting) | 22.7 KB SRAM, 12.8 ms | 17.4 KB, 11.1 ms |
+| Anomaly detection | 15.8 KB SRAM, 1.2 ms | 3.2 KB, 1.2 ms |
+| Time-series forecast | 3.0 KB SRAM, 0.3 ms | 2.9 KB, 0.3 ms |
 
 TiGrIS tiles activations so the working set fits on-chip SRAM. TFLM's single contiguous arena
 can't, so **MobileNetV2 does not run at all**. Tiling turns "won't fit" into "runs."
