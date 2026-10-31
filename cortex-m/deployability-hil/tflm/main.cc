@@ -6,11 +6,11 @@
  * emits the same BENCH_RESULT protocol so results.py parses both side by side.
  * The model is selected at build time (TFLM_MODEL, default ds_cnn).
  *
- * PARITY: when TiGrIS runs the *matched* plan (its ONNX reconstructed from this
- * exact .tflite via tools/tflite_to_qdq_onnx.py), both frameworks execute the
- * same INT8 weights through CMSIS-NN, so the OUTPUT_I8 vectors are directly
- * comparable device-to-device (DS-CNN matched is bit-identical). Both also fill
- * the input with int8 value 1, so the comparison is well-defined.
+ * PARITY: TiGrIS compiles its plan from this exact .tflite, so both frameworks
+ * execute the same INT8 weights through CMSIS-NN and the OUTPUT_I8 vectors are
+ * directly comparable device-to-device. Both also fill the input with int8
+ * value 1, so the comparison is well-defined. A model rewritten by
+ * `tigris export` runs here unchanged and must give the same output.
  */
 
 #include <cstdint>
@@ -108,8 +108,9 @@ int main(void)
     }
 
     /* Op set covering every benchmark model (CMSIS-NN optimized kernels selected
-     * at lib build time). MobileNetV2 adds ADD for its inverted-residual skips. */
-    static tflite::MicroMutableOpResolver<10> resolver;
+     * at lib build time). MobileNetV2 adds ADD for its inverted-residual skips;
+     * its `tigris export` rewrite adds PAD, SLICE and CONCATENATION. */
+    static tflite::MicroMutableOpResolver<13> resolver;
     resolver.AddConv2D();
     resolver.AddDepthwiseConv2D();
     resolver.AddAdd();             /* MobileNetV2 inverted-residual skip add */
@@ -120,6 +121,9 @@ int main(void)
     resolver.AddSoftmax();
     resolver.AddQuantize();
     resolver.AddDequantize();
+    resolver.AddPad();
+    resolver.AddSlice();
+    resolver.AddConcatenation();
 
     static tflite::MicroInterpreter interpreter(
         model, resolver, tensor_arena, TFLM_ARENA_BYTES);

@@ -3,8 +3,8 @@
   "profile": "plan-sized-workspace-2026-08-16",
   "suites": {
     "cortex-m/deployability-hil": {
-      "tigris": "0.11.0",
-      "tigris_cortex_m": "0.1.0"
+      "tigris": "0.13.0",
+      "tigris_cortex_m": "0.3.0"
     },
     "esp32s3/latency-hil": {
       "tigris": "0.11.0"
