@@ -4,7 +4,10 @@ cmake_minimum_required(VERSION 3.16)
 set(TIGRIS_BOARD "nucleo_h753zi" CACHE STRING "target board (boards/<name>)")
 set(BENCH_FRAMEWORK "tigris" CACHE STRING "framework under test: tigris | tflm")
 set(BENCH_KERNEL "cmsis_nn" CACHE STRING "TiGrIS kernel backend: cmsis_nn | s8_ref")
-set(TFLM_MODEL "ds_cnn" CACHE STRING "TFLM model under test; expects <name>_tflite_i8.h in MODELS_DIR")
+set(TFLM_MODEL "ds_cnn" CACHE STRING "TFLM model under test; expects <name>_tflite_i8.h in TFLM_MODEL_DIR")
+set(TFLM_MODEL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../models/output"
+    CACHE PATH "directory holding <TFLM_MODEL>_tflite_i8.h")
+set(BENCH_MODEL "ds_cnn" CACHE STRING "benchmark model name the TiGrIS cell reports")
 set(TFLM_ARENA_BYTES "131072" CACHE STRING "TFLM tensor arena size (shrink for small-RAM boards, e.g. F446)")
 set(TIGRIS_PLAN
     "${CMAKE_CURRENT_SOURCE_DIR}/../../models/output/ds_cnn_i8.tgrs"
@@ -120,7 +123,7 @@ if(BENCH_FRAMEWORK STREQUAL "tigris")
     target_include_directories(tigris_bench PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/harness ${CMAKE_BINARY_DIR} ${BOARD_INCLUDES})
     target_compile_definitions(tigris_bench PRIVATE
-        ${KERNEL_DEFINE} ${BOARD_DEFINES}
+        ${KERNEL_DEFINE} ${BOARD_DEFINES} BENCH_MODEL="${BENCH_MODEL}"
         TIGRIS_FAST_ARENA_BYTES=${TIGRIS_FAST_ARENA_BYTES}
         TIGRIS_SLOW_ARENA_BYTES=${TIGRIS_SLOW_ARENA_BYTES})
     target_link_libraries(tigris_bench PRIVATE tigris_runtime cmsis-nn)
@@ -153,8 +156,6 @@ elseif(BENCH_FRAMEWORK STREQUAL "tflm")
         message(FATAL_ERROR "TFLM lib not found: ${TFLM_LIB}\nBuild it (see BUILD.md): "
                 "make ... TARGET_ARCH=${BOARD_TFLM_ARCH} BUILD_TYPE=${TFLM_BUILD_TYPE} ... microlite")
     endif()
-    set(MODELS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../models/output)
-
     add_executable(tflm_bench
         tflm/main.cc
         ${BOARD_BSP} ${BOARD_SYSTEM} ${BOARD_STARTUP})
@@ -176,7 +177,7 @@ elseif(BENCH_FRAMEWORK STREQUAL "tflm")
     target_include_directories(tflm_bench PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/tflm
         ${CMAKE_CURRENT_SOURCE_DIR}/harness
-        ${MODELS_DIR} ${BOARD_INCLUDES})
+        ${TFLM_MODEL_DIR} ${BOARD_INCLUDES})
     target_link_libraries(tflm_bench PRIVATE ${TFLM_LIB})
     add_custom_command(TARGET tflm_bench POST_BUILD
         COMMAND ${CMAKE_OBJCOPY} -O binary $<TARGET_FILE:tflm_bench> ${CMAKE_BINARY_DIR}/tflm_bench.bin

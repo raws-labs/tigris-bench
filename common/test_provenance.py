@@ -127,7 +127,7 @@ class ReadmeResultContractTest(unittest.TestCase):
             config for config in self.summary["configs"]
             if (config["board"], config["model"], config["framework"],
                 config["kernel"])
-            == ("nucleo_h753zi", "ds_cnn_matched", "tigris", "cmsis_nn"))
+            == ("nucleo_h753zi", "ds_cnn", "tigris", "cmsis_nn"))
         self.latency_ms = cell["latency_mean_ms"]
         self.literal = f"{self.latency_ms:.2f} ms"
         self.assertIn(self.literal, self.readme)
@@ -156,7 +156,7 @@ class ReadmeResultContractTest(unittest.TestCase):
         cell = next(
             config for config in mutated["configs"]
             if config["board"] == "nucleo_f446re"
-            and config["model"] == "ts_matched"
+            and config["model"] == "ts"
             and config["kernel"] == "cmsis_nn")
         cell["latency_median_ms"] += 1
         errors = validate_readme_results(mutated, self.readme)
@@ -305,7 +305,7 @@ def valid_capture_provenance() -> dict:
 def write_capture(path: Path, provenance: object | None) -> None:
     lines = [
         "BENCH_RESULT:framework=tigris,kernel=cmsis_nn,dtype=int8,"
-        "model=ds_cnn_matched,board=nucleo_h753zi,cpu_mhz=480,status=ok,"
+        "model=ds_cnn,board=nucleo_h753zi,cpu_mhz=480,status=ok,"
         "latency_median_ms=1.0,latency_median_cycles=480000,"
         "sram_peak_bytes=1024,runs=30",
     ]
@@ -339,17 +339,13 @@ class CaptureProvenanceTest(unittest.TestCase):
             "fast_size = tigris_cmsis_nn_fast_arena_required(&plan);",
             harness,
         )
-        self.assertIn("local plan fast=65536 slow=8192", run_all)
+        self.assertIn('fast=65536 slow=8192', run_all)
 
     def test_non_tiled_plan_budgets_do_not_inflate_ram_high_water(self) -> None:
         plan_builder = (
             ROOT / "cortex-m/deployability-hil/scripts/prepare_tigris_plans.py"
         ).read_text()
-        self.assertIn(
-            '"ds_cnn": ("ds_cnn_matched.onnx", "20K", '
-            '"ds_cnn_matched.tgrs")',
-            plan_builder,
-        )
+        self.assertIn('"ds_cnn": ("ds_cnn_i8.tflite", "20K")', plan_builder)
         self.assertNotIn("_matched_32k.tgrs", plan_builder)
 
     def test_subset_runs_cannot_replace_the_canonical_summary(self) -> None:

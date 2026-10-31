@@ -1,7 +1,7 @@
 /*
  * TiGrIS Cortex-M Deployability Benchmark
  *
- * Loads a DS-CNN INT8 .tgrs plan embedded in flash, runs warmup + N timed
+ * Loads an INT8 .tgrs plan embedded in flash, runs warmup + N timed
  * inference runs timed with the DWT cycle counter, prints the INT8 output for
  * parity checking, and emits a machine-parseable result line.
  *
@@ -55,6 +55,11 @@ extern const unsigned int  g_tigris_plan_len;
 #endif
 #ifndef TIGRIS_SLOW_ARENA_BYTES
 #define TIGRIS_SLOW_ARENA_BYTES (256u * 1024u)
+#endif
+/* The benchmark's name for the cell's model, shared with the TFLM cell that
+ * runs the same .tflite; the plan's own model name is reported alongside. */
+#ifndef BENCH_MODEL
+#error "define BENCH_MODEL, the benchmark model name"
 #endif
 #ifndef BENCH_MAX_TENSORS
 #define BENCH_MAX_TENSORS 256
@@ -121,10 +126,10 @@ static uint32_t run_once(tigris_plan_t *plan, tigris_mem_t *mem,
                          tigris_kernel_fn dispatch,
                          tigris_exec_stats_t *out_stats, int *ok)
 {
-    tigris_mem_error_t merr = tigris_codegen_reset(
+    tigris_error_t rerr = tigris_codegen_reset(
         plan, mem, fill_benchmark_input, NULL);
-    if (merr != TIGRIS_MEM_OK) {
-        printf("generated setup failed: %s\n", tigris_mem_error_str(merr));
+    if (rerr != TIGRIS_OK) {
+        printf("generated setup failed: %s\n", tigris_error_str(rerr));
         *ok = 0;
         return 0;
     }
@@ -222,15 +227,15 @@ int main(void)
         g_tigris_plan, g_tigris_plan_len, &plan);
     if (perr != TIGRIS_OK) {
         printf("plan load failed: %s\n", tigris_error_str(perr));
-        emit_failed("unknown", "PLAN_LOAD_FAILED");
+        emit_failed(BENCH_MODEL, "PLAN_LOAD_FAILED");
         platform_halt();
     }
 
-    const char *model_name = tigris_model_name(&plan);
+    const char *model_name = BENCH_MODEL;
     uint8_t input_dtype = plan.tensors[plan.model_inputs[0]].dtype;
     int is_quantized = (input_dtype == 3); /* ONNX dtype 3 = INT8 */
 
-    printf("Model:   %s\n", model_name);
+    printf("Model:   %s (plan model %s)\n", model_name, tigris_model_name(&plan));
     printf("Type:    %s\n", is_quantized ? "int8" : "f32");
     printf("Ops:     %u\n", plan.header->num_ops);
     printf("Stages:  %u\n", plan.header->num_stages);
@@ -249,38 +254,20 @@ int main(void)
         platform_halt();
     }
 
-    /* 2. Size the arenas. fast_size = plan budget (+ decompression overhead),
-     *    bounded by the static backing array. */
-    /* Tight provisioning policy. The executor compacts the fast pool REACTIVELY
-     * (only on OOM), so a generous arena yields a lazy bump high-water well above
-     * the compiler's planned peak (e.g. DS-CNN 32 KB vs a 16 KB plan) and a
-     * misleadingly large RAM figure. We provision the fast arena at the planned
-     * peak plus a bounded margin so compaction engages and the measured working
-     * set reflects TiGrIS's true minimum SRAM, directly comparable to TFLM's
-     * interpreter.arena_used_bytes(). The margin covers (a) per-tensor 16-byte
-     * alignment, which the planned peak (computed on raw sizes) omits, and (b) one
-     * compaction transient. */
-    uint32_t align_reserve =
-        (uint32_t)plan.header->num_tensors * (uint32_t)TIGRIS_TENSOR_ALIGN + 512u;
-    uint32_t base;
-    if (plan.header->peak > 0 && plan.header->peak <= plan.header->budget) {
-        /* Non-tiled: the naive peak fits the compile budget, so provision tight at
-         * the peak - the measured working set is then the true minimum SRAM. */
-        base = plan.header->peak;
-    } else if (plan.header->budget > 0) {
-        /* Tiled: the naive peak exceeds the budget; the runtime tiles activations
-         * down to the budget, so provision the BUDGET, not the (untiled) peak. */
-        base = plan.header->budget;
-    } else {
-        base = TIGRIS_FAST_ARENA_BYTES;
-    }
-    uint32_t fast_size = base + align_reserve
-        + tigris_weight_decompression_overhead(&plan);
+    /* 2. Size the fast arena at what the plan states it needs: its scheduled
+     *    peak plus simultaneous compressed weights, and for CMSIS-NN the exact
+     *    vendor scratch on top. The run then compacts within that bound, so
+     *    the measured working set is the plan's minimum, directly comparable
+     *    to TFLM's interpreter.arena_used_bytes(). */
 #if defined(BENCH_KERNEL_CMSIS_NN)
-    /* The plan budget covers activations and transient weights, not backend
-     * scratch. CMSIS-NN reserves its exact scratch requirement from the same
-     * physical backing store before inference. */
-    fast_size = tigris_cmsis_nn_fast_arena_required(&plan);
+    uint32_t fast_size = tigris_cmsis_nn_fast_arena_required(&plan);
+    if (fast_size == UINT32_MAX) {
+        printf("error: CMSIS-NN scratch requirement unavailable\n");
+        emit_failed(model_name, "SCRATCH_QUERY_FAILED");
+        platform_halt();
+    }
+#else
+    uint32_t fast_size = tigris_fast_arena_required(&plan);
 #endif
 #ifdef TIGRIS_FAST_OVERRIDE
     /* Diagnostic: force a specific fast-arena size to probe the runtime minimum. */
@@ -296,12 +283,12 @@ int main(void)
     uint32_t slow_size = sizeof(s_slow_arena);
 
     tigris_mem_t mem;
-    tigris_mem_error_t merr = tigris_codegen_init(
+    tigris_error_t ierr = tigris_codegen_init(
         &plan, &mem, s_tensor_ptrs, BENCH_MAX_TENSORS,
         s_fast_arena, fast_size, s_slow_arena, slow_size,
         fill_benchmark_input, NULL);
-    if (merr != TIGRIS_MEM_OK) {
-        printf("mem init failed: %s\n", tigris_mem_error_str(merr));
+    if (ierr != TIGRIS_OK) {
+        printf("mem init failed: %s\n", tigris_error_str(ierr));
         emit_failed(model_name, "MEM_INIT_FAILED");
         platform_halt();
     }
@@ -417,7 +404,9 @@ int main(void)
      *                   executor workspace (TFLM keeps equivalent metadata
      *                   inside its arena, so arena_used already counts it)
      *     plan.header->peak (the old reported value) is the compiler's compile-
-     *     time activation estimate; kept as plan_act_peak_bytes for reference. */
+     *     time activation estimate; kept as plan_act_peak_bytes for reference.
+     *     plan.scheduled_peak is the fast-arena bound the plan states and the
+     *     fast arena is sized from, reported as plan_scheduled_peak_bytes. */
     uint32_t scratch_bytes = fast_size - mem.fast_size;     /* prepare() carve; 0 if none */
     uint32_t tensor_table_bytes =
         (uint32_t)plan.header->num_tensors * (uint32_t)sizeof(void *);
@@ -435,6 +424,7 @@ int main(void)
            "kernel=%s,"
            "dtype=int8,"
            "model=%s,"
+           "plan_model=%s,"
            "board=%s,"
            "cpu_mhz=%lu,"
            "status=ok,"
@@ -457,6 +447,7 @@ int main(void)
            "sram_meta_bytes=%lu,"
            "sram_executor_workspace_bytes=%lu,"
            "plan_act_peak_bytes=%lu,"
+           "plan_scheduled_peak_bytes=%lu,"
            "sram_budget_kb=%lu,"
            "sram_provisioned_kb=%lu,"
            "slow_peak_kb=%lu,"
@@ -468,6 +459,7 @@ int main(void)
            "total_tiles=%u\n",
            kernel_name(),
            model_name,
+           tigris_model_name(&plan),
            platform_board_name(),
            (unsigned long)(platform_cpu_hz() / 1000000u),
            cycles_to_ms(mean_cyc),
@@ -486,6 +478,7 @@ int main(void)
            (unsigned long)meta_bytes,
            (unsigned long)executor_workspace_bytes,
            (unsigned long)plan.header->peak,
+           (unsigned long)plan.scheduled_peak,
            (unsigned long)(plan.header->budget / 1024),
            (unsigned long)(fast_size / 1024),
            (unsigned long)(last_stats.slow_peak / 1024),

@@ -31,9 +31,9 @@ EXPECTED_MHZ = {
     "pico2_rp2350": 150,
 }
 MODEL_LABELS = {
-    "DS-CNN": ("ds_cnn_matched", "ds_cnn"),
-    "AD": ("ad_matched", "ad"),
-    "TS": ("ts_matched", "ts"),
+    "DS-CNN": ("ds_cnn", "ds_cnn"),
+    "AD": ("ad", "ad"),
+    "TS": ("ts", "ts"),
 }
 
 # Device timing is compared only from committed silicon captures. The checker
@@ -594,7 +594,7 @@ def expected_readme_result_rows(
             ("pico2_rp2350", "RP2350 (520 KB)", "n/a (no M33 lib)"),
         ):
             cell = _result_cell(
-                document, board, "mbv2_a35_r224_matched",
+                document, board, "mbv2",
                 "tigris", "cmsis_nn")
             seconds = cell["latency_median_ms"] / 1000
             rows.append(

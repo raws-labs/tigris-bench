@@ -4,14 +4,14 @@
   "cells": [
     {
       "board": "nucleo_f446re",
-      "model": "ad_matched",
+      "model": "ad",
       "framework": "tigris",
       "kernel": "cmsis_nn",
       "expected_status": "ok"
     },
     {
       "board": "nucleo_f446re",
-      "model": "ad_matched",
+      "model": "ad",
       "framework": "tigris",
       "kernel": "s8_ref",
       "expected_status": "ok"
@@ -25,14 +25,14 @@
     },
     {
       "board": "nucleo_f446re",
-      "model": "ds_cnn_matched",
+      "model": "ds_cnn",
       "framework": "tigris",
       "kernel": "cmsis_nn",
       "expected_status": "ok"
     },
     {
       "board": "nucleo_f446re",
-      "model": "ds_cnn_matched",
+      "model": "ds_cnn",
       "framework": "tigris",
       "kernel": "s8_ref",
       "expected_status": "ok"
@@ -46,14 +46,14 @@
     },
     {
       "board": "nucleo_f446re",
-      "model": "ts_matched",
+      "model": "ts",
       "framework": "tigris",
       "kernel": "cmsis_nn",
       "expected_status": "ok"
     },
     {
       "board": "nucleo_f446re",
-      "model": "ts_matched",
+      "model": "ts",
       "framework": "tigris",
       "kernel": "s8_ref",
       "expected_status": "ok"
@@ -67,14 +67,14 @@
     },
     {
       "board": "nucleo_h753zi",
-      "model": "ad_matched",
+      "model": "ad",
       "framework": "tigris",
       "kernel": "cmsis_nn",
       "expected_status": "ok"
     },
     {
       "board": "nucleo_h753zi",
-      "model": "ad_matched",
+      "model": "ad",
       "framework": "tigris",
       "kernel": "s8_ref",
       "expected_status": "ok"
@@ -88,14 +88,14 @@
     },
     {
       "board": "nucleo_h753zi",
-      "model": "ds_cnn_matched",
+      "model": "ds_cnn",
       "framework": "tigris",
       "kernel": "cmsis_nn",
       "expected_status": "ok"
     },
     {
       "board": "nucleo_h753zi",
-      "model": "ds_cnn_matched",
+      "model": "ds_cnn",
       "framework": "tigris",
       "kernel": "s8_ref",
       "expected_status": "ok"
@@ -109,7 +109,7 @@
     },
     {
       "board": "nucleo_h753zi",
-      "model": "mbv2_a35_r224_matched",
+      "model": "mbv2",
       "framework": "tigris",
       "kernel": "cmsis_nn",
       "expected_status": "ok"
@@ -123,14 +123,21 @@
     },
     {
       "board": "nucleo_h753zi",
-      "model": "ts_matched",
+      "model": "mbv2_export",
+      "framework": "tflm",
+      "kernel": "cmsis_nn",
+      "expected_status": "ok"
+    },
+    {
+      "board": "nucleo_h753zi",
+      "model": "ts",
       "framework": "tigris",
       "kernel": "cmsis_nn",
       "expected_status": "ok"
     },
     {
       "board": "nucleo_h753zi",
-      "model": "ts_matched",
+      "model": "ts",
       "framework": "tigris",
       "kernel": "s8_ref",
       "expected_status": "ok"
@@ -144,49 +151,49 @@
     },
     {
       "board": "pico2_rp2350",
-      "model": "ad_matched",
+      "model": "ad",
       "framework": "tigris",
       "kernel": "cmsis_nn",
       "expected_status": "ok"
     },
     {
       "board": "pico2_rp2350",
-      "model": "ad_matched",
+      "model": "ad",
       "framework": "tigris",
       "kernel": "s8_ref",
       "expected_status": "ok"
     },
     {
       "board": "pico2_rp2350",
-      "model": "ds_cnn_matched",
+      "model": "ds_cnn",
       "framework": "tigris",
       "kernel": "cmsis_nn",
       "expected_status": "ok"
     },
     {
       "board": "pico2_rp2350",
-      "model": "ds_cnn_matched",
+      "model": "ds_cnn",
       "framework": "tigris",
       "kernel": "s8_ref",
       "expected_status": "ok"
     },
     {
       "board": "pico2_rp2350",
-      "model": "mbv2_a35_r224_matched",
+      "model": "mbv2",
       "framework": "tigris",
       "kernel": "cmsis_nn",
       "expected_status": "ok"
     },
     {
       "board": "pico2_rp2350",
-      "model": "ts_matched",
+      "model": "ts",
       "framework": "tigris",
       "kernel": "cmsis_nn",
       "expected_status": "ok"
     },
     {
       "board": "pico2_rp2350",
-      "model": "ts_matched",
+      "model": "ts",
       "framework": "tigris",
       "kernel": "s8_ref",
       "expected_status": "ok"

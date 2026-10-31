@@ -12,7 +12,10 @@ OUTPUT_I8 vector, so parity is verifiable from a clone without the raw serial
 logs), or a directory of raw *.log captures. It groups by (board, model) and checks:
   - tigris/cmsis_nn  vs  tflm/cmsis_nn   the headline device-to-device parity
                                          (must be bit-exact: same CMSIS-NN kernels,
-                                         same int8 weights via the matched plan)
+                                         plan compiled from the same .tflite)
+  - tflm_export      vs  tflm/cmsis_nn   and vs tigris/cmsis_nn: the `tigris
+                                         export` rewrite on stock TFLM (model
+                                         "<model>_export") must be bit-exact too
   - tigris/s8_ref    vs  tigris/cmsis_nn reference-vs-optimized self-consistency
                                          (allowed +-1 LSB: the s8 requant nudge)
 
@@ -47,20 +50,20 @@ def parse_log(path: Path) -> dict | None:
     out: list[int] = []
     for line in re.findall(r"OUTPUT_I8:([^\n]*)", text):
         out.extend(int(v) for v in line.split())
-    model = fields.get("model", "?")
-    return {
-        "log": path.name,
-        "framework": fields.get("framework", "?"),
-        "kernel": fields.get("kernel", "?"),
-        "board": fields.get("board", "?"),
-        "model": model,
-        # TiGrIS runs the reconstructed plan (model "ad_matched"); TFLM runs the
-        # source tflite (model "ad"). They are the same network - group by base so
-        # the device-to-device pair lines up.
-        "model_base": model.removesuffix("_matched"),
-        "status": fields.get("status", "?"),
-        "output": out,
-    }
+    return record(path.name, fields.get("framework", "?"), fields.get("kernel", "?"),
+                  fields.get("board", "?"), fields.get("model", "?"),
+                  fields.get("status", "?"), out)
+
+
+def record(log: str, framework: str, kernel: str, board: str, model: str,
+           status: str, output: list[int]) -> dict:
+    # The TFLM cell running the `tigris export` rewrite of a model reports
+    # "<model>_export"; it is grouped with its source model as framework
+    # "tflm_export" so every pair of the same network lines up.
+    if framework == "tflm" and model.endswith("_export"):
+        framework, model = "tflm_export", model.removesuffix("_export")
+    return {"log": log, "framework": framework, "kernel": kernel, "board": board,
+            "model": model, "status": status, "output": output}
 
 
 def compare(a: dict, b: dict, tol: int) -> tuple[str, str]:
@@ -84,17 +87,12 @@ def records_from_summary(path: Path) -> list[dict]:
     """Build records from a results.py summary.json so parity is verifiable from a
     clone (the tracked artifact carries each cell's OUTPUT_I8), no raw logs needed."""
     import json
-    recs = []
-    for c in json.loads(path.read_text()).get("configs", []):
-        model = c.get("model", "?")
-        recs.append({
-            "log": path.name, "framework": c.get("framework", "?"),
-            "kernel": c.get("kernel", "?"), "board": c.get("board", "?"),
-            "model": model, "model_base": model.removesuffix("_matched"),
-            "status": c.get("status", "?"),
-            "output": (c.get("output_values") or {}).get("i8", []),
-        })
-    return recs
+    return [
+        record(path.name, c.get("framework", "?"), c.get("kernel", "?"),
+               c.get("board", "?"), c.get("model", "?"), c.get("status", "?"),
+               (c.get("output_values") or {}).get("i8", []))
+        for c in json.loads(path.read_text()).get("configs", [])
+    ]
 
 
 def main() -> None:
@@ -116,7 +114,7 @@ def main() -> None:
     for r in logs:
         if r["status"] != "ok":
             continue
-        groups.setdefault((r["board"], r["model_base"]), {})[(r["framework"], r["kernel"])] = r
+        groups.setdefault((r["board"], r["model"]), {})[(r["framework"], r["kernel"])] = r
 
     print("Device-to-device parity (TiGrIS vs TFLM, both CMSIS-NN; + s8 self-check)\n")
     all_ok = True
@@ -126,6 +124,7 @@ def main() -> None:
         tg_c = cell.get(("tigris", "cmsis_nn"))
         tg_s = cell.get(("tigris", "s8_ref"))
         tflm = cell.get(("tflm", "cmsis_nn"))
+        export = cell.get(("tflm_export", "cmsis_nn"))
         print(f"  {board} / {model}")
 
         if tg_c and tflm:
@@ -136,6 +135,14 @@ def main() -> None:
         else:
             print(f"    [INCOMPLETE] tigris/cmsis vs tflm/cmsis : "
                   f"{'no TFLM baseline' if tg_c else 'no TiGrIS cmsis'}")
+
+        for label, other in (("tflm/cmsis ", tflm), ("tigris/cmsis", tg_c)):
+            if export and other:
+                n_cross += 1
+                st, msg = compare(export, other, args.tol)
+                print(f"    [{'OK' if st == 'pass' else st.upper()}] "
+                      f"tflm_export vs {label}: {msg}")
+                all_ok &= st == "pass"
 
         if tg_c and tg_s:
             n_self += 1
