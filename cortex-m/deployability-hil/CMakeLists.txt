@@ -86,7 +86,11 @@ if(BENCH_FRAMEWORK STREQUAL "tigris")
 
     add_subdirectory(third_party)                          # cmsis-nn static lib
 
+    # codegen also writes the plan's kernel selection; the runtime links only
+    # the kernels it names, as a deployment of this plan would.
+    set(CODEGEN_KERNELS ${CMAKE_BINARY_DIR}/tigris_codegen_core_kernels.h)
     set(TIGRIS_HAS_CMSIS_NN ON CACHE BOOL "" FORCE)
+    set(TIGRIS_OP_CONFIG ${CODEGEN_KERNELS} CACHE FILEPATH "" FORCE)
     add_subdirectory(${TIGRIS_RUNTIME_ROOT}
                      ${CMAKE_BINARY_DIR}/tigris_runtime)
 
@@ -110,12 +114,14 @@ if(BENCH_FRAMEWORK STREQUAL "tigris")
         DEPENDS ${TIGRIS_PLAN} ${CMAKE_CURRENT_SOURCE_DIR}/tools/bin2c.py
         COMMENT "Embedding plan: ${TIGRIS_PLAN}")
     add_custom_command(
-        OUTPUT ${CODEGEN_CORE} ${CODEGEN_HEADER}
+        OUTPUT ${CODEGEN_CORE} ${CODEGEN_HEADER} ${CODEGEN_KERNELS}
         COMMAND ${TIGRIS_CODEGEN} codegen ${TIGRIS_PLAN}
                 --backend ${CODEGEN_BACKEND} --format core
                 --output ${CODEGEN_CORE} --header ${CODEGEN_HEADER}
         DEPENDS ${TIGRIS_PLAN} ${TIGRIS_CODEGEN}
         COMMENT "Generating TiGrIS ${CODEGEN_BACKEND} deployment core")
+    add_custom_target(tigris_codegen DEPENDS ${CODEGEN_KERNELS})
+    add_dependencies(tigris_runtime tigris_codegen)
 
     add_executable(tigris_bench
         harness/main.c ${PLAN_BLOB} ${CODEGEN_CORE}

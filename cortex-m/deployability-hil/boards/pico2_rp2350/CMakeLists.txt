@@ -54,6 +54,7 @@ find_package(Python3 REQUIRED COMPONENTS Interpreter)
 set(PLAN_BLOB ${CMAKE_BINARY_DIR}/model_blob.c)
 set(CODEGEN_CORE ${CMAKE_BINARY_DIR}/tigris_codegen_core.c)
 set(CODEGEN_HEADER ${CMAKE_BINARY_DIR}/tigris_codegen_core.h)
+set(CODEGEN_KERNELS ${CMAKE_BINARY_DIR}/tigris_codegen_core_kernels.h)
 add_custom_command(
     OUTPUT ${PLAN_BLOB}
     COMMAND ${Python3_EXECUTABLE} ${BENCH_ROOT}/tools/bin2c.py
@@ -67,7 +68,7 @@ else()
     message(FATAL_ERROR "BENCH_KERNEL must be cmsis_nn or s8_ref")
 endif()
 add_custom_command(
-    OUTPUT ${CODEGEN_CORE} ${CODEGEN_HEADER}
+    OUTPUT ${CODEGEN_CORE} ${CODEGEN_HEADER} ${CODEGEN_KERNELS}
     COMMAND ${TIGRIS_CODEGEN} codegen ${TIGRIS_PLAN}
             --backend ${CODEGEN_BACKEND} --format core
             --output ${CODEGEN_CORE} --header ${CODEGEN_HEADER}
@@ -77,7 +78,7 @@ add_custom_command(
 add_executable(tigris_pico_bench
     ${BENCH_ROOT}/harness/main.c
     ${TIGRIS_CORTEX_M_ROOT}/src/hal/platform/pico2/tigris_hal_pico2.c
-    ${PLAN_BLOB} ${CODEGEN_CORE}
+    ${PLAN_BLOB} ${CODEGEN_CORE} ${CODEGEN_KERNELS}
     ${RT_SRC} ${NN_SRC})
 
 target_include_directories(tigris_pico_bench PRIVATE
@@ -94,7 +95,9 @@ elseif(BENCH_KERNEL STREQUAL "s8_ref")
 else()
     message(FATAL_ERROR "BENCH_KERNEL must be cmsis_nn or s8_ref")
 endif()
+# Link only the kernels the plan uses, from codegen's kernel selection.
 target_compile_definitions(tigris_pico_bench PRIVATE
+    TIGRIS_OP_CONFIG="${CODEGEN_KERNELS}"
     BENCH_MODEL="${BENCH_MODEL}"
     TIGRIS_FAST_ARENA_BYTES=${TIGRIS_FAST_ARENA_BYTES}
     TIGRIS_SLOW_ARENA_BYTES=${TIGRIS_SLOW_ARENA_BYTES}
