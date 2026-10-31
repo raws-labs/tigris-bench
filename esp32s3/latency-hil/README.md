@@ -34,7 +34,7 @@ Model is close to the SRAM ceiling. Measures tiling overhead as the budget shrin
 | 9 | TiGrIS MBV1 i8 ESP-NN | TiGrIS | 64K | Runs, 1 normal + 12 tiled stages |
 | 10 | TiGrIS MBV1 i8 ESP-NN | TiGrIS | 32K | Runs, 1 normal + 24 tiled stages |
 
-### Segmentation deployability (U-Net 256×256×3 → 256×256×8)
+### Segmentation deployability (U-Net 256x256x3 -> 256x256x8)
 
 A full-resolution TRANSPOSE_CONV + CONCATENATION decoder whose activations exceed
 the internal SRAM. TiGrIS 2D-tiles the decoder and co-tiles the skip concats to
@@ -51,19 +51,22 @@ ESP32-S3-DevKitC-1 (N16R8): dual Xtensa LX7 at 240 MHz, 512 KB SRAM, 8 MB PSRAM,
 
 ## Prerequisites
 
-Before running the device builds, you also need the TiGrIS C runtime source tree next to this repo. The ESP-IDF components pull headers and source files from it at build time:
+The suite builds from the TiGrIS release pinned for it in `../../core-versions.json`.
+`run_all.sh` fetches it with `../../common/fetch_core.py`: the compiler and runtime
+are cloned at the release tag into `../../build/core/`, and the compiler is
+installed from the published `tigris-ml` wheel. The firmware takes the runtime
+from the ESP Component Registry: `tigris-esp/main/idf_component.yml` requires
+`raws-labs/tigris-runtime` at exactly the pinned release, and
+`tigris-esp/dependencies.lock` records the resolved component and its hash.
+`check_core_versions.py` holds both to the pin.
 
 ```bash
-# From the directory that contains tigris-bench, check out the exact compiler
-# and runtime commits recorded in ../tigris-bench/core-versions.json
-python tigris-bench/scripts/check_core_versions.py
+python ../../common/fetch_core.py --suite esp32s3/latency-hil
 ```
 
-By default the build looks for `tigris-runtime/` as a sibling of `tigris-bench/`. Override with `-DTIGRIS_RUNTIME_DIR=/path/to/tigris-runtime` on the `idf.py build` invocation if you keep it elsewhere.
-
-The orchestration script refuses mismatched or modified compiler/runtime
-checkouts before flashing. `TIGRIS_ALLOW_UNPINNED_CORE=1` is available only for
-non-canonical development runs.
+Setting `TIGRIS_COMPILER_ROOT` and `TIGRIS_RUNTIME_ROOT` yourself, with
+`TIGRIS_ALLOW_UNPINNED_CORE=1`, is available only for non-canonical development
+runs.
 
 ## Quick start
 

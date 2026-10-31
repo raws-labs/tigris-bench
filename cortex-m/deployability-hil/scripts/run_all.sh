@@ -8,33 +8,45 @@
 #
 # Usage:   ./run_all.sh [board ...]                 # default: h753 f446 rp2350
 #   env:   BENCH_MODELS="ds_cnn ad ts mbv2"         # subset of models
-#          BENCH_CONFIGS="cmsis_nn s8_ref tflm"     # subset of configs
+#          BENCH_CONFIGS="cmsis_nn s8_ref tflm tflm_export"  # subset of configs
 #          SRIG_API_KEY=...                         # required (rig auth)
+#          TIGRIS_ALLOW_UNPINNED_CORE=1             # start off the pinned core
 # Output:  results/raw/<board>_<model>_<config>.log -> results/summary.json
+#          Captures naming a core other than the pins land in
+#          results/unpinned-raw/ and promote nothing.
 #
 # Needs: arm-none-eabi-gcc, cmake, the pico-sdk (RP2350), the release_with_logs
 # TFLM libs (see BUILD.md), and python3 with the `siliconrig` SDK + numpy / rich.
-# TFLM headers come from ../esp32s3/latency-hil/models/output. TiGrIS plans are
-# compiled fresh from its matched ONNX sources into build/plans for each run.
+# TFLM headers come from ../../models/output. TiGrIS plans are compiled fresh
+# from the same .tflite files into build/plans for each run, next to the
+# `tigris export` rewrites the tflm_export cells run on stock TFLM.
 set -euo pipefail
 
 : "${SRIG_API_KEY:?set SRIG_API_KEY (SiliconRig auth) before running}"
 
 HERE="$(cd "$(dirname "$0")/.." && pwd)"
-TIGRIS_COMPILER_ROOT="${TIGRIS_COMPILER_ROOT:-$(cd "$HERE/../../../tigris" && pwd)}"
-TIGRIS_RUNTIME_ROOT="${TIGRIS_RUNTIME_ROOT:-$(cd "$HERE/../../../tigris-runtime" && pwd)}"
-TIGRIS_CORTEX_M_ROOT="${TIGRIS_CORTEX_M_ROOT:-$(cd "$HERE/../../../tigris-cortex-m" && pwd)}"
+# The pinned releases are fetched into build/core unless every root is given
+# explicitly (development runs; the pin check then refuses a canonical run).
+if [ -z "${TIGRIS_COMPILER_ROOT:-}${TIGRIS_RUNTIME_ROOT:-}${TIGRIS_CORTEX_M_ROOT:-}" ]; then
+    core_env="$(python3 "$HERE/../../common/fetch_core.py" --suite cortex-m/deployability-hil)"
+    eval "$core_env"
+fi
+: "${TIGRIS_COMPILER_ROOT:?set every core root or none}"
+: "${TIGRIS_RUNTIME_ROOT:?set every core root or none}"
+: "${TIGRIS_CORTEX_M_ROOT:?set every core root or none}"
 TC="$TIGRIS_RUNTIME_ROOT/cmake/arm-none-eabi.cmake"
 MODELS_DIR="$(cd "$HERE/../../models/output" && pwd)"
 PLAN_DIR="${TIGRIS_PLAN_DIR:-$HERE/build/plans}"
 TIGRIS_COMPILER="${TIGRIS_COMPILER:-$TIGRIS_COMPILER_ROOT/.venv/bin/tigris}"
 RAW="$HERE/results/raw"
+UNPINNED="$HERE/results/unpinned-raw"
 PICO_SDK="${PICO_SDK_PATH:-$HOME/pico/pico-sdk}"
 PICOTOOL="${PICOTOOL_DIR:-$HOME/pico/picotool/install/lib/cmake/picotool}"
 PICO_SDK_COMMIT="a1438dff1d38bd9c65dbd693f0e5db4b9ae91779"
 NPROC="$(nproc)"
 
 CORE_CHECK_ARGS=(
+    --suite cortex-m/deployability-hil
     --compiler-root "$TIGRIS_COMPILER_ROOT"
     --runtime-root "$TIGRIS_RUNTIME_ROOT"
     --cortex-m-root "$TIGRIS_CORTEX_M_ROOT"
@@ -44,6 +56,30 @@ if [ "${TIGRIS_ALLOW_UNPINNED_CORE:-0}" = 1 ]; then
 fi
 python3 "$HERE/../../common/check_core_versions.py" "${CORE_CHECK_ARGS[@]}"
 
+# Every capture embeds repositories.<repo>.dirty and the collector rejects a
+# dirty run, so a tracked modification anywhere here voids the whole matrix.
+# Find that now rather than after every flash. These are the four repositories
+# results.py requires to be clean; check_core_versions.py covers tigris-cortex-m.
+DIRTY_REPOS=()
+for entry in \
+        "benchmark:$HERE/../.." \
+        "tigris_compiler:$TIGRIS_COMPILER_ROOT" \
+        "tigris_runtime:$TIGRIS_RUNTIME_ROOT" \
+        "tflite_micro:$HERE/third_party/tflite-micro"; do
+    name="${entry%%:*}"; path="${entry#*:}"
+    [ -e "$path/.git" ] || continue
+    path="$(cd "$path" && pwd)"
+    if [ -n "$(git -C "$path" status --short --untracked-files=no)" ]; then
+        DIRTY_REPOS+=("$name ($path)")
+    fi
+done
+if [ "${#DIRTY_REPOS[@]}" -gt 0 ]; then
+    echo "ERROR: tracked modifications would be recorded as a dirty capture:" >&2
+    for repo in "${DIRTY_REPOS[@]}"; do echo "  $repo" >&2; done
+    echo "Commit or stash before running; the collector rejects dirty captures." >&2
+    exit 1
+fi
+
 CANONICAL_RUN=0
 if [ "$#" -eq 0 ] \
         && [ -z "${BENCH_MODELS+x}" ] \
@@ -52,7 +88,7 @@ if [ "$#" -eq 0 ] \
 fi
 BOARDS=("$@"); [ "${#BOARDS[@]}" -eq 0 ] && BOARDS=(h753 f446 rp2350)
 read -r -a MODELS  <<< "${BENCH_MODELS:-ds_cnn ad ts mbv2}"
-read -r -a CONFIGS <<< "${BENCH_CONFIGS:-cmsis_nn s8_ref tflm}"
+read -r -a CONFIGS <<< "${BENCH_CONFIGS:-cmsis_nn s8_ref tflm tflm_export}"
 
 declare -A RIG=( [h753]=stm32-h753 [f446]=stm32-f446 [rp2350]=rp2350 )
 declare -A TB=(  [h753]=nucleo_h753zi [f446]=nucleo_f446re )
@@ -84,25 +120,23 @@ command_string() { printf -v REPLY '%q ' "$@"; REPLY="${REPLY% }"; }
 build_cell() {   # board model config
     local board=$1 model=$2 cfg=$3
     # Combinations that don't exist:
-    [ "$board" = rp2350 ] && [ "$cfg" = tflm ] && return 0                       # no prebuilt M33 TFLM lib
+    [ "$board" = rp2350 ] && [[ "$cfg" = tflm* ]] && return 0                    # no prebuilt M33 TFLM lib
     [ "$model" = mbv2 ] && [ "$cfg" = s8_ref ] && return 0                       # mbv2 reference is impractically slow
-    [ "$model" = mbv2 ] && [ "$cfg" = tflm ] && [ "$board" != h753 ] && return 0 # OOM demo only needs the 512 KB board
+    [ "$model" = mbv2 ] && [[ "$cfg" = tflm* ]] && [ "$board" != h753 ] && return 0 # OOM demo only needs the 512 KB board
+    [ "$cfg" = tflm_export ] && [ "$model" != mbv2 ] && return 0                 # export rewrites only mbv2
 
     local bd="$HERE/build/${board}_${model}_${cfg}"
     local to=180; [ "$cfg" = s8_ref ] && to=300; [ "$model" = mbv2 ] && to=600
     # The 32 KiB plan budget excludes backend scratch. Keep enough physical
     # backing for the budget plus the exact CMSIS-NN reservation computed by
     # the runtime; reported RAM uses measured high-water, not this capacity.
-    local plan fast=65536 slow=8192
-    if [ "$model" = mbv2 ]; then
-        plan="$PLAN_DIR/mbv2_a35.tgrs"; fast=163840; slow=327680
-    else
-        plan="$PLAN_DIR/${model}_matched.tgrs"
-    fi
+    local plan="$PLAN_DIR/${model}.tgrs" fast=65536 slow=8192
+    [ "$model" = mbv2 ] && fast=163840 && slow=327680
 
     if [ "$board" = rp2350 ]; then
         local -a configure=(cmake -S "$HERE/boards/pico2_rp2350" -B "$bd"
             -Dpicotool_DIR="$PICOTOOL" -DBENCH_KERNEL="$cfg" -DTIGRIS_PLAN="$plan" \
+            -DBENCH_MODEL="$model" \
             -DTIGRIS_CODEGEN="$TIGRIS_COMPILER" \
             -DTIGRIS_RUNTIME_ROOT="$TIGRIS_RUNTIME_ROOT" \
             -DTIGRIS_CORTEX_M_ROOT="$TIGRIS_CORTEX_M_ROOT" \
@@ -119,18 +153,23 @@ build_cell() {   # board model config
                   -DTIGRIS_RUNTIME_ROOT="$TIGRIS_RUNTIME_ROOT"
                   -DTIGRIS_CORTEX_M_ROOT="$TIGRIS_CORTEX_M_ROOT"
                   -DTIGRIS_BOARD="${TB[$board]}")
-    if [ "$cfg" = tflm ]; then
-        local arena=32768; [ "$model" = mbv2 ] && arena=491520   # ~480 KB: most of the H753 SRAM, still OOMs
+    if [[ "$cfg" = tflm* ]]; then
+        # ~480 KB for mbv2: most of the H753 SRAM; the stock model still OOMs.
+        local arena=32768; [ "$model" = mbv2 ] && arena=491520
+        local tflm_model="$model" tflm_dir="$MODELS_DIR"
+        [ "$cfg" = tflm_export ] && tflm_model="${model}_export" && tflm_dir="$PLAN_DIR"
         local -a configure=(cmake "${common[@]}" -DBENCH_FRAMEWORK=tflm
-                            -DTFLM_MODEL="$model" -DTFLM_ARENA_BYTES=$arena)
+                            -DTFLM_MODEL="$tflm_model" -DTFLM_MODEL_DIR="$tflm_dir"
+                            -DTFLM_ARENA_BYTES=$arena)
         command_string "${configure[@]}"; local configure_command="$REPLY"
         "${configure[@]}" >/dev/null
         cmake --build "$bd" -j"$NPROC" >/dev/null
         emit "${RIG[$board]}" "$bd/tflm_bench.bin" \
              "${board}_${model}_${cfg}" "$to" \
-             "$MODELS_DIR/${model}_tflite_i8.h" "$configure_command"
+             "$tflm_dir/${tflm_model}_tflite_i8.h" "$configure_command"
     else
         local -a configure=(cmake "${common[@]}" -DBENCH_KERNEL="$cfg"
+                            -DBENCH_MODEL="$model"
                             -DTIGRIS_PLAN="$plan" -DTIGRIS_CODEGEN="$TIGRIS_COMPILER"
                             -DTIGRIS_FAST_ARENA_BYTES=$fast
                             -DTIGRIS_SLOW_ARENA_BYTES=$slow)
@@ -140,8 +179,9 @@ build_cell() {   # board model config
             emit "${RIG[$board]}" "$bd/tigris_bench.bin" \
                  "${board}_${model}_${cfg}" "$to" "$plan" "$configure_command"
         else
-            # mbv2 on F446: 591 KB plan > 512 KB flash and 301 KB working set > 128 KB
-            # SRAM. The link overflow IS the result (the flash/RAM barrier), not flashed.
+            # mbv2 on F446: the firmware with its plan exceeds 512 KB flash, and the
+            # 300 KB working set exceeds 128 KB SRAM. The link overflow IS the
+            # result (the flash/RAM barrier), not flashed.
             echo "  BARRIER: ${board}/${model}/${cfg} does not fit (link overflow) - expected"
         fi
     fi
@@ -193,12 +233,18 @@ def command(*args):
 def git_state(path):
     if not (path / ".git").exists():
         return None
-    return {
+    state = {
         "revision": command("git", "-C", str(path), "rev-parse", "HEAD"),
         "dirty": bool(command(
             "git", "-C", str(path), "status", "--short",
             "--untracked-files=no")),
     }
+    tag = subprocess.run(
+        ["git", "-C", str(path), "describe", "--tags", "--exact-match"],
+        text=True, capture_output=True)
+    if tag.returncode == 0:
+        state["tag"] = tag.stdout.strip()
+    return state
 
 
 def artifact(path):
@@ -360,21 +406,88 @@ echo "Collecting + validating..."
 python3 "$HERE/scripts/results.py" "$RUN_RAW" \
     -o "$COLLECTED_SUMMARY" --require-provenance
 
-if [[ " ${CONFIGS[*]} " == *" cmsis_nn "* ]] \
-        && [[ " ${CONFIGS[*]} " == *" tflm "* ]]; then
+# cmsis_nn is the common member of both parity pairs (vs tflm across frameworks,
+# vs s8_ref within TiGrIS), so it alone decides whether anything is comparable.
+# The validator reports a missing TFLM baseline as INCOMPLETE.
+if [[ " ${CONFIGS[*]} " == *" cmsis_nn "* ]]; then
     python3 "$HERE/scripts/validate_accuracy.py" "$COLLECTED_SUMMARY"
 else
-    echo "Skipping cross-framework parity: this subset has no TFLM/CMSIS pair."
+    echo "Skipping parity: this subset has no cmsis_nn cell to compare against."
 fi
 
 # Promote only a completely collected invocation. A subset updates its selected
-# raw logs but cannot silently replace the canonical 27-cell summary.
+# raw logs but cannot silently replace the canonical summary.
+#
+# What decides publication is the core the captures actually name, not the
+# startup override. TIGRIS_ALLOW_UNPINNED_CORE lets a run begin against
+# checkouts that differ from core-versions.json, which is also the state of a
+# re-pin rerun: the pins move first and the old summary still names the old
+# core, so the startup check cannot tell that case from a scratch build. After
+# collection the captures settle it. results/raw is what the tracked summary's
+# provenance record is reconstructed from, so captures naming anything other
+# than the pinned core go to results/unpinned-raw and promote nothing.
+if ! python3 - "$COLLECTED_SUMMARY" "$HERE/../../core-versions.json" "$HERE/../../common" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+sys.path.insert(0, sys.argv[3])
+from check_core_versions import suite_repositories
+
+summary = json.loads(Path(sys.argv[1]).read_text())
+pins = json.loads(Path(sys.argv[2]).read_text())["suites"]["cortex-m/deployability-hil"]
+try:
+    captured = summary["provenance"]["common"]["repositories"]
+except (KeyError, TypeError):
+    print("captures carry no common provenance block", file=sys.stderr)
+    raise SystemExit(1)
+
+mismatched = []
+for repo, (_, want) in suite_repositories(pins).items():
+    got = (captured.get(repo) or {}).get("tag")
+    if got != want:
+        mismatched.append(f"{repo}: captured {got}, pinned {want}")
+if mismatched:
+    for line in mismatched:
+        print(line, file=sys.stderr)
+    raise SystemExit(1)
+PY
+then
+    echo "Captures do not name the pinned core; not publishing." >&2
+    mkdir -p "$UNPINNED"
+    cp "$RUN_RAW"/*.log "$UNPINNED"/
+    echo "Captures in $UNPINNED; results/raw and the summary are unchanged." >&2
+    exit 0
+fi
+
 cp "$RUN_RAW"/*.log "$RAW"/
 SUMMARY_OUTPUT="${BENCH_SUMMARY_OUTPUT:-}"
 if [ "$CANONICAL_RUN" -eq 1 ]; then
     SUMMARY_OUTPUT="${SUMMARY_OUTPUT:-$HERE/results/summary.json}"
 fi
 if [ -n "$SUMMARY_OUTPUT" ]; then
+    # A run that lost cells to a wedged programmer still reaches this point with
+    # a well-formed summary. Promotion is what makes it the tracked result, so
+    # the expected matrix is checked here and not only after the fact.
+    python3 - "$COLLECTED_SUMMARY" "$HERE/results/expected-matrix.json" \
+            "$HERE/../../common" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+sys.path.insert(0, sys.argv[3])
+from validate_tracked_json import validate_matrix_coverage  # noqa: E402
+
+summary = json.loads(Path(sys.argv[1]).read_text())
+expected = json.loads(Path(sys.argv[2]).read_text())
+errors = validate_matrix_coverage(summary, expected)
+if errors:
+    print("ERROR: refusing to promote an incomplete matrix:", file=sys.stderr)
+    for error in errors:
+        print(f"  {error}", file=sys.stderr)
+    raise SystemExit(1)
+print(f"Matrix complete: {len(expected['cells'])} expected cells all present.")
+PY
     mkdir -p "$(dirname "$SUMMARY_OUTPUT")"
     cp "$COLLECTED_SUMMARY" "$SUMMARY_OUTPUT"
     echo "Promoted summary to $SUMMARY_OUTPUT"

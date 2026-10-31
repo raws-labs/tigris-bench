@@ -22,10 +22,12 @@ pip install numpy rich
 `SRIG_API_KEY` in the environment (and `SRIG_BASE_URL` if self-hosted). To
 reproduce on a locally-attached board instead, see "Manual steps" below.
 
-The compiler and runtime must be sibling checkouts at the exact commits in
-`../../core-versions.json`. `run_all.sh` checks them before building. Set
-`TIGRIS_ALLOW_UNPINNED_CORE=1` only for an explicitly non-canonical development
-run; the resulting revisions must be pinned before any summary is promoted.
+`run_all.sh` builds from this suite's pinned releases in `../../core-versions.json`:
+`../../common/fetch_core.py` clones the TiGrIS compiler, runtime and
+tigris-cortex-m at their release tags into `../../build/core/` and installs the
+compiler from the published `tigris-ml` wheel. Setting `TIGRIS_*_ROOT` yourself,
+with `TIGRIS_ALLOW_UNPINNED_CORE=1`, is only for an explicitly non-canonical
+development run, whose captures are never promoted.
 
 ## One-shot: build, flash, capture, validate the whole matrix
 
@@ -91,8 +93,9 @@ PATH="$PWD/tensorflow/lite/micro/tools/make/downloads/gcc_embedded/bin:$PATH" \
 ```
 
 Then build the TFLM firmware: `-DBENCH_FRAMEWORK=tflm -DTFLM_MODEL=<model>`
-(e.g. `ds_cnn` / `ad` / `ts`), and on the F446 add `-DTFLM_ARENA_BYTES=32768`
-(the 128 KB default would eat the whole SRAM). The CMake finds the lib via
+(e.g. `ds_cnn` / `ad` / `ts`; for an exported model, `-DTFLM_MODEL=mbv2_export
+-DTFLM_MODEL_DIR=<dir holding mbv2_export_tflite_i8.h>`), and on the F446 add
+`-DTFLM_ARENA_BYTES=32768` (the 128 KB default would eat the whole SRAM). The CMake finds the lib via
 `TFLM_BUILD_TYPE` (default `release_with_logs`); set it to match what you built.
 
 ## RP2350 (Pico 2) firmware
@@ -104,7 +107,7 @@ The RP2350 has no on-board debugger, so it is a SEPARATE pico-sdk project
 ```bash
 PICO_SDK_PATH=~/pico/pico-sdk cmake -S boards/pico2_rp2350 -B build/pico_ts_cmsis \
   -Dpicotool_DIR=~/pico/picotool/install/lib/cmake/picotool \
-  -DBENCH_KERNEL=cmsis_nn -DTIGRIS_PLAN=<abs path to a .tgrs>
+  -DBENCH_KERNEL=cmsis_nn -DTIGRIS_PLAN=<abs path to a .tgrs> -DBENCH_MODEL=ts
 cmake --build build/pico_ts_cmsis -j            # -> tigris_pico_bench.uf2
 # Flash a locally-attached Pico: reboot to BOOTSEL, load the UF2, then capture
 picotool load -f build/pico_ts_cmsis/tigris_pico_bench.uf2 && picotool reboot
@@ -122,9 +125,11 @@ cat /dev/ttyACM0 > results/raw/pico_ts_cmsis.log   # stop at BENCH_DONE
 | `TIGRIS_PLAN` | `ds_cnn_i8.tgrs` | the `.tgrs` plan embedded in flash (compile at a budget that fits the board) |
 | `TIGRIS_CODEGEN` | sibling TiGrIS venv CLI | `tigris` executable used to generate the backend deployment core during the build |
 | `TIGRIS_RUNTIME_ROOT` | sibling `tigris-runtime` | exact runtime checkout compiled into the firmware; `run_all.sh` binds this to the checkout it validates and records |
-| `TIGRIS_FAST_ARENA_BYTES` | `131072` | static fast arena backing store; the harness provisions only a tight slice of it (`peak + align`) so the compactor engages and the measured RAM is the true minimum |
+| `TIGRIS_FAST_ARENA_BYTES` | `131072` | static fast arena backing store; the harness provisions only the size the runtime reports for the plan (`tigris_cmsis_nn_fast_arena_required` or `tigris_fast_arena_required`) so the compactor engages and the measured RAM is the true minimum |
 | `TIGRIS_SLOW_ARENA_BYTES` | `262144` | slow arena backing store; use `8192` on the F446 |
-| `TFLM_MODEL` | `ds_cnn` | TFLM model: `<name>_tflite_i8.h` in `MODELS_DIR` |
+| `BENCH_MODEL` | `ds_cnn` | model name the TiGrIS cell reports (required in the RP2350 build) |
+| `TFLM_MODEL` | `ds_cnn` | TFLM model: `<name>_tflite_i8.h` in `TFLM_MODEL_DIR` |
+| `TFLM_MODEL_DIR` | `../../models/output` | directory holding the TFLM model header |
 | `TFLM_ARENA_BYTES` | `131072` | TFLM tensor arena; use `32768` on the F446 |
 | `TFLM_BUILD_TYPE` | `release_with_logs` | TFLM microlite build type (must match the `gen/` lib you built) |
 
@@ -140,9 +145,9 @@ cat /dev/ttyACM0 > results/raw/pico_ts_cmsis.log   # stop at BENCH_DONE
 - **RAM metric:** `sram_peak_bytes` is the MEASURED runtime working set, directly
   comparable to TFLM's `arena_used_bytes`. For TiGrIS it is the fast + slow arena
   high-water + CMSIS-NN scratch + the runtime tensor table + the caller-owned
-  executor workspace; the harness provisions a tight arena (`peak + alignment`)
-  so the executor's reactive compactor engages and the figure is the true
-  minimum, not a lazy bump high-water. (Provision a generous arena and the same
+  executor workspace; the harness provisions the fast-arena size the runtime
+  reports for the plan, so the executor's reactive compactor engages and the
+  figure is the true minimum, not a lazy bump high-water. (Provision a generous arena and the same
   model reports far more RAM - that is a measurement artifact, not a real cost.)
 - **Vendor pins** (`fetch.sh`): CMSIS-NN `6d9d61d8` (matches TFLM's bundled
   pin), CMSIS-Core `45dab712`, cmsis-device-h7 `de8243d2`,
@@ -151,7 +156,8 @@ cat /dev/ttyACM0 > results/raw/pico_ts_cmsis.log   # stop at BENCH_DONE
 - **Parity** is checked device-to-device by `scripts/validate_accuracy.py` (reads
   `results/summary.json` by default, which carries each cell's `OUTPUT_I8`; pass a
   `results/raw/` dir to read logs instead). It groups by (board, model) and compares
-  the int8 `OUTPUT_I8` vectors of `tigris/cmsis_nn` vs `tflm/cmsis_nn` (bit-exact)
-  and `tigris/s8_ref` vs `tigris/cmsis_nn` (+-1 LSB requant nudge). A (board, model)
+  the int8 `OUTPUT_I8` vectors of `tigris/cmsis_nn` vs `tflm/cmsis_nn` and of the
+  `tflm_export` cell vs both (bit-exact), and `tigris/s8_ref` vs
+  `tigris/cmsis_nn` (+-1 LSB requant nudge). A (board, model)
   with no TFLM baseline is reported INCOMPLETE, never silently passed. The host
   ORT/tflite interpreter is NOT a valid baseline (different kernels).

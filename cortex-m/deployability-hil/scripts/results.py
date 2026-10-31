@@ -191,6 +191,21 @@ def validate_capture_provenance(value: object, board: object) -> list[str]:
     return errors
 
 
+REPO_ROOT = Path(__file__).resolve().parents[3]
+SIBLING_CHECKOUTS = ("tigris-cortex-m", "tigris-runtime", "tigris")
+
+
+def portable_command(command: str) -> str:
+    """Rewrite absolute checkout paths so a provenance record reads the same on
+    every machine: this repository as ".", the sibling checkouts as "../<name>",
+    and the home directory as "~". Longest prefix first, so "tigris" cannot
+    shadow "tigris-runtime"."""
+    command = command.replace(str(REPO_ROOT), ".")
+    for name in SIBLING_CHECKOUTS:
+        command = command.replace(str(REPO_ROOT.parent / name), f"../{name}")
+    return command.replace(str(Path.home()), "~")
+
+
 def parse_capture_provenance(lines: list[str]) -> object | None:
     records = [
         line[len(PROVENANCE_PREFIX):]
@@ -201,9 +216,13 @@ def parse_capture_provenance(lines: list[str]) -> object | None:
     if len(records) != 1:
         raise ValueError(f"expected one {PROVENANCE_PREFIX} record, found {len(records)}")
     try:
-        return json.loads(records[0])
+        record = json.loads(records[0])
     except json.JSONDecodeError as exc:
         raise ValueError(f"invalid {PROVENANCE_PREFIX} JSON: {exc}") from exc
+    build = record.get("build") if isinstance(record, dict) else None
+    if isinstance(build, dict) and isinstance(build.get("configure_command"), str):
+        build["configure_command"] = portable_command(build["configure_command"])
+    return record
 
 
 def parse_log(path: Path, require_provenance: bool = False) -> dict | None:

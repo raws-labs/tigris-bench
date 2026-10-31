@@ -4,7 +4,10 @@ cmake_minimum_required(VERSION 3.16)
 set(TIGRIS_BOARD "nucleo_h753zi" CACHE STRING "target board (boards/<name>)")
 set(BENCH_FRAMEWORK "tigris" CACHE STRING "framework under test: tigris | tflm")
 set(BENCH_KERNEL "cmsis_nn" CACHE STRING "TiGrIS kernel backend: cmsis_nn | s8_ref")
-set(TFLM_MODEL "ds_cnn" CACHE STRING "TFLM model under test; expects <name>_tflite_i8.h in MODELS_DIR")
+set(TFLM_MODEL "ds_cnn" CACHE STRING "TFLM model under test; expects <name>_tflite_i8.h in TFLM_MODEL_DIR")
+set(TFLM_MODEL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../models/output"
+    CACHE PATH "directory holding <TFLM_MODEL>_tflite_i8.h")
+set(BENCH_MODEL "ds_cnn" CACHE STRING "benchmark model name the TiGrIS cell reports")
 set(TFLM_ARENA_BYTES "131072" CACHE STRING "TFLM tensor arena size (shrink for small-RAM boards, e.g. F446)")
 set(TIGRIS_PLAN
     "${CMAKE_CURRENT_SOURCE_DIR}/../../models/output/ds_cnn_i8.tgrs"
@@ -83,7 +86,11 @@ if(BENCH_FRAMEWORK STREQUAL "tigris")
 
     add_subdirectory(third_party)                          # cmsis-nn static lib
 
+    # codegen also writes the plan's kernel selection; the runtime links only
+    # the kernels it names, as a deployment of this plan would.
+    set(CODEGEN_KERNELS ${CMAKE_BINARY_DIR}/tigris_codegen_core_kernels.h)
     set(TIGRIS_HAS_CMSIS_NN ON CACHE BOOL "" FORCE)
+    set(TIGRIS_OP_CONFIG ${CODEGEN_KERNELS} CACHE FILEPATH "" FORCE)
     add_subdirectory(${TIGRIS_RUNTIME_ROOT}
                      ${CMAKE_BINARY_DIR}/tigris_runtime)
 
@@ -107,12 +114,14 @@ if(BENCH_FRAMEWORK STREQUAL "tigris")
         DEPENDS ${TIGRIS_PLAN} ${CMAKE_CURRENT_SOURCE_DIR}/tools/bin2c.py
         COMMENT "Embedding plan: ${TIGRIS_PLAN}")
     add_custom_command(
-        OUTPUT ${CODEGEN_CORE} ${CODEGEN_HEADER}
+        OUTPUT ${CODEGEN_CORE} ${CODEGEN_HEADER} ${CODEGEN_KERNELS}
         COMMAND ${TIGRIS_CODEGEN} codegen ${TIGRIS_PLAN}
                 --backend ${CODEGEN_BACKEND} --format core
                 --output ${CODEGEN_CORE} --header ${CODEGEN_HEADER}
         DEPENDS ${TIGRIS_PLAN} ${TIGRIS_CODEGEN}
         COMMENT "Generating TiGrIS ${CODEGEN_BACKEND} deployment core")
+    add_custom_target(tigris_codegen DEPENDS ${CODEGEN_KERNELS})
+    add_dependencies(tigris_runtime tigris_codegen)
 
     add_executable(tigris_bench
         harness/main.c ${PLAN_BLOB} ${CODEGEN_CORE}
@@ -120,7 +129,7 @@ if(BENCH_FRAMEWORK STREQUAL "tigris")
     target_include_directories(tigris_bench PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/harness ${CMAKE_BINARY_DIR} ${BOARD_INCLUDES})
     target_compile_definitions(tigris_bench PRIVATE
-        ${KERNEL_DEFINE} ${BOARD_DEFINES}
+        ${KERNEL_DEFINE} ${BOARD_DEFINES} BENCH_MODEL="${BENCH_MODEL}"
         TIGRIS_FAST_ARENA_BYTES=${TIGRIS_FAST_ARENA_BYTES}
         TIGRIS_SLOW_ARENA_BYTES=${TIGRIS_SLOW_ARENA_BYTES})
     target_link_libraries(tigris_bench PRIVATE tigris_runtime cmsis-nn)
@@ -153,8 +162,6 @@ elseif(BENCH_FRAMEWORK STREQUAL "tflm")
         message(FATAL_ERROR "TFLM lib not found: ${TFLM_LIB}\nBuild it (see BUILD.md): "
                 "make ... TARGET_ARCH=${BOARD_TFLM_ARCH} BUILD_TYPE=${TFLM_BUILD_TYPE} ... microlite")
     endif()
-    set(MODELS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../models/output)
-
     add_executable(tflm_bench
         tflm/main.cc
         ${BOARD_BSP} ${BOARD_SYSTEM} ${BOARD_STARTUP})
@@ -176,7 +183,7 @@ elseif(BENCH_FRAMEWORK STREQUAL "tflm")
     target_include_directories(tflm_bench PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/tflm
         ${CMAKE_CURRENT_SOURCE_DIR}/harness
-        ${MODELS_DIR} ${BOARD_INCLUDES})
+        ${TFLM_MODEL_DIR} ${BOARD_INCLUDES})
     target_link_libraries(tflm_bench PRIVATE ${TFLM_LIB})
     add_custom_command(TARGET tflm_bench POST_BUILD
         COMMAND ${CMAKE_OBJCOPY} -O binary $<TARGET_FILE:tflm_bench> ${CMAKE_BINARY_DIR}/tflm_bench.bin

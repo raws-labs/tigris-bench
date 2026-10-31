@@ -6,6 +6,10 @@ build/
 # OUTPUT_I8 parity vectors. Don't track the verbose per-run captures.
 results/raw/
 
+# Captures from TIGRIS_ALLOW_UNPINNED_CORE=1 runs: kept out of results/raw so
+# they cannot stand in for a pinned result.
+results/unpinned-raw/
+
 # Vendored sources (fetched by third_party/fetch.sh, pinned there)
 third_party/CMSIS-NN/
 third_party/CMSIS_6/

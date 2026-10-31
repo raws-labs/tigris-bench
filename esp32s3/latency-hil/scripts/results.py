@@ -12,12 +12,17 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import subprocess
+import sys
 from pathlib import Path
 
 from rich.console import Console
 from rich.table import Table
 
 from benchmark_matrix import BenchmarkDataError, EXPECTED_CELLS, validate_matrix
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "common"))
+from check_core_versions import ESP_COMPONENT, esp_component  # noqa: E402
 
 
 def parse_bench_result(line: str) -> dict | None:
@@ -113,6 +118,52 @@ def collect(path: Path, require_complete: bool | None = None) -> list[dict]:
     return [result]
 
 
+PROVENANCE_PREFIX = "BENCH_PROVENANCE:"
+
+
+def provenance_line(compiler_root: Path, runtime_root: Path) -> str:
+    """The line run_all.sh appends to every TiGrIS capture it saves."""
+    component = esp_component()
+    if component["version"] is None or component["component_hash"] is None:
+        raise BenchmarkDataError("tigris-esp dependencies.lock holds no registry runtime")
+    runtime = core_state(runtime_root)
+    runtime["esp_component"] = {
+        "name": ESP_COMPONENT,
+        "version": component["version"],
+        "component_hash": component["component_hash"],
+    }
+    record = {"repositories": {
+        "tigris_compiler": core_state(compiler_root),
+        "tigris_runtime": runtime,
+    }}
+    return PROVENANCE_PREFIX + json.dumps(record, sort_keys=True, separators=(",", ":"))
+
+
+def collect_provenance(path: Path) -> dict | None:
+    """The core every TiGrIS capture names; None when no capture carries one."""
+    log_paths = sorted(path.glob("tigris_*.log")) if path.is_dir() else (
+        [path] if path.name.startswith("tigris_") else [])
+    records = {}
+    for log_path in log_paths:
+        lines = [line for line in log_path.read_text(errors="replace").splitlines()
+                 if line.startswith(PROVENANCE_PREFIX)]
+        if len(lines) > 1:
+            raise BenchmarkDataError(f"{log_path.name}: more than one provenance line")
+        records[log_path.name] = lines[0] if lines else None
+    present = {name for name, line in records.items() if line is not None}
+    if not present:
+        return None
+    if present != set(records):
+        missing = sorted(set(records) - present)
+        raise BenchmarkDataError("captures without provenance: " + ", ".join(missing))
+    if len(set(records.values())) != 1:
+        raise BenchmarkDataError("TiGrIS captures name different cores")
+    try:
+        return json.loads(next(iter(records.values()))[len(PROVENANCE_PREFIX):])
+    except json.JSONDecodeError as exc:
+        raise BenchmarkDataError(f"malformed provenance line: {exc}") from exc
+
+
 def render_table(configs: list[dict]) -> Table:
     table = Table(title="Benchmark results", title_style="bold")
     table.add_column("Config", style="cyan", no_wrap=True)
@@ -158,20 +209,54 @@ def render_table(configs: list[dict]) -> Table:
     return table
 
 
+def core_state(root: Path) -> dict:
+    """Revision and release tag of a core checkout, refusing tracked modifications."""
+    def git(*args: str) -> str:
+        return subprocess.run(["git", "-C", str(root), *args], text=True,
+                              capture_output=True, check=True).stdout.strip()
+    try:
+        revision = git("rev-parse", "HEAD")
+        dirty = git("status", "--porcelain", "--untracked-files=no")
+    except (OSError, subprocess.CalledProcessError) as exc:
+        raise BenchmarkDataError(f"cannot read revision of {root}: {exc}") from exc
+    if dirty:
+        raise BenchmarkDataError(f"{root} has tracked modifications")
+    state = {"revision": revision}
+    try:
+        state["tag"] = git("describe", "--tags", "--exact-match")
+    except subprocess.CalledProcessError:
+        pass
+    return state
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Parse benchmark logs and print a results table")
-    parser.add_argument("path", type=Path, help="Directory of .log files or a single log file")
+    parser.add_argument("path", type=Path, nargs="?",
+                        help="Directory of .log files or a single log file")
     parser.add_argument("-o", "--output", type=Path, help="Also write summary JSON to this path")
     parser.add_argument(
         "--allow-partial", action="store_true",
         help="Allow missing canonical cells when collecting a directory (unexpected or malformed "
              "cells still fail).")
+    parser.add_argument(
+        "--provenance-line", nargs=2, type=Path, metavar=("COMPILER_ROOT", "RUNTIME_ROOT"),
+        help="Print the provenance line for captures built from these checkouts and exit")
     args = parser.parse_args()
+    if args.path is None and not args.provenance_line:
+        parser.error("path is required")
 
     console = Console()
+    if args.provenance_line:
+        try:
+            print(provenance_line(*args.provenance_line))
+        except BenchmarkDataError as exc:
+            console.print(f"[bold red]RESULT GATE FAILED[/bold red] {exc}")
+            raise SystemExit(1) from exc
+        return
     try:
         require_complete = args.path.is_dir() and not args.allow_partial
         configs = collect(args.path, require_complete=require_complete)
+        provenance = collect_provenance(args.path)
     except BenchmarkDataError as exc:
         console.print("[bold red]RESULT GATE FAILED[/bold red]")
         for line in str(exc).splitlines():
@@ -181,8 +266,11 @@ def main() -> None:
     console.print(render_table(configs))
 
     if args.output:
+        document = {"configs": configs, "count": len(configs)}
+        if provenance is not None:
+            document["provenance"] = provenance
         args.output.parent.mkdir(parents=True, exist_ok=True)
-        args.output.write_text(json.dumps({"configs": configs, "count": len(configs)}, indent=2) + "\n")
+        args.output.write_text(json.dumps(document, indent=2) + "\n")
         console.print(f"\nWrote {len(configs)} results to {args.output}")
 
 

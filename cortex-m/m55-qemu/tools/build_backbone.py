@@ -22,7 +22,7 @@ from onnxruntime.quantization.shape_inference import quant_pre_process
 
 ARCH = sys.argv[1]
 RES = int(sys.argv[2]) if len(sys.argv) > 2 else 224
-OUT = Path(sys.argv[3]) if len(sys.argv) > 2 else Path("/home/armin/.claude/jobs/1c449b07/tmp/resnet")
+OUT = Path(sys.argv[3]) if len(sys.argv) > 3 else Path("build") / ARCH
 OUT.mkdir(parents=True, exist_ok=True)
 print(f"Building ResNet-18 backbone at {RES}x{RES}")
 

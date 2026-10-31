@@ -12,6 +12,7 @@ from pathlib import Path
 from provenance_validation import (
     all_source_captures_present,
     git_tracked_paths,
+    sha256_file,
     validate_provenance,
 )
 
@@ -30,9 +31,9 @@ EXPECTED_MHZ = {
     "pico2_rp2350": 150,
 }
 MODEL_LABELS = {
-    "DS-CNN": ("ds_cnn_matched", "ds_cnn"),
-    "AD": ("ad_matched", "ad"),
-    "TS": ("ts_matched", "ts"),
+    "DS-CNN": ("ds_cnn", "ds_cnn"),
+    "AD": ("ad", "ad"),
+    "TS": ("ts", "ts"),
 }
 
 # Device timing is compared only from committed silicon captures. The checker
@@ -593,7 +594,7 @@ def expected_readme_result_rows(
             ("pico2_rp2350", "RP2350 (520 KB)", "n/a (no M33 lib)"),
         ):
             cell = _result_cell(
-                document, board, "mbv2_a35_r224_matched",
+                document, board, "mbv2",
                 "tigris", "cmsis_nn")
             seconds = cell["latency_median_ms"] / 1000
             rows.append(
@@ -655,6 +656,41 @@ def validate_readme_results(document: object, readme: str) -> list[str]:
     return errors
 
 
+def refresh_provenance() -> None:
+    """Recompute the provenance hashes after a rerun.
+
+    Every field written here is a hash of a file already on disk, so this states
+    what the tree holds rather than deciding anything. The suite scripts promote
+    new summaries and fresh captures; without this the provenance record still
+    names the previous ones and validation fails. artifact_repository.revision is
+    left for the caller to set to the commit that carries the new artifacts.
+    """
+    path = ROOT / CORTEX_PROVENANCE
+    document = json.loads(path.read_text())
+
+    for artifact in document["result_artifacts"]:
+        artifact["sha256"] = sha256_file(ROOT / artifact["path"])
+        for role in ("collector", "validator", "post_processor"):
+            entry = artifact.get(role)
+            if isinstance(entry, dict):
+                entry["sha256"] = sha256_file(ROOT / entry["path"])
+
+        capture_root = ROOT / artifact["source_capture_root"]
+        captures = sorted(capture_root.glob("*.log"))
+        artifact["source_captures"] = [
+            {
+                "path": str(capture.relative_to(ROOT)),
+                "sha256": sha256_file(capture),
+            }
+            for capture in captures
+        ]
+        print(f"  {artifact['path']}: {len(captures)} source captures")
+
+    path.write_text(json.dumps(document, indent=2) + "\n")
+    print(f"Refreshed {CORTEX_PROVENANCE}.")
+    print("Set artifact_repository.revision to the commit carrying them.")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Validate tracked benchmark data and optional performance drift.")
@@ -665,7 +701,18 @@ def main() -> None:
             "compare committed silicon metrics with the summaries at this Git "
             "revision; no hardware or host timing is run"),
     )
+    parser.add_argument(
+        "--refresh-provenance",
+        action="store_true",
+        help=(
+            "rewrite the provenance hashes from the files on disk after a "
+            "rerun, then exit without validating"),
+    )
     args = parser.parse_args()
+
+    if args.refresh_provenance:
+        refresh_provenance()
+        return
 
     tracked_paths = git_tracked_paths(ROOT)
     paths = tracked_json_paths(tracked_paths)
@@ -771,7 +818,7 @@ def main() -> None:
     if mutation_checked:
         print("Verified that removing an expected Cortex matrix cell fails.")
     if reconstruction_checked:
-        print("Rebuilt the Cortex summary byte-for-byte from 27 source captures.")
+        print("Rebuilt the Cortex summary byte-for-byte from its source captures.")
     if performance_checked:
         if performance_observations:
             for observation in performance_observations:

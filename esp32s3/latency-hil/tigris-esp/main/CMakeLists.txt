@@ -1,7 +1,7 @@
 idf_component_register(
     SRCS "main.c"
     INCLUDE_DIRS "."
-    REQUIRES tigris_runtime
+    REQUIRES raws-labs__tigris-runtime
     PRIV_REQUIRES esp_partition esp_timer heap
 )
 

@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "suite": "cortex-m55-qemu",
+  "note": "An output checksum is a property of the exact plan bytes that produced it. The plans are gitignored build artifacts regenerated from models whose heads are freshly initialized, so a rebuild changes the checksum while leaving the memory profile identical. Compare a checksum only against a run whose plan sha256 matches.",
+  "environment": {
+    "qemu": "QEMU emulator version 8.2.2 (Debian 1:8.2.2+ds-0ubuntu1.18)",
+    "machine": "mps3-an547",
+    "cpu": "cortex-m55",
+    "compiler": "arm-none-eabi-gcc 13.2.1",
+    "target_flags": "-mcpu=cortex-m55+nomve -mthumb -mfloat-abi=hard -O2",
+    "kernels": "s8_ref"
+  },
+  "runtime": {
+    "repository": "https://github.com/raws-labs/tigris-runtime.git",
+    "commit": "f21201851297e0aacb4d7ecb79750ff953097bb1",
+    "note": "verified to give identical output at tag v0.8.0's predecessor v0.7.0"
+  },
+  "harness": {
+    "firmware": {
+      "path": "cortex-m/m55-qemu/firmware/main.c",
+      "sha256": "093e2a40e3cd8f507e46043a9bbc8d3be76bcb05eeefe93505735665420d5701"
+    },
+    "build": {
+      "path": "cortex-m/m55-qemu/build.sh",
+      "sha256": "146701a7f179514f1569d60402a3e30b107a4b5b858641b869933a7e02ec380a"
+    },
+    "run": {
+      "path": "cortex-m/m55-qemu/run.sh",
+      "sha256": "9649b4761abdb6cd7cdca7d8d2397fb12974c48981e967284c14799a1d8a173d"
+    }
+  },
+  "runs": [
+    {
+      "model": "MobileNetV2-0.35 @224",
+      "plan": {
+        "path": "cortex-m/deployability-hil/build/plans/mbv2_a35.tgrs",
+        "tracking": "gitignored_build_artifact",
+        "sha256": "69f984b98449505e314e6ebe7f5ffa7bd0c4b8559c0e55b0ded582af5653cb4a",
+        "size_bytes": 606284
+      },
+      "build_flags": [
+        "-DFAST_KB=192",
+        "-DSLOW_KB=256"
+      ],
+      "observed": {
+        "output": "OUTPUT n=10 checksum=4869 min=-128 max=127 nonmin=6",
+        "arena": "ARENA fast_peak=130176 slow_used=16 total_sram=130192 bytes (fast_cap=131072 slow_cap=262144)"
+      }
+    },
+    {
+      "model": "DS-CNN",
+      "plan": {
+        "path": "cortex-m/deployability-hil/build/plans/ds_cnn_matched.tgrs",
+        "tracking": "gitignored_build_artifact",
+        "sha256": "ccac6154bb4c5e64ffcf1b97a8170394750f70c6862a46696cd5e726494f747e",
+        "size_bytes": 40604
+      },
+      "build_flags": [
+        "-DFAST_KB=64",
+        "-DSLOW_KB=64"
+      ],
+      "observed": {
+        "output": "OUTPUT n=12 checksum=10244 min=-128 max=127 nonmin=9",
+        "arena": "ARENA fast_peak=16496 slow_used=16 total_sram=16512 bytes (fast_cap=20480 slow_cap=65536)"
+      }
+    }
+  ]
+}

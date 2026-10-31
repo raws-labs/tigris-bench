@@ -32,6 +32,7 @@ set(NN_DIR     ${BENCH_ROOT}/third_party/CMSIS-NN)
 
 set(BENCH_KERNEL "cmsis_nn" CACHE STRING "TiGrIS backend: cmsis_nn | s8_ref")
 set(TIGRIS_PLAN  "" CACHE FILEPATH "the .tgrs plan embedded in flash")
+set(BENCH_MODEL  "" CACHE STRING "benchmark model name the cell reports")
 set(TIGRIS_FAST_ARENA_BYTES "65536" CACHE STRING "fast arena (RP2350 has 520 KB SRAM)")
 set(TIGRIS_SLOW_ARENA_BYTES "131072" CACHE STRING "slow arena")
 set(TIGRIS_CODEGEN "${BENCH_ROOT}/../../tigris/.venv/bin/tigris"
@@ -39,8 +40,8 @@ set(TIGRIS_CODEGEN "${BENCH_ROOT}/../../tigris/.venv/bin/tigris"
 set(WARMUP_RUNS "3" CACHE STRING "warmup runs (reduce for slow tiled models)")
 set(BENCH_RUNS "30" CACHE STRING "timed runs (reduce for slow tiled models)")
 
-if(NOT TIGRIS_PLAN)
-    message(FATAL_ERROR "set -DTIGRIS_PLAN=<abs path to a .tgrs>")
+if(NOT TIGRIS_PLAN OR NOT BENCH_MODEL)
+    message(FATAL_ERROR "set -DTIGRIS_PLAN=<abs path to a .tgrs> and -DBENCH_MODEL=<name>")
 endif()
 
 # TiGrIS runtime + vendored CMSIS-NN (v7 is standalone: no CMSIS-Core/DSP dep).
@@ -53,6 +54,7 @@ find_package(Python3 REQUIRED COMPONENTS Interpreter)
 set(PLAN_BLOB ${CMAKE_BINARY_DIR}/model_blob.c)
 set(CODEGEN_CORE ${CMAKE_BINARY_DIR}/tigris_codegen_core.c)
 set(CODEGEN_HEADER ${CMAKE_BINARY_DIR}/tigris_codegen_core.h)
+set(CODEGEN_KERNELS ${CMAKE_BINARY_DIR}/tigris_codegen_core_kernels.h)
 add_custom_command(
     OUTPUT ${PLAN_BLOB}
     COMMAND ${Python3_EXECUTABLE} ${BENCH_ROOT}/tools/bin2c.py
@@ -66,7 +68,7 @@ else()
     message(FATAL_ERROR "BENCH_KERNEL must be cmsis_nn or s8_ref")
 endif()
 add_custom_command(
-    OUTPUT ${CODEGEN_CORE} ${CODEGEN_HEADER}
+    OUTPUT ${CODEGEN_CORE} ${CODEGEN_HEADER} ${CODEGEN_KERNELS}
     COMMAND ${TIGRIS_CODEGEN} codegen ${TIGRIS_PLAN}
             --backend ${CODEGEN_BACKEND} --format core
             --output ${CODEGEN_CORE} --header ${CODEGEN_HEADER}
@@ -76,7 +78,7 @@ add_custom_command(
 add_executable(tigris_pico_bench
     ${BENCH_ROOT}/harness/main.c
     ${TIGRIS_CORTEX_M_ROOT}/src/hal/platform/pico2/tigris_hal_pico2.c
-    ${PLAN_BLOB} ${CODEGEN_CORE}
+    ${PLAN_BLOB} ${CODEGEN_CORE} ${CODEGEN_KERNELS}
     ${RT_SRC} ${NN_SRC})
 
 target_include_directories(tigris_pico_bench PRIVATE
@@ -93,13 +95,19 @@ elseif(BENCH_KERNEL STREQUAL "s8_ref")
 else()
     message(FATAL_ERROR "BENCH_KERNEL must be cmsis_nn or s8_ref")
 endif()
+# Link only the kernels the plan uses, from codegen's kernel selection.
 target_compile_definitions(tigris_pico_bench PRIVATE
+    TIGRIS_OP_CONFIG="${CODEGEN_KERNELS}"
+    BENCH_MODEL="${BENCH_MODEL}"
     TIGRIS_FAST_ARENA_BYTES=${TIGRIS_FAST_ARENA_BYTES}
     TIGRIS_SLOW_ARENA_BYTES=${TIGRIS_SLOW_ARENA_BYTES}
     WARMUP_RUNS=${WARMUP_RUNS}
     BENCH_RUNS=${BENCH_RUNS})
 # vendor code (CMSIS-NN): silence its warnings, don't fail our build on them
 set_source_files_properties(${NN_SRC} PROPERTIES COMPILE_OPTIONS "-w")
+# The runtime's own CMake build compiles it with -ffp-contract=off; this build
+# compiles its sources directly, so it needs the same flag.
+set_source_files_properties(${RT_SRC} PROPERTIES COMPILE_OPTIONS "-ffp-contract=off")
 
 target_link_libraries(tigris_pico_bench pico_stdlib)
 pico_enable_stdio_usb(tigris_pico_bench 1)
