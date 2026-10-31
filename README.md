@@ -11,19 +11,21 @@ pinned on-device run recorded in this repo.
 
 ### Cortex-M: deployability (does it fit and run?)
 
-NUCLEO-H753ZI (Cortex-M7, on-chip SRAM only), INT8, CMSIS-NN. Same weights on both sides. TiGrIS
-runs the exact model reconstructed from TFLM's own TFLite file. SRAM is the measured peak from
+NUCLEO-H753ZI (Cortex-M7, on-chip SRAM only), INT8, CMSIS-NN. Same weights on both sides: TiGrIS
+compiles its plan from the TFLite file TFLM runs. SRAM is the measured peak from
 `cortex-m/deployability-hil/results/summary.json`, in KB of 1000 bytes.
 
 | Model | TFLite Micro | TiGrIS |
 |---|---|---|
-| **MobileNetV2** (alpha 0.35, 224x224) | **OOM**, `AllocateTensors` -> `ARENA_TOO_SMALL` | **runs**, tiled to 308 KB SRAM, 0.37 s |
-| DS-CNN (keyword spotting) | 22.7 KB SRAM, 12.8 ms | 17.4 KB, 11.1 ms |
-| Anomaly detection | 15.8 KB SRAM, 1.2 ms | 3.2 KB, 1.2 ms |
-| Time-series forecast | 3.0 KB SRAM, 0.3 ms | 2.9 KB, 0.3 ms |
+| **MobileNetV2** (alpha 0.35, 224x224) | **OOM**, `AllocateTensors` -> `ARENA_TOO_SMALL` | **runs**, tiled to 307 KB SRAM, 0.37 s |
+| DS-CNN (keyword spotting) | 22.7 KB SRAM, 12.8 ms | 16.4 KB, 11.2 ms |
+| Anomaly detection | 15.8 KB SRAM, 1.2 ms | 1.0 KB, 1.2 ms |
+| Time-series forecast | 3.0 KB SRAM, 0.3 ms | 1.5 KB, 0.3 ms |
 
 TiGrIS tiles activations so the working set fits on-chip SRAM. TFLM's single contiguous arena
 can't, so **MobileNetV2 does not run at all**. Tiling turns "won't fit" into "runs."
+`tigris export` rewrites the same MobileNetV2 so that stock TFLM runs it on the H753 in 424 KB,
+with output identical to TiGrIS.
 
 ### ESP32-S3: latency (how fast, with acceleration?)
 
@@ -61,8 +63,8 @@ releases are pinned per suite in `core-versions.json`, fetched and enforced by t
 
 ## Methodology
 
-- **Weight-matched.** TiGrIS runs the *identical* INT8 weights as TFLM, reconstructed from the same
-  TFLite file, so every cell is apples-to-apples.
+- **Weight-matched.** TiGrIS compiles the same TFLite file TFLM runs, so both sides execute the
+  *identical* INT8 weights and every cell is apples-to-apples.
 - **Honest RAM.** SRAM figures are the measured working set, not a provisioned arena.
 - **Provenance.** Every result carries the compiler/runtime commit and plan schema, validated in CI.
 

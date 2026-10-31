@@ -15,25 +15,26 @@ same comparison on ESP32-S3). Build and run: see `BUILD.md`.
 
 ## Method
 
-TiGrIS and TFLite Micro run the same INT8 models: identical weights,
-reconstructed from TFLM's `.tflite` via `tools/tflite_to_qdq_onnx.py`, both
-linking the same pinned CMSIS-NN commit. The comparison is TiGrIS vs TFLM, both
-on cmsis_nn, device-to-device. The x86 host tflite interpreter rounds gemmlowp
-ties differently from on-device CMSIS-NN, so it is not used as a baseline. All
-boards build at `-O2`; each runs at its rated clock, verified per run by a clock
-guard in `results.py`. Latency is the median of 30 runs (DWT cycle counter on
-M7/M4, hardware `time_us` on M33). RAM is the activation working set: TiGrIS
-`sram_peak` (fast-arena peak + slow-pool spill + scratch + tensor table +
-executor workspace) against TFLM `arena_used`; weights live in flash and are
-excluded, as is stack. Captured remotely on a SiliconRig hardware-in-the-loop
-lab via `scripts/run_all.sh`.
+TiGrIS and TFLite Micro run the same INT8 models: TiGrIS compiles its plan from
+the `.tflite` file TFLM embeds, and both link the same pinned CMSIS-NN commit.
+The comparison is TiGrIS vs TFLM, both on cmsis_nn, device-to-device. The x86
+host tflite interpreter rounds gemmlowp ties differently from on-device
+CMSIS-NN, so it is not used as a baseline. All boards build at `-O2`; each runs
+at its rated clock, verified per run by a clock guard in `results.py`. Latency
+is the median of 30 runs (DWT cycle counter on M7/M4, hardware `time_us` on
+M33). RAM is the activation working set: TiGrIS `sram_peak` (fast-arena peak +
+slow-pool spill + scratch + tensor table + executor workspace) against TFLM
+`arena_used`; weights live in flash and are excluded, as is stack. Captured
+remotely on a SiliconRig hardware-in-the-loop lab via `scripts/run_all.sh`.
 
 For each TiGrIS cell, CMake runs `tigris codegen <plan> --backend
 {cmsis-nn|reference} --format core`. The generated, backend-specific deployment
 core loads the embedded plan, resets runtime memory, prepares the backend, and
-selects/executes its dispatcher. The benchmark harness supplies only the
-board entry point, statically sized arenas, benchmark input pattern, timing, and
-machine-parseable reporting.
+selects/executes its dispatcher. Codegen also writes the plan's kernel
+selection, and the runtime is built with it, so the firmware links only the
+kernels the plan uses, as TFLM's op resolver does on its side. The benchmark
+harness supplies only the board entry point, statically sized arenas, benchmark
+input pattern, timing, and machine-parseable reporting.
 
 Three INT8 models are used: DS-CNN (keyword spotting, conv/depthwise, ~23K
 params / 24 KB weights), an anomaly-detection dense autoencoder (~266K params /
@@ -70,8 +71,8 @@ int8 weights plus biases, measured from the committed plans.
 - Output is bit-exact device-to-device: every (model, framework, kernel) cell
   emits the identical INT8 vector (max abs diff 0), checked by
   `scripts/validate_accuracy.py`.
-- CMSIS-NN vs the portable reference kernels (same model, both `-O2`): 7.4x
-  (DS-CNN) / 2.6x (AD) / 5.4x (TS) on the M7.
+- CMSIS-NN vs the portable reference kernels (same model, both `-O2`): 3.9x
+  (DS-CNN) / 2.3x (AD) / 2.9x (TS) on the M7.
 - Cycles are clock-independent; ms is at 480 MHz.
 - Latency, cycles, RAM, and firmware sizes come from the same tracked,
   provenance-bearing run in `results/summary.json`.
@@ -99,17 +100,17 @@ byte-identical to the H753 and F446. Weights are read from QSPI flash via XIP.
 | AD | 35.52 ms | 28.83 ms | 0.9 KB |
 | DS-CNN | 63.64 ms | 238.72 ms | 16.0 KB |
 
-The FC-heavy AD is slower here (35.01 ms vs 4.98 ms on the F446): each of its
+The FC-heavy AD is slower here (35.52 ms vs 5.04 ms on the F446): each of its
 265 KB of weights is read once per inference from XIP flash with no reuse, so it
 is QSPI-bandwidth-bound. The conv models reuse weights across spatial positions
 and stay fast.
 
 ## MobileNetV2 (tiling)
 
-MobileNetV2 (alpha 0.35, 224x224, INT8, 591 KB weights, 52 convs with
+MobileNetV2 (alpha 0.35, 224x224, INT8, 413 KB weights, 52 convs with
 inverted-residual ADD skips) has a naive activation peak of 735 KB, larger than
-any of these boards' SRAM. TiGrIS tiles it to a 300.8 KB working set (127.1 KB
-fast + 171.5 KB slow-pool spill + 2.1 KB scratch/runtime metadata, 2 tiled
+any of these boards' SRAM. TiGrIS tiles it to a 299.8 KB working set (126.4 KB
+fast + 171.5 KB slow-pool spill + 1.9 KB scratch/runtime metadata, 2 tiled
 stages), with bit-exact output across boards.
 
 | Board (SRAM) | TiGrIS (tiled) | TFLM (no tiling) |
@@ -121,9 +122,13 @@ stages), with bit-exact output across boards.
 - On the H753, TFLM given a 480 KB arena (nearly all of the 512 KB SRAM) fails
   `AllocateTensors` with `ARENA_TOO_SMALL`: with no tiling it needs the full
   735 KB. TiGrIS runs the identical model on the same board.
-- The F446 cannot hold MobileNetV2: the 591 KB weight blob exceeds its 512 KB
-  flash, and the 300 KB tiled working set exceeds its 128 KB SRAM.
-- RP2350 is ~4.9x slower than the H753 on this model (XIP-bound: 591 KB of
+- Rewritten by `tigris export`, the same model runs on stock TFLM on the H753:
+  `arena_used` is 413.8 KB, and the output is identical to TiGrIS
+  (`h753_mbv2_tflm_export`). Export finds no rewrite that lowers the arena of
+  the other three models.
+- The F446 cannot hold MobileNetV2: the firmware with its 477 KB plan exceeds
+  the 512 KB flash, and the 300 KB tiled working set exceeds its 128 KB SRAM.
+- RP2350 is ~4.9x slower than the H753 on this model (XIP-bound: 413 KB of
   weights streamed from QSPI flash each inference, plus the lower clock).
 
 ## Reproduce
@@ -136,7 +141,7 @@ provenance. See `BUILD.md` for the build knobs and a locally-attached-board
 (no-rig) path.
 
 `results/provenance.json` binds that summary and its collector/validator to
-SHA-256 digests and records the paths and hashes of all 27 source captures. The
+SHA-256 digests and records the paths and hashes of all source captures. The
 summary embeds the actual compiler, runtime, TFLM, CMSIS and SDK revisions;
 tool and Python-environment versions; build invocations; model and firmware
 hashes/sizes; capture timestamps; and SiliconRig board identities. The captures

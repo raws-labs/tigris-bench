@@ -14,7 +14,8 @@ Reproducible benchmarks of TiGrIS (tiling ahead-of-time compiler plus INT8 runti
 - `core-versions.json`: per suite, the TiGrIS release (compiler and runtime share its version) and, for Cortex-M, the tigris-cortex-m release that suite's tracked results were produced with.
 - `common/fetch_core.py`: clones a suite's pinned releases at their tags into gitignored `build/core/` and installs the compiler from the published `tigris-ml` wheel; `run_all.sh` calls it.
 - `<target>/results/summary.json` is the tracked artifact; `results/raw/` serial logs are gitignored.
-- `cortex-m/deployability-hil/tools/tflite_to_qdq_onnx.py`: reconstructs the TiGrIS ONNX model from the TFLite file TFLM runs, so both sides share weights.
+- `cortex-m/deployability-hil/scripts/prepare_tigris_plans.py`: compiles the Cortex-M plans straight from the TFLite files TFLM runs, and writes the `tigris export` models for the `tflm_export` cells.
+- `cortex-m/deployability-hil/tools/tflite_to_qdq_onnx.py`: reconstructs a QDQ ONNX model from a TFLite file; the ESP32-S3 suite compiles its TiGrIS plans from these.
 
 ## Conventions
 - Cells are weight-matched: TiGrIS INT8 models come from the exact TFLite file embedded in the TFLM firmware. Float cells are independently initialized and are never used for cross-framework claims.
@@ -30,6 +31,6 @@ Reproducible benchmarks of TiGrIS (tiling ahead-of-time compiler plus INT8 runti
 - Capture the host Python path before sourcing ESP-IDF `export.sh`; ESP-IDF's private Python lacks the benchmark and SiliconRig packages.
 - The device resets after `idf.py flash`; open the serial port right away and read until `BENCH_DONE`.
 - TFLM baseline libraries are built with `BUILD_TYPE=release_with_logs`; the `default` build keeps debug asserts on and slows TFLM by 5-10%.
-- The TFLM MobileNet cells are required to report `ARENA_TOO_SMALL`; that status is the expected result, not a broken run.
+- The stock TFLM MobileNet cells are required to report `ARENA_TOO_SMALL`; that status is the expected result, not a broken run. The H753 `tflm_export` cell runs the `tigris export` rewrite of the same model and must report `ok`.
 - QEMU's Cortex-M55 is functional, not cycle-accurate: correctness and memory-fit only, never latency claims.
 - Cortex-M boards must run at their rated clock; `results.py` has a clock guard that rejects captures otherwise.

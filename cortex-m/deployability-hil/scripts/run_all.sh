@@ -179,8 +179,9 @@ build_cell() {   # board model config
             emit "${RIG[$board]}" "$bd/tigris_bench.bin" \
                  "${board}_${model}_${cfg}" "$to" "$plan" "$configure_command"
         else
-            # mbv2 on F446: 591 KB plan > 512 KB flash and 301 KB working set > 128 KB
-            # SRAM. The link overflow IS the result (the flash/RAM barrier), not flashed.
+            # mbv2 on F446: the firmware with its plan exceeds 512 KB flash, and the
+            # 300 KB working set exceeds 128 KB SRAM. The link overflow IS the
+            # result (the flash/RAM barrier), not flashed.
             echo "  BARRIER: ${board}/${model}/${cfg} does not fit (link overflow) - expected"
         fi
     fi
