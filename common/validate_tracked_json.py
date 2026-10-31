@@ -818,7 +818,7 @@ def main() -> None:
     if mutation_checked:
         print("Verified that removing an expected Cortex matrix cell fails.")
     if reconstruction_checked:
-        print("Rebuilt the Cortex summary byte-for-byte from 27 source captures.")
+        print("Rebuilt the Cortex summary byte-for-byte from its source captures.")
     if performance_checked:
         if performance_observations:
             for observation in performance_observations:
