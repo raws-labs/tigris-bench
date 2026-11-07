@@ -7,11 +7,17 @@ same comparison on ESP32-S3). Build and run: see `BUILD.md`.
 
 ## Boards
 
-| Board | MCU | Core | Clock | Flash | RAM |
+| Board | Chip | Core | Clock | Flash | RAM |
 |---|---|---|---|---|---|
-| NUCLEO-H753ZI | STM32H753ZI | Cortex-M7 | 480 MHz | 2 MB | 1 MB (+128 KB DTCM / 64 KB ITCM) |
+| NUCLEO-H753ZI | STM32H753ZI | Cortex-M7 | 480 MHz | 2 MB | 1056 KB in 5 regions, largest 512 KB (AXI SRAM) |
 | NUCLEO-F446RE | STM32F446RE | Cortex-M4F | 180 MHz | 512 KB | 128 KB |
 | Raspberry Pi Pico 2 W | RP2350 | dual Cortex-M33 | 150 MHz | 4 MB (ext QSPI) | 520 KB |
+
+RAM sizes are the linker memory regions. The H753 regions are AXI SRAM 512 KB,
+SRAM D2 288 KB, SRAM D3 64 KB, DTCM 128 KB and ITCM 64 KB. Its linker script
+places `.data`, `.bss` and the heap in the AXI SRAM and the stack in DTCM. Every
+arena is `.bss`, so both the TFLM tensor arena and the TiGrIS arenas must fit in
+the one 512 KB AXI SRAM. KB and MB in this README are 1024 B and 1024 KB.
 
 ## Method
 
@@ -115,7 +121,7 @@ and stay fast.
 
 MobileNetV2 (alpha 0.35, 224x224, INT8, 413 KB weights, 52 convs with
 inverted-residual ADD skips) has a naive activation peak of 735 KB, larger than
-any of these boards' SRAM. TiGrIS tiles it to a 299.8 KB working set (126.4 KB
+the largest contiguous SRAM of any of these boards. TiGrIS tiles it to a 299.8 KB working set (126.4 KB
 fast + 171.5 KB slow-pool spill + 1.9 KB scratch/runtime metadata, 2 tiled
 stages), with bit-exact output across boards.
 
@@ -125,9 +131,15 @@ stages), with bit-exact output across boards.
 | RP2350 (520 KB) | runs, 1.82 s, 299.8 KB | n/a (no M33 lib) |
 | F446RE (128 KB) | does not fit | does not fit |
 
-- On the H753, TFLM given a 480 KB arena (nearly all of the 512 KB SRAM) fails
-  `AllocateTensors` with `ARENA_TOO_SMALL`: with no tiling it needs the full
-  735 KB. TiGrIS runs the identical model on the same board.
+- On the H753, TFLM given a 480 KB arena (491,520 B of the 512 KB AXI SRAM)
+  fails `AllocateTensors` with `ARENA_TOO_SMALL`. Its activation plan alone
+  needs at least 735 KB (752,640 B): the 1x1 expansion CONV_2D of the first
+  stride-2 block writes a 112x112x48 tensor (588 KB) that is still live while
+  the next operator, a stride-2 DEPTHWISE_CONV_2D, writes its 56x56x48 output
+  (147 KB). TFLM adds its persistent allocations on top. The device log states
+  no required size: the harness registers no TFLM debug-log callback, so the
+  allocator's message is dropped. TiGrIS runs the identical model on the same
+  board.
 - Rewritten by `tigris export`, the same model runs on stock TFLM on the H753:
   `arena_used` is 413.8 KB, and the output is identical to TiGrIS
   (`h753_mbv2_tflm_export`). Export finds no rewrite that lowers the arena of
