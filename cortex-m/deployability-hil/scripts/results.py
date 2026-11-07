@@ -57,6 +57,9 @@ def parse_output_values(lines: list[str]) -> dict:
             outputs["f32"] = [float(v) for v in line.split("OUTPUT_F32:")[1].split()]
         elif "OUTPUT_I8:" in line:
             outputs["i8"] = [int(v) for v in line.split("OUTPUT_I8:")[1].split()]
+        elif "OUTPUT_I8_SEEDED:" in line:
+            outputs.setdefault("i8_seeded", []).append(
+                [int(v) for v in line.split("OUTPUT_I8_SEEDED:")[1].split()])
     return outputs
 
 
@@ -70,7 +73,8 @@ def parse_clock_stage(lines: list[str]) -> int | None:
     return None
 
 
-def validate_capture_provenance(value: object, board: object) -> list[str]:
+def validate_capture_provenance(
+        value: object, board: object, framework: object = None) -> list[str]:
     """Validate the evidence appended by run_all.sh before it can be published."""
     if not isinstance(value, dict):
         return ["record must be a JSON object"]
@@ -164,7 +168,9 @@ def validate_capture_provenance(value: object, board: object) -> list[str]:
     if not isinstance(artifacts, dict):
         errors.append("artifacts must be an object")
     else:
-        for kind in ("model", "firmware"):
+        kinds = ("model", "firmware") + (
+            ("tflm_library",) if framework == "tflm" else ())
+        for kind in kinds:
             artifact = artifacts.get(kind)
             if not isinstance(artifact, dict):
                 errors.append(f"artifacts.{kind} must be an object")
@@ -176,6 +182,13 @@ def validate_capture_provenance(value: object, board: object) -> list[str]:
             size = artifact.get("size_bytes")
             if not isinstance(size, int) or isinstance(size, bool) or size <= 0:
                 errors.append(f"artifacts.{kind}.size_bytes must be positive")
+        library = artifacts.get("tflm_library")
+        if framework == "tflm" and isinstance(library, dict):
+            names = library.get("compilers")
+            if (not isinstance(names, list) or not names
+                    or not all(isinstance(n, str) and n for n in names)):
+                errors.append(
+                    "artifacts.tflm_library.compilers must be a non-empty list")
 
     board_record = value.get("board")
     if not isinstance(board_record, dict):
@@ -242,7 +255,8 @@ def parse_log(path: Path, require_provenance: bool = False) -> dict | None:
         if require_provenance:
             raise ValueError(f"{path.name}: missing {PROVENANCE_PREFIX} record")
     else:
-        errors = validate_capture_provenance(provenance, result.get("board"))
+        errors = validate_capture_provenance(
+            provenance, result.get("board"), result.get("framework"))
         if errors:
             raise ValueError(
                 f"{path.name}: invalid capture provenance: {'; '.join(errors)}")

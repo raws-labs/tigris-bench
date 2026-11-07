@@ -3,7 +3,8 @@
  *
  * Loads an INT8 .tgrs plan embedded in flash, runs warmup + N timed
  * inference runs timed with the DWT cycle counter, prints the INT8 output for
- * parity checking, and emits a machine-parseable result line.
+ * parity checking, emits a machine-parseable result line, then prints the
+ * outputs for the seeded parity inputs (parity_input.h).
  *
  * Board-independent: all hardware access goes through platform.h, implemented
  * per board under boards/<board>/.
@@ -19,6 +20,7 @@
  * Machine-parseable output:
  *   OUTPUT_I8: <int8 values...>
  *   BENCH_RESULT:framework=tigris,kernel=...,latency_median_ms=...,...
+ *   OUTPUT_I8_SEEDED: <int8 values...>   (BENCH_PARITY_VECTORS lines)
  *   BENCH_DONE
  */
 
@@ -36,6 +38,7 @@
 #include "tigris_kernels_cmsis_nn.h"
 #endif
 #include "tigris_codegen_core.h"
+#include "parity_input.h"
 
 /* Embedded plan blob (generated from the .tgrs by tools/bin2c.py). */
 extern const unsigned char g_tigris_plan[];
@@ -120,14 +123,23 @@ static void fill_benchmark_input(void *data, uint32_t size_bytes,
     memset(data, 1, size_bytes);  /* matches prepare.py's reference input */
 }
 
-/* Run one inference. Re-inits the arena state, refills inputs, returns the
- * DWT cycle count for the tigris_run() call. Sets *ok to 0 on failure. */
+/* Parity inputs: the next bytes of the stream whose state is user_ctx. */
+static void fill_parity_input(void *data, uint32_t size_bytes,
+                              uint16_t tensor_index, void *user_ctx)
+{
+    (void)tensor_index;
+    parity_fill((uint8_t *)data, size_bytes, (uint32_t *)user_ctx);
+}
+
+/* Run one inference. Re-inits the arena state, refills inputs with fill,
+ * returns the DWT cycle count for the tigris_run() call. Sets *ok to 0 on
+ * failure. */
 static uint32_t run_once(tigris_plan_t *plan, tigris_mem_t *mem,
                          tigris_kernel_fn dispatch,
+                         tigris_codegen_input_init_fn fill, void *fill_ctx,
                          tigris_exec_stats_t *out_stats, int *ok)
 {
-    tigris_error_t rerr = tigris_codegen_reset(
-        plan, mem, fill_benchmark_input, NULL);
+    tigris_error_t rerr = tigris_codegen_reset(plan, mem, fill, fill_ctx);
     if (rerr != TIGRIS_OK) {
         printf("generated setup failed: %s\n", tigris_error_str(rerr));
         *ok = 0;
@@ -157,6 +169,37 @@ static uint32_t run_once(tigris_plan_t *plan, tigris_mem_t *mem,
         *out_stats = stats;
     *ok = 1;
     return c1 - c0;
+}
+
+/* Print every model output as one "<label>: <int8 values...>" line. */
+static void print_outputs(const tigris_plan_t *plan, const tigris_mem_t *mem,
+                          const char *label)
+{
+    uint16_t n_out = plan->header->num_model_outputs;
+    uint16_t fallback_out;
+    const uint16_t *out_list;
+    if (n_out > 0) {
+        out_list = plan->model_outputs;
+    } else {
+        /* Stale plans built before the num_model_outputs compiler fix report 0
+         * outputs; fall back to the last op's first output (as the ESP harness
+         * does). For DS-CNN that is the 12-class tensor. */
+        const tigris_op_t *last = &plan->ops[plan->header->num_ops - 1];
+        fallback_out = tigris_op_outputs(plan, last)[0];
+        out_list = &fallback_out;
+        n_out = 1;
+    }
+    for (uint16_t i = 0; i < n_out; i++) {
+        uint16_t tidx = out_list[i];
+        const int8_t *out = (const int8_t *)mem->tensor_ptrs[tidx];
+        if (!out)
+            continue;
+        uint32_t n = plan->tensors[tidx].size_bytes;
+        printf("  %s:", label);
+        for (uint32_t j = 0; j < n; j++)
+            printf(" %d", (int)out[j]);
+        printf("\n");
+    }
 }
 
 /* In-place insertion sort - tiny N, no libc qsort dependency. */
@@ -307,7 +350,8 @@ int main(void)
     printf("Warmup (%d runs)...\n", WARMUP_RUNS);
     for (int i = 0; i < WARMUP_RUNS; i++) {
         int ok = 0;
-        uint32_t c = run_once(&plan, &mem, dispatch, NULL, &ok);
+        uint32_t c = run_once(&plan, &mem, dispatch, fill_benchmark_input, NULL,
+                              NULL, &ok);
         if (!ok) {
             emit_failed(model_name, "INFERENCE_FAILED");
             platform_halt();
@@ -326,7 +370,8 @@ int main(void)
     for (int i = 0; i < BENCH_RUNS; i++) {
         int ok = 0;
         tigris_exec_stats_t *sp = (i == BENCH_RUNS - 1) ? &last_stats : NULL;
-        cyc[i] = run_once(&plan, &mem, dispatch, sp, &ok);
+        cyc[i] = run_once(&plan, &mem, dispatch, fill_benchmark_input, NULL,
+                          sp, &ok);
         if (!ok) {
             emit_failed(model_name, "INFERENCE_FAILED");
             platform_halt();
@@ -368,32 +413,7 @@ int main(void)
 
     /* 6. Output values for parity validation. */
     printf("\nOutput values:\n");
-    uint16_t n_out = plan.header->num_model_outputs;
-    uint16_t fallback_out;
-    const uint16_t *out_list;
-    if (n_out > 0) {
-        out_list = plan.model_outputs;
-    } else {
-        /* Stale plans built before the num_model_outputs compiler fix report 0
-         * outputs; fall back to the last op's first output (as the ESP harness
-         * does). For DS-CNN that is the 12-class tensor. */
-        const tigris_op_t *last = &plan.ops[plan.header->num_ops - 1];
-        fallback_out = tigris_op_outputs(&plan, last)[0];
-        out_list = &fallback_out;
-        n_out = 1;
-    }
-    for (uint16_t i = 0; i < n_out; i++) {
-        uint16_t tidx = out_list[i];
-        void *out_ptr = mem.tensor_ptrs[tidx];
-        if (!out_ptr)
-            continue;
-        int8_t *out = (int8_t *)out_ptr;
-        uint32_t n = plan.tensors[tidx].size_bytes;
-        printf("  OUTPUT_I8:");
-        for (uint32_t j = 0; j < n; j++)
-            printf(" %d", (int)out[j]);
-        printf("\n");
-    }
+    print_outputs(&plan, &mem, "OUTPUT_I8");
 
     /* 6b. Honest, MEASURED SRAM working set. This is what is directly comparable
      *     to TFLM's interpreter.arena_used_bytes(): the actual peak bytes the
@@ -488,6 +508,20 @@ int main(void)
            (unsigned)last_stats.stages_tiled,
            (unsigned)last_stats.stages_chain,
            (unsigned)last_stats.total_tiles);
+
+    /* 8. Seeded parity inputs, after every reported figure is fixed. */
+    printf("\nSeeded parity outputs (%d inputs):\n", BENCH_PARITY_VECTORS);
+    uint32_t parity_state = BENCH_PARITY_SEED;
+    for (int k = 0; k < BENCH_PARITY_VECTORS; k++) {
+        int ok = 0;
+        (void)run_once(&plan, &mem, dispatch, fill_parity_input,
+                       &parity_state, NULL, &ok);
+        if (!ok) {
+            printf("PARITY_RUN_FAILED: input %d\n", k);
+            break;
+        }
+        print_outputs(&plan, &mem, "OUTPUT_I8_SEEDED");
+    }
 
     printf("BENCH_DONE\n");
 

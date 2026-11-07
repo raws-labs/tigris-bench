@@ -36,6 +36,12 @@ kernels the plan uses, as TFLM's op resolver does on its side. The benchmark
 harness supplies only the board entry point, statically sized arenas, benchmark
 input pattern, timing, and machine-parseable reporting.
 
+Every cell times its runs on a constant input (every int8 value 1), which is
+also the input the reported RAM comes from. After the result line it runs 8
+more inferences on pseudo-random int8 inputs (xorshift32 from a fixed seed,
+`harness/parity_input.h`); the TiGrIS and TFLM harnesses generate the same
+bytes, and the parity gate compares the outputs for all 9 inputs.
+
 Three INT8 models are used: DS-CNN (keyword spotting, conv/depthwise, ~23K
 params / 24 KB weights), an anomaly-detection dense autoencoder (~266K params /
 265 KB weights, 10 FC layers), and a 1D-signal timeseries CNN (3 strided convs +
@@ -144,10 +150,14 @@ provenance. See `BUILD.md` for the build knobs and a locally-attached-board
 SHA-256 digests and records the paths and hashes of all source captures. The
 summary embeds the actual compiler, runtime, TFLM, CMSIS and SDK revisions;
 tool and Python-environment versions; build invocations; model and firmware
-hashes/sizes; capture timestamps; and SiliconRig board identities. The captures
-are not shipped in a clone, but their hashes are retained so an obtained capture
-set can be checked. Host validation always checks tracked artifact/tool hashes
-and also checks source-capture hashes when those gitignored files are present.
+hashes/sizes; for TFLM cells, the hash and size of the linked
+`libtensorflow-microlite.a` and the compilers named in its `.comment` sections
+(built with the toolchain TFLM downloads, which can differ from the recorded
+`arm_none_eabi_gcc`); capture timestamps; and SiliconRig board identities. The
+captures are not shipped in a clone, but their hashes are retained so an
+obtained capture set can be checked. Host validation always checks tracked
+artifact/tool hashes and also checks source-capture hashes when those
+gitignored files are present.
 When the complete capture set is available, it reruns the collector in a
 temporary directory and requires byte-identical `summary.json` output; a clean
 clone skips that reconstruction and does not report it as verified.

@@ -10,9 +10,10 @@ import unittest
 SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "validate_accuracy.py"
 
 
-def _record(framework, output):
+def _record(framework, output, seeded=([4, 5, 6], [-7, 8, -9])):
     return {"framework": framework, "kernel": "cmsis_nn", "board": "nucleo_h753zi",
-            "model": "ds_cnn", "status": "ok", "output_values": {"i8": output}}
+            "model": "ds_cnn", "status": "ok",
+            "output_values": {"i8": output, "i8_seeded": [list(v) for v in seeded]}}
 
 
 class ParityValidatorTest(unittest.TestCase):
@@ -34,6 +35,17 @@ class ParityValidatorTest(unittest.TestCase):
 
     def test_one_missing_vector_fails(self):
         result = self._run([_record("tigris", [1, -2, 3]), _record("tflm", [])])
+        self.assertNotEqual(result.returncode, 0)
+
+    def test_missing_seeded_vectors_fail(self):
+        result = self._run([_record("tigris", [1, -2, 3], seeded=()),
+                            _record("tflm", [1, -2, 3], seeded=())])
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("without OUTPUT_I8_SEEDED", result.stdout)
+
+    def test_differing_seeded_vector_fails(self):
+        result = self._run([_record("tigris", [1, -2, 3]),
+                            _record("tflm", [1, -2, 3], seeded=([4, 5, 6], [-7, 8, -8]))])
         self.assertNotEqual(result.returncode, 0)
 
 
