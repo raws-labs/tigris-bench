@@ -113,8 +113,9 @@ MANIFEST="$(mktemp)"
 RUN_RAW="$(mktemp -d)"
 COLLECTED_SUMMARY="$(mktemp)"
 trap 'rm -f "$MANIFEST" "$COLLECTED_SUMMARY"; rm -rf "$RUN_RAW"' EXIT
-# rigtype, firmware, log name, timeout, embedded model, exact CMake invocation
-emit() { printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$1" "$2" "$3" "$4" "$5" "$6" >> "$MANIFEST"; }
+# rigtype, firmware, log name, timeout, embedded model, exact CMake invocation,
+# linked TFLM library (empty for TiGrIS cells)
+emit() { printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$1" "$2" "$3" "$4" "$5" "$6" "${7:-}" >> "$MANIFEST"; }
 command_string() { printf -v REPLY '%q ' "$@"; REPLY="${REPLY% }"; }
 
 build_cell() {   # board model config
@@ -166,7 +167,8 @@ build_cell() {   # board model config
         cmake --build "$bd" -j"$NPROC" >/dev/null
         emit "${RIG[$board]}" "$bd/tflm_bench.bin" \
              "${board}_${model}_${cfg}" "$to" \
-             "$tflm_dir/${tflm_model}_tflite_i8.h" "$configure_command"
+             "$tflm_dir/${tflm_model}_tflite_i8.h" "$configure_command" \
+             "$(cat "$bd/tflm_lib.path")"
     else
         local -a configure=(cmake "${common[@]}" -DBENCH_KERNEL="$cfg"
                             -DBENCH_MODEL="$model"
@@ -204,6 +206,7 @@ import collections
 import hashlib
 import importlib.metadata
 import json
+import re
 import subprocess
 import sys
 import time
@@ -254,6 +257,13 @@ def artifact(path):
         "sha256": sha256(path),
         "size_bytes": path.stat().st_size,
     }
+
+
+def compilers(path):
+    """Distinct .comment strings of an archive: the compilers that built it."""
+    dump = command("arm-none-eabi-readelf", "-p", ".comment", str(path))
+    return sorted({m.group(1).strip() for m in re.finditer(
+        r"^\s*\[\s*[0-9a-f]+\]\s+(.+)$", dump, re.MULTILINE)})
 
 
 def checked_python_environment(path):
@@ -315,8 +325,8 @@ common = {
 
 cells = collections.defaultdict(list)
 for line in open(manifest):
-    bt, fw, name, to, model, configure = line.rstrip("\n").split("\t")
-    cells[bt].append((fw, name, float(to), model, configure))
+    bt, fw, name, to, model, configure, library = line.rstrip("\n").split("\t")
+    cells[bt].append((fw, name, float(to), model, configure, library))
 
 c = Client()
 
@@ -364,7 +374,7 @@ try:
             }
             if not board["siliconrig_board_id"]:
                 raise RuntimeError("SiliconRig did not report the allocated board ID")
-            for fw, name, to, model, configure in items:
+            for fw, name, to, model, configure, library in items:
                 log, status = "", "ok"
                 try:
                     s.flash(fw, timeout=300)     # bridge uploads can take ~2.5 minutes
@@ -384,6 +394,9 @@ try:
                     },
                     "board": board,
                 }
+                if library:
+                    provenance["artifacts"]["tflm_library"] = {
+                        **artifact(library), "compilers": compilers(library)}
                 if log and not log.endswith("\n"):
                     log += "\n"
                 log += "BENCH_PROVENANCE:" + json.dumps(

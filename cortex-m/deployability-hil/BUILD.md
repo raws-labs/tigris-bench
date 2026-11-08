@@ -43,8 +43,9 @@ captures each on the SiliconRig remote lab until `BENCH_DONE`, writes
 `results/summary.json`, and runs the device-to-device parity gate. Raw serial logs
 land in `results/raw/` (gitignored; `summary.json` is the tracked artifact). Each
 raw capture also carries a machine-readable provenance record for the exact
-repositories, dependencies, tools, build invocation, model, firmware, and
-allocated board. Collection fails if that evidence is missing or incomplete.
+repositories, dependencies, tools, build invocation, model, firmware, linked
+TFLM library (TFLM cells), and allocated board. Collection fails if that
+evidence is missing or incomplete.
 
 ## Manual steps
 
@@ -91,6 +92,12 @@ PATH="$PWD/tensorflow/lite/micro/tools/make/downloads/gcc_embedded/bin:$PATH" \
   BUILD_TYPE=release_with_logs OPTIMIZED_KERNEL_DIR=cmsis_nn microlite -j
 # -> gen/cortex_m_generic_<arch>_release_with_logs_cmsis_nn_gcc/lib/libtensorflow-microlite.a
 ```
+
+The `PATH` line selects the toolchain TFLM's make downloads (pinned in
+`tensorflow/lite/micro/tools/make/arm_gcc_download.sh`), so the library's gcc
+can differ from the one that builds the firmware. `run_all.sh` records the
+library's SHA-256, its size and the compilers named in its `.comment` sections
+as `artifacts.tflm_library` of each TFLM capture.
 
 Then build the TFLM firmware: `-DBENCH_FRAMEWORK=tflm -DTFLM_MODEL=<model>`
 (e.g. `ds_cnn` / `ad` / `ts`; for an exported model, `-DTFLM_MODEL=mbv2_export
@@ -158,6 +165,8 @@ cat /dev/ttyACM0 > results/raw/pico_ts_cmsis.log   # stop at BENCH_DONE
   `results/raw/` dir to read logs instead). It groups by (board, model) and compares
   the int8 `OUTPUT_I8` vectors of `tigris/cmsis_nn` vs `tflm/cmsis_nn` and of the
   `tflm_export` cell vs both (bit-exact), and `tigris/s8_ref` vs
-  `tigris/cmsis_nn` (+-1 LSB requant nudge). A (board, model)
+  `tigris/cmsis_nn` (+-1 LSB requant nudge), each on the constant input and on
+  the `BENCH_PARITY_VECTORS` (default 8) seeded inputs of
+  `harness/parity_input.h` (`OUTPUT_I8_SEEDED` lines). A (board, model)
   with no TFLM baseline is reported INCOMPLETE, never silently passed. The host
   ORT/tflite interpreter is NOT a valid baseline (different kernels).
