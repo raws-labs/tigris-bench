@@ -61,24 +61,24 @@ int8 weights plus biases, measured from the committed plans.
 | Framework | Kernel | Latency | Cycles | RAM (work. set) | Flash (firmware) |
 |---|---|---|---|---|---|
 | TiGrIS | cmsis_nn | 11.22 ms | 5.38 M | 16.0 KB | 157 KB |
-| TFLM | cmsis_nn | 12.80 ms | 6.14 M | 22.2 KB | 187 KB |
+| TFLM | cmsis_nn | 12.84 ms | 6.16 M | 22.2 KB | 187 KB |
 | TiGrIS | s8_ref | 43.86 ms | 21.05 M | 15.9 KB | 131 KB |
 
 **Anomaly detection:**
 
 | Framework | Kernel | Latency | Cycles | RAM (work. set) | Flash (firmware) |
 |---|---|---|---|---|---|
-| TiGrIS | cmsis_nn | 1.21 ms | 580 K | 0.9 KB | 387 KB |
-| TFLM | cmsis_nn | 1.17 ms | 561 K | 15.5 KB | 428 KB |
+| TiGrIS | cmsis_nn | 1.21 ms | 579 K | 0.9 KB | 387 KB |
+| TFLM | cmsis_nn | 1.16 ms | 559 K | 15.5 KB | 428 KB |
 | TiGrIS | s8_ref | 2.73 ms | 1.31 M | 0.9 KB | 375 KB |
 
 **Timeseries:**
 
 | Framework | Kernel | Latency | Cycles | RAM (work. set) | Flash (firmware) |
 |---|---|---|---|---|---|
-| TiGrIS | cmsis_nn | 0.314 ms | 151 K | 1.5 KB | 127 KB |
+| TiGrIS | cmsis_nn | 0.313 ms | 150 K | 1.5 KB | 127 KB |
 | TFLM | cmsis_nn | 0.347 ms | 167 K | 2.9 KB | 156 KB |
-| TiGrIS | s8_ref | 0.920 ms | 442 K | 1.1 KB | 106 KB |
+| TiGrIS | s8_ref | 0.920 ms | 442 K | 1.1 KB | 107 KB |
 
 - Output is bit-exact device-to-device: every (model, framework, kernel) cell
   emits the identical INT8 vector (max abs diff 0), checked by
@@ -93,9 +93,9 @@ int8 weights plus biases, measured from the committed plans.
 
 | Model | TiGrIS cmsis | TFLM cmsis | TiGrIS s8 | RAM (TiGrIS / TFLM) |
 |---|---|---|---|---|
-| TS | 1.62 ms | 1.80 ms | 5.49 ms | 1.5 / 2.9 KB |
-| AD | 5.04 ms | 4.81 ms | 14.95 ms | 0.9 / 15.5 KB |
-| DS-CNN | 63.71 ms | 68.19 ms | 271.30 ms | 16.0 / 22.2 KB |
+| TS | 1.62 ms | 1.81 ms | 5.49 ms | 1.5 / 2.9 KB |
+| AD | 5.04 ms | 4.82 ms | 14.95 ms | 0.9 / 15.5 KB |
+| DS-CNN | 63.71 ms | 69.08 ms | 271.52 ms | 16.0 / 22.2 KB |
 
 Output is byte-identical to the H753 (same weights, two architectures). The
 128 KB SRAM holds every model.
@@ -109,8 +109,8 @@ byte-identical to the H753 and F446. Weights are read from QSPI flash via XIP.
 | Model | TiGrIS cmsis | TiGrIS s8 | RAM |
 |---|---|---|---|
 | TS | 2.69 ms | 5.95 ms | 1.5 KB |
-| AD | 35.52 ms | 28.83 ms | 0.9 KB |
-| DS-CNN | 63.64 ms | 238.72 ms | 16.0 KB |
+| AD | 35.53 ms | 28.79 ms | 0.9 KB |
+| DS-CNN | 64.05 ms | 238.72 ms | 16.0 KB |
 
 The FC-heavy AD is slower here (35.52 ms vs 5.04 ms on the F446): each of its
 265 KB of weights is read once per inference from XIP flash with no reuse, so it
@@ -128,7 +128,7 @@ stages), with bit-exact output across boards.
 | Board (SRAM) | TiGrIS (tiled) | TFLM (no tiling) |
 |---|---|---|
 | H753ZI (512 KB) | runs, 0.37 s, 299.8 KB | OOM at AllocateTensors |
-| RP2350 (520 KB) | runs, 1.82 s, 299.8 KB | n/a (no M33 lib) |
+| RP2350 (520 KB) | runs, 1.81 s, 299.8 KB | n/a (no M33 lib) |
 | F446RE (128 KB) | does not fit | does not fit |
 
 - On the H753, TFLM given a 480 KB arena (491,520 B of the 512 KB AXI SRAM)
