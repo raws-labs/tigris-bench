@@ -185,6 +185,8 @@ elseif(BENCH_FRAMEWORK STREQUAL "tflm")
         ${CMAKE_CURRENT_SOURCE_DIR}/harness
         ${TFLM_MODEL_DIR} ${BOARD_INCLUDES})
     target_link_libraries(tflm_bench PRIVATE ${TFLM_LIB})
+    # run_all.sh records the linked library's hash and compilers per capture.
+    file(WRITE ${CMAKE_BINARY_DIR}/tflm_lib.path "${TFLM_LIB}")
     add_custom_command(TARGET tflm_bench POST_BUILD
         COMMAND ${CMAKE_OBJCOPY} -O binary $<TARGET_FILE:tflm_bench> ${CMAKE_BINARY_DIR}/tflm_bench.bin
         COMMAND ${CMAKE_SIZE} $<TARGET_FILE:tflm_bench>

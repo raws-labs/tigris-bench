@@ -8,8 +8,10 @@ actually produced. The host ORT / tflite interpreter is NOT a valid baseline (it
 uses different kernels and differs from on-device CMSIS-NN by ~1 LSB).
 
 This reads results/summary.json (the tracked artifact, which carries each cell's
-OUTPUT_I8 vector, so parity is verifiable from a clone without the raw serial
-logs), or a directory of raw *.log captures. It groups by (board, model) and checks:
+OUTPUT_I8 vector and its OUTPUT_I8_SEEDED vectors, so parity is verifiable from a
+clone without the raw serial logs), or a directory of raw *.log captures. Every
+pair compares the constant-input vector and each seeded-input vector
+(harness/parity_input.h). It groups by (board, model) and checks:
   - tigris/cmsis_nn  vs  tflm/cmsis_nn   the headline device-to-device parity
                                          (must be bit-exact: same CMSIS-NN kernels,
                                          plan compiled from the same .tflite)
@@ -50,20 +52,22 @@ def parse_log(path: Path) -> dict | None:
     out: list[int] = []
     for line in re.findall(r"OUTPUT_I8:([^\n]*)", text):
         out.extend(int(v) for v in line.split())
+    seeded = [[int(v) for v in line.split()]
+              for line in re.findall(r"OUTPUT_I8_SEEDED:([^\n]*)", text)]
     return record(path.name, fields.get("framework", "?"), fields.get("kernel", "?"),
                   fields.get("board", "?"), fields.get("model", "?"),
-                  fields.get("status", "?"), out)
+                  fields.get("status", "?"), out, seeded)
 
 
 def record(log: str, framework: str, kernel: str, board: str, model: str,
-           status: str, output: list[int]) -> dict:
+           status: str, output: list[int], seeded: list[list[int]]) -> dict:
     # The TFLM cell running the `tigris export` rewrite of a model reports
     # "<model>_export"; it is grouped with its source model as framework
     # "tflm_export" so every pair of the same network lines up.
     if framework == "tflm" and model.endswith("_export"):
         framework, model = "tflm_export", model.removesuffix("_export")
     return {"log": log, "framework": framework, "kernel": kernel, "board": board,
-            "model": model, "status": status, "output": output}
+            "model": model, "status": status, "output": output, "seeded": seeded}
 
 
 def compare(a: dict, b: dict, tol: int) -> tuple[str, str]:
@@ -76,10 +80,19 @@ def compare(a: dict, b: dict, tol: int) -> tuple[str, str]:
         return "fail", f"successful record without OUTPUT_I8 ({missing})"
     if len(va) != len(vb):
         return "fail", f"length mismatch: {len(va)} vs {len(vb)}"
-    diff = np.abs(np.array(va, np.int32) - np.array(vb, np.int32))
+    sa, sb = a["seeded"], b["seeded"]
+    if not sa or not sb:
+        missing = " and ".join(r["log"] for r in (a, b) if not r["seeded"])
+        return "fail", f"successful record without OUTPUT_I8_SEEDED ({missing})"
+    if len(sa) != len(sb):
+        return "fail", f"seeded input count mismatch: {len(sa)} vs {len(sb)}"
+    if any(len(v) != len(va) for v in [*sa, *sb]):
+        return "fail", "seeded output length differs from the constant-input output"
+    diff = np.abs(np.array([va, *sa], np.int32) - np.array([vb, *sb], np.int32))
     max_abs = int(diff.max())
     n_diff = int((diff > 0).sum())
-    msg = f"max_abs_diff={max_abs}, differing={n_diff}/{len(va)}"
+    msg = (f"max_abs_diff={max_abs}, differing={n_diff}/{diff.size} "
+           f"over {1 + len(sa)} inputs")
     return ("pass" if max_abs <= tol else "fail"), msg
 
 
@@ -90,7 +103,8 @@ def records_from_summary(path: Path) -> list[dict]:
     return [
         record(path.name, c.get("framework", "?"), c.get("kernel", "?"),
                c.get("board", "?"), c.get("model", "?"), c.get("status", "?"),
-               (c.get("output_values") or {}).get("i8", []))
+               (c.get("output_values") or {}).get("i8", []),
+               (c.get("output_values") or {}).get("i8_seeded", []))
         for c in json.loads(path.read_text()).get("configs", [])
     ]
 

@@ -7,11 +7,17 @@ same comparison on ESP32-S3). Build and run: see `BUILD.md`.
 
 ## Boards
 
-| Board | MCU | Core | Clock | Flash | RAM |
+| Board | Chip | Core | Clock | Flash | RAM |
 |---|---|---|---|---|---|
-| NUCLEO-H753ZI | STM32H753ZI | Cortex-M7 | 480 MHz | 2 MB | 1 MB (+128 KB DTCM / 64 KB ITCM) |
+| NUCLEO-H753ZI | STM32H753ZI | Cortex-M7 | 480 MHz | 2 MB | 1056 KB in 5 regions, largest 512 KB (AXI SRAM) |
 | NUCLEO-F446RE | STM32F446RE | Cortex-M4F | 180 MHz | 512 KB | 128 KB |
 | Raspberry Pi Pico 2 W | RP2350 | dual Cortex-M33 | 150 MHz | 4 MB (ext QSPI) | 520 KB |
+
+RAM sizes are the linker memory regions. The H753 regions are AXI SRAM 512 KB,
+SRAM D2 288 KB, SRAM D3 64 KB, DTCM 128 KB and ITCM 64 KB. Its linker script
+places `.data`, `.bss` and the heap in the AXI SRAM and the stack in DTCM. Every
+arena is `.bss`, so both the TFLM tensor arena and the TiGrIS arenas must fit in
+the one 512 KB AXI SRAM. KB and MB in this README are 1024 B and 1024 KB.
 
 ## Method
 
@@ -36,6 +42,12 @@ kernels the plan uses, as TFLM's op resolver does on its side. The benchmark
 harness supplies only the board entry point, statically sized arenas, benchmark
 input pattern, timing, and machine-parseable reporting.
 
+Every cell times its runs on a constant input (every int8 value 1), which is
+also the input the reported RAM comes from. After the result line it runs 8
+more inferences on pseudo-random int8 inputs (xorshift32 from a fixed seed,
+`harness/parity_input.h`); the TiGrIS and TFLM harnesses generate the same
+bytes, and the parity gate compares the outputs for all 9 inputs.
+
 Three INT8 models are used: DS-CNN (keyword spotting, conv/depthwise, ~23K
 params / 24 KB weights), an anomaly-detection dense autoencoder (~266K params /
 265 KB weights, 10 FC layers), and a 1D-signal timeseries CNN (3 strided convs +
@@ -49,28 +61,28 @@ int8 weights plus biases, measured from the committed plans.
 | Framework | Kernel | Latency | Cycles | RAM (work. set) | Flash (firmware) |
 |---|---|---|---|---|---|
 | TiGrIS | cmsis_nn | 11.22 ms | 5.38 M | 16.0 KB | 157 KB |
-| TFLM | cmsis_nn | 12.80 ms | 6.14 M | 22.2 KB | 187 KB |
+| TFLM | cmsis_nn | 12.84 ms | 6.16 M | 22.2 KB | 187 KB |
 | TiGrIS | s8_ref | 43.86 ms | 21.05 M | 15.9 KB | 131 KB |
 
 **Anomaly detection:**
 
 | Framework | Kernel | Latency | Cycles | RAM (work. set) | Flash (firmware) |
 |---|---|---|---|---|---|
-| TiGrIS | cmsis_nn | 1.21 ms | 580 K | 0.9 KB | 387 KB |
-| TFLM | cmsis_nn | 1.17 ms | 561 K | 15.5 KB | 428 KB |
+| TiGrIS | cmsis_nn | 1.21 ms | 579 K | 0.9 KB | 387 KB |
+| TFLM | cmsis_nn | 1.16 ms | 559 K | 15.5 KB | 428 KB |
 | TiGrIS | s8_ref | 2.73 ms | 1.31 M | 0.9 KB | 375 KB |
 
 **Timeseries:**
 
 | Framework | Kernel | Latency | Cycles | RAM (work. set) | Flash (firmware) |
 |---|---|---|---|---|---|
-| TiGrIS | cmsis_nn | 0.314 ms | 151 K | 1.5 KB | 127 KB |
+| TiGrIS | cmsis_nn | 0.313 ms | 150 K | 1.5 KB | 127 KB |
 | TFLM | cmsis_nn | 0.347 ms | 167 K | 2.9 KB | 156 KB |
-| TiGrIS | s8_ref | 0.920 ms | 442 K | 1.1 KB | 106 KB |
+| TiGrIS | s8_ref | 0.920 ms | 442 K | 1.1 KB | 107 KB |
 
 - Output is bit-exact device-to-device: every (model, framework, kernel) cell
-  emits the identical INT8 vector (max abs diff 0), checked by
-  `scripts/validate_accuracy.py`.
+  emits the identical INT8 vector (max abs diff 0) on the constant input and on
+  each of the 8 seeded inputs, checked by `scripts/validate_accuracy.py`.
 - CMSIS-NN vs the portable reference kernels (same model, both `-O2`): 3.9x
   (DS-CNN) / 2.3x (AD) / 2.9x (TS) on the M7.
 - Cycles are clock-independent; ms is at 480 MHz.
@@ -81,9 +93,9 @@ int8 weights plus biases, measured from the committed plans.
 
 | Model | TiGrIS cmsis | TFLM cmsis | TiGrIS s8 | RAM (TiGrIS / TFLM) |
 |---|---|---|---|---|
-| TS | 1.62 ms | 1.80 ms | 5.49 ms | 1.5 / 2.9 KB |
-| AD | 5.04 ms | 4.81 ms | 14.95 ms | 0.9 / 15.5 KB |
-| DS-CNN | 63.71 ms | 68.19 ms | 271.30 ms | 16.0 / 22.2 KB |
+| TS | 1.62 ms | 1.81 ms | 5.49 ms | 1.5 / 2.9 KB |
+| AD | 5.04 ms | 4.82 ms | 14.95 ms | 0.9 / 15.5 KB |
+| DS-CNN | 63.71 ms | 69.08 ms | 271.52 ms | 16.0 / 22.2 KB |
 
 Output is byte-identical to the H753 (same weights, two architectures). The
 128 KB SRAM holds every model.
@@ -97,8 +109,8 @@ byte-identical to the H753 and F446. Weights are read from QSPI flash via XIP.
 | Model | TiGrIS cmsis | TiGrIS s8 | RAM |
 |---|---|---|---|
 | TS | 2.69 ms | 5.95 ms | 1.5 KB |
-| AD | 35.52 ms | 28.83 ms | 0.9 KB |
-| DS-CNN | 63.64 ms | 238.72 ms | 16.0 KB |
+| AD | 35.53 ms | 28.79 ms | 0.9 KB |
+| DS-CNN | 64.05 ms | 238.72 ms | 16.0 KB |
 
 The FC-heavy AD is slower here (35.52 ms vs 5.04 ms on the F446): each of its
 265 KB of weights is read once per inference from XIP flash with no reuse, so it
@@ -109,26 +121,33 @@ and stay fast.
 
 MobileNetV2 (alpha 0.35, 224x224, INT8, 413 KB weights, 52 convs with
 inverted-residual ADD skips) has a naive activation peak of 735 KB, larger than
-any of these boards' SRAM. TiGrIS tiles it to a 299.8 KB working set (126.4 KB
-fast + 171.5 KB slow-pool spill + 1.9 KB scratch/runtime metadata, 2 tiled
-stages), with bit-exact output across boards.
+the largest contiguous SRAM of any of these boards. TiGrIS tiles it to a
+299.8 KB working set (126.4 KB fast + 171.5 KB slow-pool spill + 1.9 KB
+scratch/runtime metadata; 15 of its 17 stages tiled, 13 of them in chains), with
+bit-exact output across boards.
 
 | Board (SRAM) | TiGrIS (tiled) | TFLM (no tiling) |
 |---|---|---|
 | H753ZI (512 KB) | runs, 0.37 s, 299.8 KB | OOM at AllocateTensors |
-| RP2350 (520 KB) | runs, 1.82 s, 299.8 KB | n/a (no M33 lib) |
+| RP2350 (520 KB) | runs, 1.81 s, 299.8 KB | n/a (no M33 lib) |
 | F446RE (128 KB) | does not fit | does not fit |
 
-- On the H753, TFLM given a 480 KB arena (nearly all of the 512 KB SRAM) fails
-  `AllocateTensors` with `ARENA_TOO_SMALL`: with no tiling it needs the full
-  735 KB. TiGrIS runs the identical model on the same board.
+- On the H753, TFLM given a 480 KB arena (491,520 B of the 512 KB AXI SRAM)
+  fails `AllocateTensors` with `ARENA_TOO_SMALL`. Its activation plan alone
+  needs at least 735 KB (752,640 B): the 1x1 expansion CONV_2D of the first
+  stride-2 block writes a 112x112x48 tensor (588 KB) that is still live while
+  the next operator, a stride-2 DEPTHWISE_CONV_2D, writes its 56x56x48 output
+  (147 KB). TFLM adds its persistent allocations on top. The device log states
+  no required size: the harness registers no TFLM debug-log callback, so the
+  allocator's message is dropped. TiGrIS runs the identical model on the same
+  board.
 - Rewritten by `tigris export`, the same model runs on stock TFLM on the H753:
   `arena_used` is 413.8 KB, and the output is identical to TiGrIS
   (`h753_mbv2_tflm_export`). Export finds no rewrite that lowers the arena of
   the other three models.
 - The F446 cannot hold MobileNetV2: the firmware with its 477 KB plan exceeds
   the 512 KB flash, and the 300 KB tiled working set exceeds its 128 KB SRAM.
-- RP2350 is ~4.9x slower than the H753 on this model (XIP-bound: 413 KB of
+- RP2350 is ~4.8x slower than the H753 on this model (XIP-bound: 413 KB of
   weights streamed from QSPI flash each inference, plus the lower clock).
 
 ## Reproduce
@@ -136,18 +155,22 @@ stages), with bit-exact output across boards.
 `SRIG_API_KEY=... ./scripts/run_all.sh` builds every cell, flashes and captures
 on the SiliconRig lab, aggregates, and runs the parity gate. Raw serial logs land
 in `results/raw/` (gitignored); the tracked artifact is `results/summary.json`,
-which carries each cell's numbers, `OUTPUT_I8` vector, and deduplicated execution
-provenance. See `BUILD.md` for the build knobs and a locally-attached-board
-(no-rig) path.
+which carries each cell's numbers, `OUTPUT_I8` and `OUTPUT_I8_SEEDED` vectors,
+and deduplicated execution provenance. See `BUILD.md` for the build knobs and a
+locally-attached-board (no-rig) path.
 
 `results/provenance.json` binds that summary and its collector/validator to
 SHA-256 digests and records the paths and hashes of all source captures. The
 summary embeds the actual compiler, runtime, TFLM, CMSIS and SDK revisions;
 tool and Python-environment versions; build invocations; model and firmware
-hashes/sizes; capture timestamps; and SiliconRig board identities. The captures
-are not shipped in a clone, but their hashes are retained so an obtained capture
-set can be checked. Host validation always checks tracked artifact/tool hashes
-and also checks source-capture hashes when those gitignored files are present.
+hashes/sizes; for TFLM cells, the hash and size of the linked
+`libtensorflow-microlite.a` and the compilers named in its `.comment` sections
+(built with the toolchain TFLM downloads, which can differ from the recorded
+`arm_none_eabi_gcc`); capture timestamps; and SiliconRig board identities. The
+captures are not shipped in a clone, but their hashes are retained so an
+obtained capture set can be checked. Host validation always checks tracked
+artifact/tool hashes and also checks source-capture hashes when those
+gitignored files are present.
 When the complete capture set is available, it reruns the collector in a
 temporary directory and requires byte-identical `summary.json` output; a clean
 clone skips that reconstruction and does not report it as verified.

@@ -395,6 +395,17 @@ class CaptureProvenanceTest(unittest.TestCase):
             provenance, "nucleo_h753zi")
         self.assertIn("artifacts.firmware.sha256 must be a SHA-256", errors)
 
+    def test_tflm_capture_requires_library_record(self) -> None:
+        provenance = valid_capture_provenance()
+        errors = cortex_results.validate_capture_provenance(
+            provenance, "nucleo_h753zi", "tflm")
+        self.assertIn("artifacts.tflm_library must be an object", errors)
+        provenance["artifacts"]["tflm_library"] = {
+            "name": "libtensorflow-microlite.a", "sha256": "2" * 64,
+            "size_bytes": 42, "compilers": ["GCC: 14.3.1"]}
+        self.assertEqual(cortex_results.validate_capture_provenance(
+            provenance, "nucleo_h753zi", "tflm"), [])
+
     def test_rp2350_requires_pico_sdk_revision(self) -> None:
         provenance = valid_capture_provenance()
         errors = cortex_results.validate_capture_provenance(

@@ -9,8 +9,9 @@
  * PARITY: TiGrIS compiles its plan from this exact .tflite, so both frameworks
  * execute the same INT8 weights through CMSIS-NN and the OUTPUT_I8 vectors are
  * directly comparable device-to-device. Both also fill the input with int8
- * value 1, so the comparison is well-defined. A model rewritten by
- * `tigris export` runs here unchanged and must give the same output.
+ * value 1, then with the same seeded bytes (parity_input.h), so the comparison
+ * is well-defined. A model rewritten by `tigris export` runs here unchanged and
+ * must give the same output.
  */
 
 #include <cstdint>
@@ -20,6 +21,7 @@
 extern "C" {
 #include "platform.h"
 }
+#include "parity_input.h"
 
 #include "tensorflow/lite/micro/micro_interpreter.h"
 #include "tensorflow/lite/micro/micro_mutable_op_resolver.h"
@@ -203,6 +205,22 @@ int main(void)
            /* arena_used_bytes() is TFLM's true activation working set. */
            (unsigned long)arena_used, (unsigned long)(arena_used / 1024),
            (unsigned long)(TFLM_MODEL_LEN / 1024), BENCH_RUNS);
+
+    /* Seeded parity inputs, after every reported figure is fixed. */
+    printf("\nSeeded parity outputs (%d inputs):\n", BENCH_PARITY_VECTORS);
+    uint32_t parity_state = BENCH_PARITY_SEED;
+    for (int k = 0; k < BENCH_PARITY_VECTORS; k++) {
+        parity_fill(reinterpret_cast<uint8_t *>(input->data.int8),
+                    (uint32_t)input->bytes, &parity_state);
+        if (interpreter.Invoke() != kTfLiteOk) {
+            printf("PARITY_RUN_FAILED: input %d\n", k);
+            break;
+        }
+        printf("  OUTPUT_I8_SEEDED:");
+        for (size_t j = 0; j < output->bytes; j++)
+            printf(" %d", (int)output->data.int8[j]);
+        printf("\n");
+    }
     printf("BENCH_DONE\n");
 
     platform_halt();
