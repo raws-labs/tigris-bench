@@ -81,8 +81,8 @@ int8 weights plus biases, measured from the committed plans.
 | TiGrIS | s8_ref | 0.920 ms | 442 K | 1.1 KB | 107 KB |
 
 - Output is bit-exact device-to-device: every (model, framework, kernel) cell
-  emits the identical INT8 vector (max abs diff 0), checked by
-  `scripts/validate_accuracy.py`.
+  emits the identical INT8 vector (max abs diff 0) on the constant input and on
+  each of the 8 seeded inputs, checked by `scripts/validate_accuracy.py`.
 - CMSIS-NN vs the portable reference kernels (same model, both `-O2`): 3.9x
   (DS-CNN) / 2.3x (AD) / 2.9x (TS) on the M7.
 - Cycles are clock-independent; ms is at 480 MHz.
@@ -121,9 +121,10 @@ and stay fast.
 
 MobileNetV2 (alpha 0.35, 224x224, INT8, 413 KB weights, 52 convs with
 inverted-residual ADD skips) has a naive activation peak of 735 KB, larger than
-the largest contiguous SRAM of any of these boards. TiGrIS tiles it to a 299.8 KB working set (126.4 KB
-fast + 171.5 KB slow-pool spill + 1.9 KB scratch/runtime metadata, 2 tiled
-stages), with bit-exact output across boards.
+the largest contiguous SRAM of any of these boards. TiGrIS tiles it to a
+299.8 KB working set (126.4 KB fast + 171.5 KB slow-pool spill + 1.9 KB
+scratch/runtime metadata; 15 of its 17 stages tiled, 13 of them in chains), with
+bit-exact output across boards.
 
 | Board (SRAM) | TiGrIS (tiled) | TFLM (no tiling) |
 |---|---|---|
@@ -146,7 +147,7 @@ stages), with bit-exact output across boards.
   the other three models.
 - The F446 cannot hold MobileNetV2: the firmware with its 477 KB plan exceeds
   the 512 KB flash, and the 300 KB tiled working set exceeds its 128 KB SRAM.
-- RP2350 is ~4.9x slower than the H753 on this model (XIP-bound: 413 KB of
+- RP2350 is ~4.8x slower than the H753 on this model (XIP-bound: 413 KB of
   weights streamed from QSPI flash each inference, plus the lower clock).
 
 ## Reproduce
@@ -154,9 +155,9 @@ stages), with bit-exact output across boards.
 `SRIG_API_KEY=... ./scripts/run_all.sh` builds every cell, flashes and captures
 on the SiliconRig lab, aggregates, and runs the parity gate. Raw serial logs land
 in `results/raw/` (gitignored); the tracked artifact is `results/summary.json`,
-which carries each cell's numbers, `OUTPUT_I8` vector, and deduplicated execution
-provenance. See `BUILD.md` for the build knobs and a locally-attached-board
-(no-rig) path.
+which carries each cell's numbers, `OUTPUT_I8` and `OUTPUT_I8_SEEDED` vectors,
+and deduplicated execution provenance. See `BUILD.md` for the build knobs and a
+locally-attached-board (no-rig) path.
 
 `results/provenance.json` binds that summary and its collector/validator to
 SHA-256 digests and records the paths and hashes of all source captures. The
