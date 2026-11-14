@@ -27,6 +27,14 @@ can't, so **MobileNetV2 does not run at all**. Tiling turns "won't fit" into "ru
 `tigris export` rewrites the same MobileNetV2 so that stock TFLM runs it on the H753 in 424 KB,
 with output identical to TiGrIS.
 
+Both MobileNetV2 cells, recorded on a NUCLEO-H753ZI with the binaries this suite builds at the
+pinned releases; each page plays back the board's serial output and lists the firmware hash:
+
+- [![Run on SiliconRig](https://siliconrig.dev/badge/run-on-siliconrig.svg)](https://siliconrig.dev/record/rec_56ae7e9325b750ac2282d359)
+  TFLite Micro: `AllocateTensors` fails, `ARENA_TOO_SMALL`
+- [![Run on SiliconRig](https://siliconrig.dev/badge/run-on-siliconrig.svg)](https://siliconrig.dev/record/rec_ff531061789e6e985b174de6)
+  TiGrIS: 374.95 ms median over 30 runs, 307023 B SRAM peak
+
 ### ESP32-S3: latency (how fast, with acceleration?)
 
 ESP32-S3, INT8. TiGrIS dispatches to ESP-NN; TFLM uses its optimized kernels.
