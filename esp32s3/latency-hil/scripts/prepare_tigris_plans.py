@@ -14,7 +14,7 @@ import subprocess
 PLAN_SPECS = (
     ("ds_cnn.onnx", "256K", "ds_cnn.tgrs"),
     ("ds_cnn_matched.onnx", "256K", "ds_cnn_i8.tgrs"),
-    ("mobilenet_v1_matched.onnx", "256K", "mobilenet_v1_i8.tgrs"),
+    ("mobilenet_v1_matched.onnx", "232K", "mobilenet_v1_i8.tgrs"),
     ("mobilenet_v1_matched.onnx", "128K", "mobilenet_v1_i8_128k.tgrs"),
     ("mobilenet_v1_matched.onnx", "64K", "mobilenet_v1_i8_64k.tgrs"),
     ("mobilenet_v1_matched.onnx", "32K", "mobilenet_v1_i8_32k.tgrs"),

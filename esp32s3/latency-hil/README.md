@@ -1,6 +1,6 @@
 # esp32s3 / latency-hil
 
-Reproducible benchmarks: **TiGrIS vs TFLite Micro** on ESP32-S3. DS-CNN and MobileNetV1, 10 configurations, machine-parseable output.
+Reproducible benchmarks: **TiGrIS vs TFLite Micro** on ESP32-S3. DS-CNN, MobileNetV1 and U-Net, 12 configurations, machine-parseable output.
 
 This is the suite that backs the numbers quoted in the [Introducing TiGrIS](https://tigris-ml.dev/blog/introducing-tigris) post.
 
@@ -28,11 +28,11 @@ Model is close to the SRAM ceiling. Measures tiling overhead as the budget shrin
 
 | # | Config | Framework | Budget | Expected |
 |---|--------|-----------|--------|----------|
-| 6 | TiGrIS MBV1 i8 ESP-NN | TiGrIS | 256K | Runs, 1 normal + 3 chain stages |
+| 6 | TiGrIS MBV1 i8 ESP-NN | TiGrIS | 232K | Runs, 1 normal + 7 chain stages |
 | 7 | TFLM MBV1 i8 | TFLite Micro | 256K | Fails (arena too small) |
-| 8 | TiGrIS MBV1 i8 ESP-NN | TiGrIS | 128K | Runs, 1 normal + 8 tiled stages |
-| 9 | TiGrIS MBV1 i8 ESP-NN | TiGrIS | 64K | Runs, 1 normal + 12 tiled stages |
-| 10 | TiGrIS MBV1 i8 ESP-NN | TiGrIS | 32K | Runs, 1 normal + 24 tiled stages |
+| 8 | TiGrIS MBV1 i8 ESP-NN | TiGrIS | 128K | Runs, 1 normal + 1 tiled + 7 chain stages |
+| 9 | TiGrIS MBV1 i8 ESP-NN | TiGrIS | 64K | Runs, 1 normal + 12 chain stages |
+| 10 | TiGrIS MBV1 i8 ESP-NN | TiGrIS | 32K | Runs, 1 normal + 1 tiled + 23 chain stages |
 
 ### Segmentation deployability (U-Net 256x256x3 -> 256x256x8)
 
@@ -42,7 +42,7 @@ fit; TFLM cannot allocate its arena.
 
 | # | Config | Framework | Budget | Expected |
 |---|--------|-----------|--------|----------|
-| 11 | TiGrIS U-Net i8 ESP-NN | TiGrIS | 232K+6M | Runs, 4 tiled + 10 co-tiled chain stages (fits internal SRAM + PSRAM) |
+| 11 | TiGrIS U-Net i8 ESP-NN | TiGrIS | 232K+6M | Runs, 1 normal + 4 tiled + 6 chain stages (fits internal SRAM + PSRAM) |
 | 12 | TFLM U-Net i8 | TFLite Micro | 256K | Fails (arena too small) |
 
 ## Hardware
@@ -107,7 +107,7 @@ application, and freshly compiled plan into one raw image. The plan is placed
 at the partition-table offset `0x210000`; the runner has a regression test that
 prevents the old, incorrect `0x60000` app-partition offset from returning.
 
-`run_all.sh` now accepts a result only after all 10 canonical cells were
+`run_all.sh` now accepts a result only after all 12 canonical cells were
 captured through `BENCH_DONE`, aggregated, and checked against their
 model-specific references. A timeout, missing or extra cell, unexpected status,
 or numerical mismatch makes the command fail.
@@ -171,7 +171,7 @@ tflm-esp/                     # ESP-IDF project: TFLite Micro benchmark harness
 scripts/run_all.sh            # Orchestrate all configs end-to-end
 scripts/results.py            # Parse logs, print table, optionally emit JSON
 scripts/validate_accuracy.py  # Compare device output against ORT reference
-scripts/benchmark_matrix.py   # Canonical 10-cell matrix and structural gate
+scripts/benchmark_matrix.py   # Canonical 12-cell matrix and structural gate
 tests/test_validation.py      # Self-contained result/accuracy fixtures
 ```
 
@@ -190,6 +190,6 @@ BENCH_VALIDATE_ONLY=1 ./scripts/run_all.sh
 ## Dependencies
 
 - Host: Python 3.10+, `onnx`, `onnxruntime`, `tensorflow`, `tigris-ml`, `pyserial`, `esptool`
-- Device: ESP-IDF 5.4.0, `esp-nn 1.1.2`, `esp-tflite-micro 1.3.5`
+- Device: ESP-IDF 5.4.0, `esp-nn 1.4.1`, `esp-tflite-micro 1.3.8`
 - Hardware: ESP32-S3 board with 16 MB flash and 8 MB PSRAM
-- Runtime: a local checkout of [tigris-runtime](https://github.com/raws-labs/tigris-runtime) (see Prerequisites)
+- Runtime: the `raws-labs/tigris-runtime` component from the ESP Component Registry, at the pinned release
