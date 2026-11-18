@@ -50,7 +50,7 @@ evidence is missing or incomplete.
 ## Manual steps
 
 ```bash
-# 1. Vendor CMSIS-NN v7.0.0 + CMSIS-Core v6.3.0 + ST H7 device pack
+# 1. Vendor CMSIS-NN 6d9d61d8 (v7.0.0 plus 29 commits) + CMSIS-Core v6.3.0 + ST H7 device pack
 third_party/fetch.sh
 
 # 2. Configure + build (CMSIS-NN backend, DS-CNN INT8 plan)

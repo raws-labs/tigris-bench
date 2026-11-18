@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Vendor the ARM + ST sources the cross-build needs, pinned for reproducibility.
 #
-#   - ARM-software/CMSIS-NN  v7.0.0  : the int8 kernels (standalone since v7,
+#   - ARM-software/CMSIS-NN  6d9d61d8, v7.0.0 plus 29 commits: the int8 kernels (standalone since v7,
 #                                      no CMSIS-Core / CMSIS-DSP build dep)
 #   - ARM-software/CMSIS_6   v6.3.0  : CMSIS-Core (core_cm7.h) for the BSP
 #   - STMicroelectronics/cmsis-device-h7 : stm32h753xx.h, system file, startup
