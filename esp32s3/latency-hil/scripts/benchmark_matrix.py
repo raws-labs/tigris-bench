@@ -45,7 +45,7 @@ EXPECTED_CELLS: dict[str, CellSpec] = {
         "tflm", "default", "int8", "ds_cnn", 256,
         "i8", "ds_cnn_tflite_reference_i8.bin", int8_atol=4),
     "tigris_mbv1_i8_espnn.log": CellSpec(
-        "tigris", "esp_nn", "int8", "mobilenet_v1_matched", 256,
+        "tigris", "esp_nn", "int8", "mobilenet_v1_matched", 232,
         "i8", "mobilenet_v1_matched_ref.bin"),
     "tflm_mbv1_i8.log": CellSpec(
         "tflm", "default", "int8", "mobilenet_v1", 256,
