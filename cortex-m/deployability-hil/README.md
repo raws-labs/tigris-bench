@@ -60,31 +60,31 @@ int8 weights plus biases, measured from the committed plans.
 
 | Framework | Kernel | Latency | Cycles | RAM (work. set) | Flash (firmware) |
 |---|---|---|---|---|---|
-| TiGrIS | cmsis_nn | 11.22 ms | 5.38 M | 16.0 KB | 157 KB |
+| TiGrIS | cmsis_nn | 11.14 ms | 5.35 M | 16.0 KB | 159 KB |
 | TFLM | cmsis_nn | 12.84 ms | 6.16 M | 22.2 KB | 187 KB |
-| TiGrIS | s8_ref | 43.86 ms | 21.05 M | 15.9 KB | 131 KB |
+| TiGrIS | s8_ref | 43.63 ms | 20.94 M | 15.9 KB | 133 KB |
 
 **Anomaly detection:**
 
 | Framework | Kernel | Latency | Cycles | RAM (work. set) | Flash (firmware) |
 |---|---|---|---|---|---|
-| TiGrIS | cmsis_nn | 1.21 ms | 579 K | 0.9 KB | 387 KB |
+| TiGrIS | cmsis_nn | 1.22 ms | 585 K | 0.9 KB | 389 KB |
 | TFLM | cmsis_nn | 1.16 ms | 559 K | 15.5 KB | 428 KB |
-| TiGrIS | s8_ref | 2.73 ms | 1.31 M | 0.9 KB | 375 KB |
+| TiGrIS | s8_ref | 2.74 ms | 1.31 M | 0.9 KB | 377 KB |
 
 **Timeseries:**
 
 | Framework | Kernel | Latency | Cycles | RAM (work. set) | Flash (firmware) |
 |---|---|---|---|---|---|
-| TiGrIS | cmsis_nn | 0.313 ms | 150 K | 1.5 KB | 127 KB |
+| TiGrIS | cmsis_nn | 0.321 ms | 154 K | 1.5 KB | 129 KB |
 | TFLM | cmsis_nn | 0.347 ms | 167 K | 2.9 KB | 156 KB |
-| TiGrIS | s8_ref | 0.920 ms | 442 K | 1.1 KB | 107 KB |
+| TiGrIS | s8_ref | 0.926 ms | 445 K | 1.1 KB | 109 KB |
 
 - Output is bit-exact device-to-device: every (model, framework, kernel) cell
   emits the identical INT8 vector (max abs diff 0) on the constant input and on
   each of the 8 seeded inputs, checked by `scripts/validate_accuracy.py`.
 - CMSIS-NN vs the portable reference kernels (same model, both `-O2`): 3.9x
-  (DS-CNN) / 2.3x (AD) / 2.9x (TS) on the M7.
+  (DS-CNN) / 2.2x (AD) / 2.9x (TS) on the M7.
 - Cycles are clock-independent; ms is at 480 MHz.
 - Latency, cycles, RAM, and firmware sizes come from the same tracked,
   provenance-bearing run in `results/summary.json`.
@@ -108,11 +108,11 @@ byte-identical to the H753 and F446. Weights are read from QSPI flash via XIP.
 
 | Model | TiGrIS cmsis | TiGrIS s8 | RAM |
 |---|---|---|---|
-| TS | 2.69 ms | 5.95 ms | 1.5 KB |
+| TS | 2.82 ms | 6.06 ms | 1.5 KB |
 | AD | 35.53 ms | 28.79 ms | 0.9 KB |
 | DS-CNN | 64.05 ms | 238.72 ms | 16.0 KB |
 
-The FC-heavy AD is slower here (35.52 ms vs 5.04 ms on the F446): each of its
+The FC-heavy AD is slower here (35.53 ms vs 5.04 ms on the F446): each of its
 265 KB of weights is read once per inference from XIP flash with no reuse, so it
 is QSPI-bandwidth-bound. The conv models reuse weights across spatial positions
 and stay fast.
