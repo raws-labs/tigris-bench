@@ -9,14 +9,14 @@
       "board": "nucleo_f446re",
       "cpu_mhz": 180,
       "status": "ok",
-      "latency_mean_ms": 5.041,
-      "latency_median_ms": 5.041,
-      "latency_min_ms": 5.041,
-      "latency_max_ms": 5.041,
+      "latency_mean_ms": 5.094,
+      "latency_median_ms": 5.094,
+      "latency_min_ms": 5.094,
+      "latency_max_ms": 5.094,
       "latency_stdev_ms": 0.0,
-      "latency_median_cycles": 907440,
-      "latency_min_cycles": 907440,
-      "latency_max_cycles": 907440,
+      "latency_median_cycles": 916916,
+      "latency_min_cycles": 916916,
+      "latency_max_cycles": 916916,
       "sram_peak_bytes": 971,
       "sram_act_peak_bytes": 768,
       "sram_fast_peak_bytes": 768,
@@ -5829,14 +5829,14 @@
       "board": "nucleo_f446re",
       "cpu_mhz": 180,
       "status": "ok",
-      "latency_mean_ms": 14.952,
-      "latency_median_ms": 14.952,
-      "latency_min_ms": 14.952,
-      "latency_max_ms": 14.952,
+      "latency_mean_ms": 14.999,
+      "latency_median_ms": 14.999,
+      "latency_min_ms": 14.999,
+      "latency_max_ms": 14.999,
       "latency_stdev_ms": 0.0,
-      "latency_median_cycles": 2691370,
-      "latency_min_cycles": 2691370,
-      "latency_max_cycles": 2691370,
+      "latency_median_cycles": 2699887,
+      "latency_min_cycles": 2699887,
+      "latency_max_cycles": 2699887,
       "sram_peak_bytes": 971,
       "sram_act_peak_bytes": 768,
       "sram_fast_peak_bytes": 768,
@@ -17451,14 +17451,14 @@
       "board": "nucleo_f446re",
       "cpu_mhz": 180,
       "status": "ok",
-      "latency_mean_ms": 63.711,
-      "latency_median_ms": 63.711,
-      "latency_min_ms": 63.711,
-      "latency_max_ms": 63.711,
+      "latency_mean_ms": 63.403,
+      "latency_median_ms": 63.403,
+      "latency_min_ms": 63.403,
+      "latency_max_ms": 63.403,
       "latency_stdev_ms": 0.0,
-      "latency_median_cycles": 11467911,
-      "latency_min_cycles": 11467911,
-      "latency_max_cycles": 11467911,
+      "latency_median_cycles": 11412581,
+      "latency_min_cycles": 11412581,
+      "latency_max_cycles": 11412581,
       "sram_peak_bytes": 16395,
       "sram_act_peak_bytes": 16000,
       "sram_fast_peak_bytes": 16000,
@@ -17619,14 +17619,14 @@
       "board": "nucleo_f446re",
       "cpu_mhz": 180,
       "status": "ok",
-      "latency_mean_ms": 271.524,
-      "latency_median_ms": 271.524,
-      "latency_min_ms": 271.524,
-      "latency_max_ms": 271.524,
+      "latency_mean_ms": 271.48,
+      "latency_median_ms": 271.48,
+      "latency_min_ms": 271.48,
+      "latency_max_ms": 271.48,
       "latency_stdev_ms": 0.0,
-      "latency_median_cycles": 48874270,
-      "latency_min_cycles": 48874270,
-      "latency_max_cycles": 48874270,
+      "latency_median_cycles": 48866333,
+      "latency_min_cycles": 48866333,
+      "latency_max_cycles": 48866333,
       "sram_peak_bytes": 16235,
       "sram_act_peak_bytes": 16000,
       "sram_fast_peak_bytes": 16000,
@@ -17937,14 +17937,14 @@
       "board": "nucleo_f446re",
       "cpu_mhz": 180,
       "status": "ok",
-      "latency_mean_ms": 1.616,
-      "latency_median_ms": 1.616,
-      "latency_min_ms": 1.616,
-      "latency_max_ms": 1.616,
+      "latency_mean_ms": 1.642,
+      "latency_median_ms": 1.642,
+      "latency_min_ms": 1.642,
+      "latency_max_ms": 1.642,
       "latency_stdev_ms": 0.0,
-      "latency_median_cycles": 290825,
-      "latency_min_cycles": 290825,
-      "latency_max_cycles": 290825,
+      "latency_median_cycles": 295536,
+      "latency_min_cycles": 295536,
+      "latency_max_cycles": 295536,
       "sram_peak_bytes": 1547,
       "sram_act_peak_bytes": 1024,
       "sram_fast_peak_bytes": 1024,
@@ -18087,14 +18087,14 @@
       "board": "nucleo_f446re",
       "cpu_mhz": 180,
       "status": "ok",
-      "latency_mean_ms": 5.494,
-      "latency_median_ms": 5.494,
-      "latency_min_ms": 5.494,
-      "latency_max_ms": 5.494,
+      "latency_mean_ms": 5.52,
+      "latency_median_ms": 5.52,
+      "latency_min_ms": 5.52,
+      "latency_max_ms": 5.52,
       "latency_stdev_ms": 0.0,
-      "latency_median_cycles": 988901,
-      "latency_min_cycles": 988901,
-      "latency_max_cycles": 988901,
+      "latency_median_cycles": 993599,
+      "latency_min_cycles": 993599,
+      "latency_max_cycles": 993599,
       "sram_peak_bytes": 1163,
       "sram_act_peak_bytes": 1024,
       "sram_fast_peak_bytes": 1024,
@@ -18369,14 +18369,14 @@
       "board": "nucleo_h753zi",
       "cpu_mhz": 480,
       "status": "ok",
-      "latency_mean_ms": 1.207,
-      "latency_median_ms": 1.207,
-      "latency_min_ms": 1.206,
-      "latency_max_ms": 1.208,
-      "latency_stdev_ms": 0.001,
-      "latency_median_cycles": 579211,
-      "latency_min_cycles": 578694,
-      "latency_max_cycles": 579836,
+      "latency_mean_ms": 1.218,
+      "latency_median_ms": 1.218,
+      "latency_min_ms": 1.217,
+      "latency_max_ms": 1.219,
+      "latency_stdev_ms": 0.0,
+      "latency_median_cycles": 584651,
+      "latency_min_cycles": 584216,
+      "latency_max_cycles": 585152,
       "sram_peak_bytes": 971,
       "sram_act_peak_bytes": 768,
       "sram_fast_peak_bytes": 768,
@@ -24189,14 +24189,14 @@
       "board": "nucleo_h753zi",
       "cpu_mhz": 480,
       "status": "ok",
-      "latency_mean_ms": 2.725,
-      "latency_median_ms": 2.725,
-      "latency_min_ms": 2.724,
-      "latency_max_ms": 2.726,
-      "latency_stdev_ms": 0.0,
-      "latency_median_cycles": 1307939,
-      "latency_min_cycles": 1307516,
-      "latency_max_cycles": 1308442,
+      "latency_mean_ms": 2.737,
+      "latency_median_ms": 2.737,
+      "latency_min_ms": 2.736,
+      "latency_max_ms": 2.739,
+      "latency_stdev_ms": 0.001,
+      "latency_median_cycles": 1313963,
+      "latency_min_cycles": 1313241,
+      "latency_max_cycles": 1314671,
       "sram_peak_bytes": 971,
       "sram_act_peak_bytes": 768,
       "sram_fast_peak_bytes": 768,
@@ -35811,14 +35811,14 @@
       "board": "nucleo_h753zi",
       "cpu_mhz": 480,
       "status": "ok",
-      "latency_mean_ms": 11.219,
-      "latency_median_ms": 11.219,
-      "latency_min_ms": 11.215,
-      "latency_max_ms": 11.224,
+      "latency_mean_ms": 11.145,
+      "latency_median_ms": 11.145,
+      "latency_min_ms": 11.141,
+      "latency_max_ms": 11.15,
       "latency_stdev_ms": 0.002,
-      "latency_median_cycles": 5384966,
-      "latency_min_cycles": 5383355,
-      "latency_max_cycles": 5387343,
+      "latency_median_cycles": 5349608,
+      "latency_min_cycles": 5347601,
+      "latency_max_cycles": 5351785,
       "sram_peak_bytes": 16395,
       "sram_act_peak_bytes": 16000,
       "sram_fast_peak_bytes": 16000,
@@ -35979,14 +35979,14 @@
       "board": "nucleo_h753zi",
       "cpu_mhz": 480,
       "status": "ok",
-      "latency_mean_ms": 43.857,
-      "latency_median_ms": 43.857,
-      "latency_min_ms": 43.855,
-      "latency_max_ms": 43.861,
-      "latency_stdev_ms": 0.002,
-      "latency_median_cycles": 21051535,
-      "latency_min_cycles": 21050312,
-      "latency_max_cycles": 21053128,
+      "latency_mean_ms": 43.635,
+      "latency_median_ms": 43.635,
+      "latency_min_ms": 43.631,
+      "latency_max_ms": 43.637,
+      "latency_stdev_ms": 0.001,
+      "latency_median_cycles": 20944594,
+      "latency_min_cycles": 20942843,
+      "latency_max_cycles": 20945824,
       "sram_peak_bytes": 16235,
       "sram_act_peak_bytes": 16000,
       "sram_fast_peak_bytes": 16000,
@@ -36146,12 +36146,12 @@
       "board": "nucleo_h753zi",
       "cpu_mhz": 480,
       "status": "ok",
-      "latency_mean_ms": 12.837,
-      "latency_median_ms": 12.837,
-      "latency_min_ms": 12.833,
-      "latency_max_ms": 12.841,
-      "latency_stdev_ms": 0.002,
-      "latency_median_cycles": 6161588,
+      "latency_mean_ms": 12.836,
+      "latency_median_ms": 12.836,
+      "latency_min_ms": 12.83,
+      "latency_max_ms": 12.843,
+      "latency_stdev_ms": 0.003,
+      "latency_median_cycles": 6161066,
       "sram_peak_bytes": 22692,
       "arena_kb": 22,
       "plan_flash_kb": 41,
@@ -36297,14 +36297,14 @@
       "board": "nucleo_h753zi",
       "cpu_mhz": 480,
       "status": "ok",
-      "latency_mean_ms": 374.951,
-      "latency_median_ms": 374.953,
-      "latency_min_ms": 374.892,
-      "latency_max_ms": 374.999,
-      "latency_stdev_ms": 0.024,
-      "latency_median_cycles": 179977544,
-      "latency_min_cycles": 179948257,
-      "latency_max_cycles": 179999477,
+      "latency_mean_ms": 374.617,
+      "latency_median_ms": 374.617,
+      "latency_min_ms": 374.559,
+      "latency_max_ms": 374.645,
+      "latency_stdev_ms": 0.017,
+      "latency_median_cycles": 179816319,
+      "latency_min_cycles": 179788339,
+      "latency_max_cycles": 179829457,
       "sram_peak_bytes": 307023,
       "sram_act_peak_bytes": 305088,
       "sram_fast_peak_bytes": 129472,
@@ -36590,14 +36590,14 @@
       "board": "nucleo_h753zi",
       "cpu_mhz": 480,
       "status": "ok",
-      "latency_mean_ms": 0.313,
-      "latency_median_ms": 0.313,
-      "latency_min_ms": 0.313,
-      "latency_max_ms": 0.314,
+      "latency_mean_ms": 0.321,
+      "latency_median_ms": 0.321,
+      "latency_min_ms": 0.32,
+      "latency_max_ms": 0.322,
       "latency_stdev_ms": 0.0,
-      "latency_median_cycles": 150370,
-      "latency_min_cycles": 150015,
-      "latency_max_cycles": 150675,
+      "latency_median_cycles": 154013,
+      "latency_min_cycles": 153717,
+      "latency_max_cycles": 154508,
       "sram_peak_bytes": 1547,
       "sram_act_peak_bytes": 1024,
       "sram_fast_peak_bytes": 1024,
@@ -36740,14 +36740,14 @@
       "board": "nucleo_h753zi",
       "cpu_mhz": 480,
       "status": "ok",
-      "latency_mean_ms": 0.92,
-      "latency_median_ms": 0.92,
-      "latency_min_ms": 0.92,
-      "latency_max_ms": 0.921,
+      "latency_mean_ms": 0.926,
+      "latency_median_ms": 0.926,
+      "latency_min_ms": 0.926,
+      "latency_max_ms": 0.927,
       "latency_stdev_ms": 0.0,
-      "latency_median_cycles": 441661,
-      "latency_min_cycles": 441560,
-      "latency_max_cycles": 441904,
+      "latency_median_cycles": 444719,
+      "latency_min_cycles": 444506,
+      "latency_max_cycles": 444907,
       "sram_peak_bytes": 1163,
       "sram_act_peak_bytes": 1024,
       "sram_fast_peak_bytes": 1024,
@@ -36894,7 +36894,7 @@
       "latency_min_ms": 0.347,
       "latency_max_ms": 0.348,
       "latency_stdev_ms": 0.0,
-      "latency_median_cycles": 166566,
+      "latency_median_cycles": 166662,
       "sram_peak_bytes": 2980,
       "arena_kb": 2,
       "plan_flash_kb": 10,
@@ -37022,14 +37022,14 @@
       "board": "pico2_rp2350",
       "cpu_mhz": 150,
       "status": "ok",
-      "latency_mean_ms": 35.535,
-      "latency_median_ms": 35.535,
-      "latency_min_ms": 35.434,
-      "latency_max_ms": 35.656,
-      "latency_stdev_ms": 0.042,
-      "latency_median_cycles": 5330175,
-      "latency_min_cycles": 5315100,
-      "latency_max_cycles": 5348400,
+      "latency_mean_ms": 35.634,
+      "latency_median_ms": 35.629,
+      "latency_min_ms": 35.529,
+      "latency_max_ms": 35.766,
+      "latency_stdev_ms": 0.059,
+      "latency_median_cycles": 5344275,
+      "latency_min_cycles": 5329350,
+      "latency_max_cycles": 5364900,
       "sram_peak_bytes": 971,
       "sram_act_peak_bytes": 768,
       "sram_fast_peak_bytes": 768,
@@ -42842,14 +42842,14 @@
       "board": "pico2_rp2350",
       "cpu_mhz": 150,
       "status": "ok",
-      "latency_mean_ms": 28.792,
-      "latency_median_ms": 28.79,
-      "latency_min_ms": 28.694,
-      "latency_max_ms": 28.892,
-      "latency_stdev_ms": 0.043,
-      "latency_median_cycles": 4318500,
-      "latency_min_cycles": 4304100,
-      "latency_max_cycles": 4333800,
+      "latency_mean_ms": 28.985,
+      "latency_median_ms": 28.985,
+      "latency_min_ms": 28.87,
+      "latency_max_ms": 29.075,
+      "latency_stdev_ms": 0.041,
+      "latency_median_cycles": 4347750,
+      "latency_min_cycles": 4330500,
+      "latency_max_cycles": 4361250,
       "sram_peak_bytes": 971,
       "sram_act_peak_bytes": 768,
       "sram_fast_peak_bytes": 768,
@@ -48662,14 +48662,14 @@
       "board": "pico2_rp2350",
       "cpu_mhz": 150,
       "status": "ok",
-      "latency_mean_ms": 64.053,
-      "latency_median_ms": 64.048,
-      "latency_min_ms": 63.941,
-      "latency_max_ms": 64.159,
-      "latency_stdev_ms": 0.062,
-      "latency_median_cycles": 9607125,
-      "latency_min_cycles": 9591150,
-      "latency_max_cycles": 9623850,
+      "latency_mean_ms": 63.76,
+      "latency_median_ms": 63.757,
+      "latency_min_ms": 63.651,
+      "latency_max_ms": 63.927,
+      "latency_stdev_ms": 0.066,
+      "latency_median_cycles": 9563550,
+      "latency_min_cycles": 9547650,
+      "latency_max_cycles": 9589050,
       "sram_peak_bytes": 16395,
       "sram_act_peak_bytes": 16000,
       "sram_fast_peak_bytes": 16000,
@@ -48830,14 +48830,14 @@
       "board": "pico2_rp2350",
       "cpu_mhz": 150,
       "status": "ok",
-      "latency_mean_ms": 238.726,
-      "latency_median_ms": 238.722,
-      "latency_min_ms": 238.586,
-      "latency_max_ms": 238.823,
-      "latency_stdev_ms": 0.056,
-      "latency_median_cycles": 35808300,
-      "latency_min_cycles": 35787900,
-      "latency_max_cycles": 35823450,
+      "latency_mean_ms": 240.295,
+      "latency_median_ms": 240.292,
+      "latency_min_ms": 240.189,
+      "latency_max_ms": 240.367,
+      "latency_stdev_ms": 0.044,
+      "latency_median_cycles": 36043725,
+      "latency_min_cycles": 36028350,
+      "latency_max_cycles": 36055050,
       "sram_peak_bytes": 16235,
       "sram_act_peak_bytes": 16000,
       "sram_fast_peak_bytes": 16000,
@@ -48998,14 +48998,14 @@
       "board": "pico2_rp2350",
       "cpu_mhz": 150,
       "status": "ok",
-      "latency_mean_ms": 1812.76,
-      "latency_median_ms": 1812.749,
-      "latency_min_ms": 1812.571,
-      "latency_max_ms": 1812.952,
-      "latency_stdev_ms": 0.083,
-      "latency_median_cycles": 271912275,
-      "latency_min_cycles": 271885650,
-      "latency_max_cycles": 271942800,
+      "latency_mean_ms": 1809.543,
+      "latency_median_ms": 1809.524,
+      "latency_min_ms": 1809.359,
+      "latency_max_ms": 1809.837,
+      "latency_stdev_ms": 0.112,
+      "latency_median_cycles": 271428600,
+      "latency_min_cycles": 271403850,
+      "latency_max_cycles": 271475550,
       "sram_peak_bytes": 307023,
       "sram_act_peak_bytes": 305088,
       "sram_fast_peak_bytes": 129472,
@@ -49148,14 +49148,14 @@
       "board": "pico2_rp2350",
       "cpu_mhz": 150,
       "status": "ok",
-      "latency_mean_ms": 2.681,
-      "latency_median_ms": 2.693,
-      "latency_min_ms": 2.559,
-      "latency_max_ms": 2.767,
-      "latency_stdev_ms": 0.056,
-      "latency_median_cycles": 403875,
-      "latency_min_cycles": 383850,
-      "latency_max_cycles": 415050,
+      "latency_mean_ms": 2.82,
+      "latency_median_ms": 2.822,
+      "latency_min_ms": 2.706,
+      "latency_max_ms": 2.906,
+      "latency_stdev_ms": 0.051,
+      "latency_median_cycles": 423300,
+      "latency_min_cycles": 405900,
+      "latency_max_cycles": 435900,
       "sram_peak_bytes": 1547,
       "sram_act_peak_bytes": 1024,
       "sram_fast_peak_bytes": 1024,
@@ -49298,14 +49298,14 @@
       "board": "pico2_rp2350",
       "cpu_mhz": 150,
       "status": "ok",
-      "latency_mean_ms": 5.942,
-      "latency_median_ms": 5.948,
-      "latency_min_ms": 5.851,
-      "latency_max_ms": 5.985,
-      "latency_stdev_ms": 0.028,
-      "latency_median_cycles": 892125,
-      "latency_min_cycles": 877650,
-      "latency_max_cycles": 897750,
+      "latency_mean_ms": 6.055,
+      "latency_median_ms": 6.061,
+      "latency_min_ms": 5.969,
+      "latency_max_ms": 6.114,
+      "latency_stdev_ms": 0.029,
+      "latency_median_cycles": 909150,
+      "latency_min_cycles": 895350,
+      "latency_max_cycles": 917100,
       "sram_peak_bytes": 1163,
       "sram_act_peak_bytes": 1024,
       "sram_fast_peak_bytes": 1024,
@@ -49462,7 +49462,7 @@
       "repositories": {
         "benchmark": {
           "dirty": false,
-          "revision": "db723a63efddce0f87318848d7d5d1db6f7024d4"
+          "revision": "4ed76232c66b42a9c597db35bc6a8ef477d4369d"
         },
         "tflite_micro": {
           "dirty": false,
@@ -49470,21 +49470,21 @@
         },
         "tigris_compiler": {
           "dirty": false,
-          "revision": "dcc68c6515a3b06a597cff97dc138ba648f9c6dc",
-          "tag": "v0.14.1"
+          "revision": "df380fdc56e54cdac44416523e89e55f8eb945b8",
+          "tag": "v0.15.0"
         },
         "tigris_cortex_m": {
           "dirty": false,
-          "revision": "a708af9c5cb463d918d97f7b339168a76babbbe8",
-          "tag": "v0.3.0"
+          "revision": "659e2cf81a67e7f3cf47a3572aa2f7bec53a1377",
+          "tag": "v0.5.0"
         },
         "tigris_runtime": {
           "dirty": false,
-          "revision": "421bf5b4a6ce47739eb1488859a1225315d64e2c",
-          "tag": "v0.14.1"
+          "revision": "65c4d6290a1959c7f956e0b492a8997dd20fda06",
+          "tag": "v0.15.0"
         }
       },
-      "siliconrig_sdk_version": "0.2.3.dev7+g24278bc2d",
+      "siliconrig_sdk_version": "0.2.3",
       "tools": {
         "arm_none_eabi_gcc": "arm-none-eabi-gcc (15:13.2.rel1-2) 13.2.1 20231009",
         "cmake": "cmake version 3.28.3",
@@ -49496,8 +49496,8 @@
         "artifacts": {
           "firmware": {
             "name": "tigris_bench.bin",
-            "sha256": "4e2c1426bcc8d6c0ca23a556baef0afbbfd8b212404c72da09747c516d8c8381",
-            "size_bytes": 400104
+            "sha256": "31567f1065dd377103feb9c84f56698dd6c4ebbbd582db73c8fc543ca162dd1a",
+            "size_bytes": 402248
           },
           "model": {
             "name": "ad.tgrs",
@@ -49511,16 +49511,16 @@
           "specs": null
         },
         "build": {
-          "configure_command": "cmake -S ./cortex-m/deployability-hil -B ./cortex-m/deployability-hil/build/f446_ad_cmsis_nn -DCMAKE_TOOLCHAIN_FILE=./build/core/tigris_runtime-v0.14.1/cmake/arm-none-eabi.cmake -DTIGRIS_RUNTIME_ROOT=./build/core/tigris_runtime-v0.14.1 -DTIGRIS_CORTEX_M_ROOT=./build/core/tigris_cortex_m-v0.3.0 -DTIGRIS_BOARD=nucleo_f446re -DBENCH_KERNEL=cmsis_nn -DBENCH_MODEL=ad -DTIGRIS_PLAN=./cortex-m/deployability-hil/build/plans/ad.tgrs -DTIGRIS_CODEGEN=./build/core/tigris-ml-0.14.1/bin/tigris -DTIGRIS_FAST_ARENA_BYTES=65536 -DTIGRIS_SLOW_ARENA_BYTES=8192"
+          "configure_command": "cmake -S ./cortex-m/deployability-hil -B ./cortex-m/deployability-hil/build/f446_ad_cmsis_nn -DCMAKE_TOOLCHAIN_FILE=./build/core/tigris_runtime-v0.15.0/cmake/arm-none-eabi.cmake -DTIGRIS_RUNTIME_ROOT=./build/core/tigris_runtime-v0.15.0 -DTIGRIS_CORTEX_M_ROOT=./build/core/tigris_cortex_m-v0.5.0 -DTIGRIS_BOARD=nucleo_f446re -DBENCH_KERNEL=cmsis_nn -DBENCH_MODEL=ad -DTIGRIS_PLAN=./cortex-m/deployability-hil/build/plans/ad.tgrs -DTIGRIS_CODEGEN=./build/core/tigris-ml-0.15.0/bin/tigris -DTIGRIS_FAST_ARENA_BYTES=65536 -DTIGRIS_SLOW_ARENA_BYTES=8192"
         },
-        "captured_at_utc": "2026-11-08T06:30:30.573203Z"
+        "captured_at_utc": "2026-11-18T19:48:59.461591Z"
       },
       "f446_ad_s8_ref.log": {
         "artifacts": {
           "firmware": {
             "name": "tigris_bench.bin",
-            "sha256": "2610c5592e6469a4eb411910870575a3c9b083f2fbd6b1690131aa2817ac0346",
-            "size_bytes": 388264
+            "sha256": "88dba6d7ab14480d3e2a99369bac7dec76911cc01dca1edadfc68d43d751377e",
+            "size_bytes": 390408
           },
           "model": {
             "name": "ad.tgrs",
@@ -49534,9 +49534,9 @@
           "specs": null
         },
         "build": {
-          "configure_command": "cmake -S ./cortex-m/deployability-hil -B ./cortex-m/deployability-hil/build/f446_ad_s8_ref -DCMAKE_TOOLCHAIN_FILE=./build/core/tigris_runtime-v0.14.1/cmake/arm-none-eabi.cmake -DTIGRIS_RUNTIME_ROOT=./build/core/tigris_runtime-v0.14.1 -DTIGRIS_CORTEX_M_ROOT=./build/core/tigris_cortex_m-v0.3.0 -DTIGRIS_BOARD=nucleo_f446re -DBENCH_KERNEL=s8_ref -DBENCH_MODEL=ad -DTIGRIS_PLAN=./cortex-m/deployability-hil/build/plans/ad.tgrs -DTIGRIS_CODEGEN=./build/core/tigris-ml-0.14.1/bin/tigris -DTIGRIS_FAST_ARENA_BYTES=65536 -DTIGRIS_SLOW_ARENA_BYTES=8192"
+          "configure_command": "cmake -S ./cortex-m/deployability-hil -B ./cortex-m/deployability-hil/build/f446_ad_s8_ref -DCMAKE_TOOLCHAIN_FILE=./build/core/tigris_runtime-v0.15.0/cmake/arm-none-eabi.cmake -DTIGRIS_RUNTIME_ROOT=./build/core/tigris_runtime-v0.15.0 -DTIGRIS_CORTEX_M_ROOT=./build/core/tigris_cortex_m-v0.5.0 -DTIGRIS_BOARD=nucleo_f446re -DBENCH_KERNEL=s8_ref -DBENCH_MODEL=ad -DTIGRIS_PLAN=./cortex-m/deployability-hil/build/plans/ad.tgrs -DTIGRIS_CODEGEN=./build/core/tigris-ml-0.15.0/bin/tigris -DTIGRIS_FAST_ARENA_BYTES=65536 -DTIGRIS_SLOW_ARENA_BYTES=8192"
         },
-        "captured_at_utc": "2026-11-08T06:30:55.401747Z"
+        "captured_at_utc": "2026-11-18T19:49:24.129476Z"
       },
       "f446_ad_tflm.log": {
         "artifacts": {
@@ -49565,16 +49565,16 @@
           "specs": null
         },
         "build": {
-          "configure_command": "cmake -S ./cortex-m/deployability-hil -B ./cortex-m/deployability-hil/build/f446_ad_tflm -DCMAKE_TOOLCHAIN_FILE=./build/core/tigris_runtime-v0.14.1/cmake/arm-none-eabi.cmake -DTIGRIS_RUNTIME_ROOT=./build/core/tigris_runtime-v0.14.1 -DTIGRIS_CORTEX_M_ROOT=./build/core/tigris_cortex_m-v0.3.0 -DTIGRIS_BOARD=nucleo_f446re -DBENCH_FRAMEWORK=tflm -DTFLM_MODEL=ad -DTFLM_MODEL_DIR=./models/output -DTFLM_ARENA_BYTES=32768"
+          "configure_command": "cmake -S ./cortex-m/deployability-hil -B ./cortex-m/deployability-hil/build/f446_ad_tflm -DCMAKE_TOOLCHAIN_FILE=./build/core/tigris_runtime-v0.15.0/cmake/arm-none-eabi.cmake -DTIGRIS_RUNTIME_ROOT=./build/core/tigris_runtime-v0.15.0 -DTIGRIS_CORTEX_M_ROOT=./build/core/tigris_cortex_m-v0.5.0 -DTIGRIS_BOARD=nucleo_f446re -DBENCH_FRAMEWORK=tflm -DTFLM_MODEL=ad -DTFLM_MODEL_DIR=./models/output -DTFLM_ARENA_BYTES=32768"
         },
-        "captured_at_utc": "2026-11-08T06:31:23.660650Z"
+        "captured_at_utc": "2026-11-18T19:49:51.878637Z"
       },
       "f446_ds_cnn_cmsis_nn.log": {
         "artifacts": {
           "firmware": {
             "name": "tigris_bench.bin",
-            "sha256": "db872eb2a8131be0fa61d59fdd6ff78f40eb3419d4cabe101e30e3af61fe21b0",
-            "size_bytes": 165448
+            "sha256": "9ca9a080de3c4f854c5ea83f0280cb8a05169a6f751cd8972406490e312b40e9",
+            "size_bytes": 167560
           },
           "model": {
             "name": "ds_cnn.tgrs",
@@ -49588,16 +49588,16 @@
           "specs": null
         },
         "build": {
-          "configure_command": "cmake -S ./cortex-m/deployability-hil -B ./cortex-m/deployability-hil/build/f446_ds_cnn_cmsis_nn -DCMAKE_TOOLCHAIN_FILE=./build/core/tigris_runtime-v0.14.1/cmake/arm-none-eabi.cmake -DTIGRIS_RUNTIME_ROOT=./build/core/tigris_runtime-v0.14.1 -DTIGRIS_CORTEX_M_ROOT=./build/core/tigris_cortex_m-v0.3.0 -DTIGRIS_BOARD=nucleo_f446re -DBENCH_KERNEL=cmsis_nn -DBENCH_MODEL=ds_cnn -DTIGRIS_PLAN=./cortex-m/deployability-hil/build/plans/ds_cnn.tgrs -DTIGRIS_CODEGEN=./build/core/tigris-ml-0.14.1/bin/tigris -DTIGRIS_FAST_ARENA_BYTES=65536 -DTIGRIS_SLOW_ARENA_BYTES=8192"
+          "configure_command": "cmake -S ./cortex-m/deployability-hil -B ./cortex-m/deployability-hil/build/f446_ds_cnn_cmsis_nn -DCMAKE_TOOLCHAIN_FILE=./build/core/tigris_runtime-v0.15.0/cmake/arm-none-eabi.cmake -DTIGRIS_RUNTIME_ROOT=./build/core/tigris_runtime-v0.15.0 -DTIGRIS_CORTEX_M_ROOT=./build/core/tigris_cortex_m-v0.5.0 -DTIGRIS_BOARD=nucleo_f446re -DBENCH_KERNEL=cmsis_nn -DBENCH_MODEL=ds_cnn -DTIGRIS_PLAN=./cortex-m/deployability-hil/build/plans/ds_cnn.tgrs -DTIGRIS_CODEGEN=./build/core/tigris-ml-0.15.0/bin/tigris -DTIGRIS_FAST_ARENA_BYTES=65536 -DTIGRIS_SLOW_ARENA_BYTES=8192"
         },
-        "captured_at_utc": "2026-11-08T06:29:24.395138Z"
+        "captured_at_utc": "2026-11-18T19:47:54.563666Z"
       },
       "f446_ds_cnn_s8_ref.log": {
         "artifacts": {
           "firmware": {
             "name": "tigris_bench.bin",
-            "sha256": "b702594e3bf12172f53f711bf5fb737cc213643d41788cb67dd1a4691bc64e4f",
-            "size_bytes": 138904
+            "sha256": "955140b87ef07029837b6055f750020a0bf56c27b5b40f9fc40a9fbe712951d0",
+            "size_bytes": 141016
           },
           "model": {
             "name": "ds_cnn.tgrs",
@@ -49611,9 +49611,9 @@
           "specs": null
         },
         "build": {
-          "configure_command": "cmake -S ./cortex-m/deployability-hil -B ./cortex-m/deployability-hil/build/f446_ds_cnn_s8_ref -DCMAKE_TOOLCHAIN_FILE=./build/core/tigris_runtime-v0.14.1/cmake/arm-none-eabi.cmake -DTIGRIS_RUNTIME_ROOT=./build/core/tigris_runtime-v0.14.1 -DTIGRIS_CORTEX_M_ROOT=./build/core/tigris_cortex_m-v0.3.0 -DTIGRIS_BOARD=nucleo_f446re -DBENCH_KERNEL=s8_ref -DBENCH_MODEL=ds_cnn -DTIGRIS_PLAN=./cortex-m/deployability-hil/build/plans/ds_cnn.tgrs -DTIGRIS_CODEGEN=./build/core/tigris-ml-0.14.1/bin/tigris -DTIGRIS_FAST_ARENA_BYTES=65536 -DTIGRIS_SLOW_ARENA_BYTES=8192"
+          "configure_command": "cmake -S ./cortex-m/deployability-hil -B ./cortex-m/deployability-hil/build/f446_ds_cnn_s8_ref -DCMAKE_TOOLCHAIN_FILE=./build/core/tigris_runtime-v0.15.0/cmake/arm-none-eabi.cmake -DTIGRIS_RUNTIME_ROOT=./build/core/tigris_runtime-v0.15.0 -DTIGRIS_CORTEX_M_ROOT=./build/core/tigris_cortex_m-v0.5.0 -DTIGRIS_BOARD=nucleo_f446re -DBENCH_KERNEL=s8_ref -DBENCH_MODEL=ds_cnn -DTIGRIS_PLAN=./cortex-m/deployability-hil/build/plans/ds_cnn.tgrs -DTIGRIS_CODEGEN=./build/core/tigris-ml-0.15.0/bin/tigris -DTIGRIS_FAST_ARENA_BYTES=65536 -DTIGRIS_SLOW_ARENA_BYTES=8192"
         },
-        "captured_at_utc": "2026-11-08T06:29:47.152280Z"
+        "captured_at_utc": "2026-11-18T19:48:17.014561Z"
       },
       "f446_ds_cnn_tflm.log": {
         "artifacts": {
@@ -49642,16 +49642,16 @@
           "specs": null
         },
         "build": {
-          "configure_command": "cmake -S ./cortex-m/deployability-hil -B ./cortex-m/deployability-hil/build/f446_ds_cnn_tflm -DCMAKE_TOOLCHAIN_FILE=./build/core/tigris_runtime-v0.14.1/cmake/arm-none-eabi.cmake -DTIGRIS_RUNTIME_ROOT=./build/core/tigris_runtime-v0.14.1 -DTIGRIS_CORTEX_M_ROOT=./build/core/tigris_cortex_m-v0.3.0 -DTIGRIS_BOARD=nucleo_f446re -DBENCH_FRAMEWORK=tflm -DTFLM_MODEL=ds_cnn -DTFLM_MODEL_DIR=./models/output -DTFLM_ARENA_BYTES=32768"
+          "configure_command": "cmake -S ./cortex-m/deployability-hil -B ./cortex-m/deployability-hil/build/f446_ds_cnn_tflm -DCMAKE_TOOLCHAIN_FILE=./build/core/tigris_runtime-v0.15.0/cmake/arm-none-eabi.cmake -DTIGRIS_RUNTIME_ROOT=./build/core/tigris_runtime-v0.15.0 -DTIGRIS_CORTEX_M_ROOT=./build/core/tigris_cortex_m-v0.5.0 -DTIGRIS_BOARD=nucleo_f446re -DBENCH_FRAMEWORK=tflm -DTFLM_MODEL=ds_cnn -DTFLM_MODEL_DIR=./models/output -DTFLM_ARENA_BYTES=32768"
         },
-        "captured_at_utc": "2026-11-08T06:30:03.849329Z"
+        "captured_at_utc": "2026-11-18T19:48:33.160323Z"
       },
       "f446_ts_cmsis_nn.log": {
         "artifacts": {
           "firmware": {
             "name": "tigris_bench.bin",
-            "sha256": "1066030fe95eee72fa5d7c4e9a04f1edab4544ce6be1d7c6c3fdfd971af07cac",
-            "size_bytes": 134520
+            "sha256": "f0b4f1f7d1246c314e3c5932ea4bc46b836738ff2344bdf8b16c5abe8f0e0abd",
+            "size_bytes": 136664
           },
           "model": {
             "name": "ts.tgrs",
@@ -49665,16 +49665,16 @@
           "specs": null
         },
         "build": {
-          "configure_command": "cmake -S ./cortex-m/deployability-hil -B ./cortex-m/deployability-hil/build/f446_ts_cmsis_nn -DCMAKE_TOOLCHAIN_FILE=./build/core/tigris_runtime-v0.14.1/cmake/arm-none-eabi.cmake -DTIGRIS_RUNTIME_ROOT=./build/core/tigris_runtime-v0.14.1 -DTIGRIS_CORTEX_M_ROOT=./build/core/tigris_cortex_m-v0.3.0 -DTIGRIS_BOARD=nucleo_f446re -DBENCH_KERNEL=cmsis_nn -DBENCH_MODEL=ts -DTIGRIS_PLAN=./cortex-m/deployability-hil/build/plans/ts.tgrs -DTIGRIS_CODEGEN=./build/core/tigris-ml-0.14.1/bin/tigris -DTIGRIS_FAST_ARENA_BYTES=65536 -DTIGRIS_SLOW_ARENA_BYTES=8192"
+          "configure_command": "cmake -S ./cortex-m/deployability-hil -B ./cortex-m/deployability-hil/build/f446_ts_cmsis_nn -DCMAKE_TOOLCHAIN_FILE=./build/core/tigris_runtime-v0.15.0/cmake/arm-none-eabi.cmake -DTIGRIS_RUNTIME_ROOT=./build/core/tigris_runtime-v0.15.0 -DTIGRIS_CORTEX_M_ROOT=./build/core/tigris_cortex_m-v0.5.0 -DTIGRIS_BOARD=nucleo_f446re -DBENCH_KERNEL=cmsis_nn -DBENCH_MODEL=ts -DTIGRIS_PLAN=./cortex-m/deployability-hil/build/plans/ts.tgrs -DTIGRIS_CODEGEN=./build/core/tigris-ml-0.15.0/bin/tigris -DTIGRIS_FAST_ARENA_BYTES=65536 -DTIGRIS_SLOW_ARENA_BYTES=8192"
         },
-        "captured_at_utc": "2026-11-08T06:31:35.401757Z"
+        "captured_at_utc": "2026-11-18T19:50:03.228640Z"
       },
       "f446_ts_s8_ref.log": {
         "artifacts": {
           "firmware": {
             "name": "tigris_bench.bin",
-            "sha256": "dd04979d6dd340fb9cdd624c44ed2a040ec8b76f63785d89efe91234ab61560e",
-            "size_bytes": 114056
+            "sha256": "b72592dc0bcf0e183161d23707267f5e0cbd476e8f834945103f9b5ebf3ee834",
+            "size_bytes": 116200
           },
           "model": {
             "name": "ts.tgrs",
@@ -49688,9 +49688,9 @@
           "specs": null
         },
         "build": {
-          "configure_command": "cmake -S ./cortex-m/deployability-hil -B ./cortex-m/deployability-hil/build/f446_ts_s8_ref -DCMAKE_TOOLCHAIN_FILE=./build/core/tigris_runtime-v0.14.1/cmake/arm-none-eabi.cmake -DTIGRIS_RUNTIME_ROOT=./build/core/tigris_runtime-v0.14.1 -DTIGRIS_CORTEX_M_ROOT=./build/core/tigris_cortex_m-v0.3.0 -DTIGRIS_BOARD=nucleo_f446re -DBENCH_KERNEL=s8_ref -DBENCH_MODEL=ts -DTIGRIS_PLAN=./cortex-m/deployability-hil/build/plans/ts.tgrs -DTIGRIS_CODEGEN=./build/core/tigris-ml-0.14.1/bin/tigris -DTIGRIS_FAST_ARENA_BYTES=65536 -DTIGRIS_SLOW_ARENA_BYTES=8192"
+          "configure_command": "cmake -S ./cortex-m/deployability-hil -B ./cortex-m/deployability-hil/build/f446_ts_s8_ref -DCMAKE_TOOLCHAIN_FILE=./build/core/tigris_runtime-v0.15.0/cmake/arm-none-eabi.cmake -DTIGRIS_RUNTIME_ROOT=./build/core/tigris_runtime-v0.15.0 -DTIGRIS_CORTEX_M_ROOT=./build/core/tigris_cortex_m-v0.5.0 -DTIGRIS_BOARD=nucleo_f446re -DBENCH_KERNEL=s8_ref -DBENCH_MODEL=ts -DTIGRIS_PLAN=./cortex-m/deployability-hil/build/plans/ts.tgrs -DTIGRIS_CODEGEN=./build/core/tigris-ml-0.15.0/bin/tigris -DTIGRIS_FAST_ARENA_BYTES=65536 -DTIGRIS_SLOW_ARENA_BYTES=8192"
         },
-        "captured_at_utc": "2026-11-08T06:31:44.778483Z"
+        "captured_at_utc": "2026-11-18T19:50:12.133287Z"
       },
       "f446_ts_tflm.log": {
         "artifacts": {
@@ -49719,16 +49719,16 @@
           "specs": null
         },
         "build": {
-          "configure_command": "cmake -S ./cortex-m/deployability-hil -B ./cortex-m/deployability-hil/build/f446_ts_tflm -DCMAKE_TOOLCHAIN_FILE=./build/core/tigris_runtime-v0.14.1/cmake/arm-none-eabi.cmake -DTIGRIS_RUNTIME_ROOT=./build/core/tigris_runtime-v0.14.1 -DTIGRIS_CORTEX_M_ROOT=./build/core/tigris_cortex_m-v0.3.0 -DTIGRIS_BOARD=nucleo_f446re -DBENCH_FRAMEWORK=tflm -DTFLM_MODEL=ts -DTFLM_MODEL_DIR=./models/output -DTFLM_ARENA_BYTES=32768"
+          "configure_command": "cmake -S ./cortex-m/deployability-hil -B ./cortex-m/deployability-hil/build/f446_ts_tflm -DCMAKE_TOOLCHAIN_FILE=./build/core/tigris_runtime-v0.15.0/cmake/arm-none-eabi.cmake -DTIGRIS_RUNTIME_ROOT=./build/core/tigris_runtime-v0.15.0 -DTIGRIS_CORTEX_M_ROOT=./build/core/tigris_cortex_m-v0.5.0 -DTIGRIS_BOARD=nucleo_f446re -DBENCH_FRAMEWORK=tflm -DTFLM_MODEL=ts -DTFLM_MODEL_DIR=./models/output -DTFLM_ARENA_BYTES=32768"
         },
-        "captured_at_utc": "2026-11-08T06:31:57.597020Z"
+        "captured_at_utc": "2026-11-18T19:50:24.479433Z"
       },
       "h753_ad_cmsis_nn.log": {
         "artifacts": {
           "firmware": {
             "name": "tigris_bench.bin",
-            "sha256": "5b9d6ca874171d7b9f23a20d4c917000e22d7be36c7b866f575e8c040b352476",
-            "size_bytes": 396152
+            "sha256": "e139cce875d2bbabb9e7d049cb4a622943f3bd3cece138fa52d45b1cb1b0fea3",
+            "size_bytes": 398296
           },
           "model": {
             "name": "ad.tgrs",
@@ -49742,16 +49742,16 @@
           "specs": null
         },
         "build": {
-          "configure_command": "cmake -S ./cortex-m/deployability-hil -B ./cortex-m/deployability-hil/build/h753_ad_cmsis_nn -DCMAKE_TOOLCHAIN_FILE=./build/core/tigris_runtime-v0.14.1/cmake/arm-none-eabi.cmake -DTIGRIS_RUNTIME_ROOT=./build/core/tigris_runtime-v0.14.1 -DTIGRIS_CORTEX_M_ROOT=./build/core/tigris_cortex_m-v0.3.0 -DTIGRIS_BOARD=nucleo_h753zi -DBENCH_KERNEL=cmsis_nn -DBENCH_MODEL=ad -DTIGRIS_PLAN=./cortex-m/deployability-hil/build/plans/ad.tgrs -DTIGRIS_CODEGEN=./build/core/tigris-ml-0.14.1/bin/tigris -DTIGRIS_FAST_ARENA_BYTES=65536 -DTIGRIS_SLOW_ARENA_BYTES=8192"
+          "configure_command": "cmake -S ./cortex-m/deployability-hil -B ./cortex-m/deployability-hil/build/h753_ad_cmsis_nn -DCMAKE_TOOLCHAIN_FILE=./build/core/tigris_runtime-v0.15.0/cmake/arm-none-eabi.cmake -DTIGRIS_RUNTIME_ROOT=./build/core/tigris_runtime-v0.15.0 -DTIGRIS_CORTEX_M_ROOT=./build/core/tigris_cortex_m-v0.5.0 -DTIGRIS_BOARD=nucleo_h753zi -DBENCH_KERNEL=cmsis_nn -DBENCH_MODEL=ad -DTIGRIS_PLAN=./cortex-m/deployability-hil/build/plans/ad.tgrs -DTIGRIS_CODEGEN=./build/core/tigris-ml-0.15.0/bin/tigris -DTIGRIS_FAST_ARENA_BYTES=65536 -DTIGRIS_SLOW_ARENA_BYTES=8192"
         },
-        "captured_at_utc": "2026-11-08T06:25:13.283221Z"
+        "captured_at_utc": "2026-11-18T19:43:45.235524Z"
       },
       "h753_ad_s8_ref.log": {
         "artifacts": {
           "firmware": {
             "name": "tigris_bench.bin",
-            "sha256": "728223d8fe43fe81069be44b93359c13787f1826b7109907f9bd136c09292371",
-            "size_bytes": 383912
+            "sha256": "4f52dd9d470c58dbce49bb459e82d7f7f93be9a62492c8daaf7a7241c7eb1271",
+            "size_bytes": 386072
           },
           "model": {
             "name": "ad.tgrs",
@@ -49765,9 +49765,9 @@
           "specs": null
         },
         "build": {
-          "configure_command": "cmake -S ./cortex-m/deployability-hil -B ./cortex-m/deployability-hil/build/h753_ad_s8_ref -DCMAKE_TOOLCHAIN_FILE=./build/core/tigris_runtime-v0.14.1/cmake/arm-none-eabi.cmake -DTIGRIS_RUNTIME_ROOT=./build/core/tigris_runtime-v0.14.1 -DTIGRIS_CORTEX_M_ROOT=./build/core/tigris_cortex_m-v0.3.0 -DTIGRIS_BOARD=nucleo_h753zi -DBENCH_KERNEL=s8_ref -DBENCH_MODEL=ad -DTIGRIS_PLAN=./cortex-m/deployability-hil/build/plans/ad.tgrs -DTIGRIS_CODEGEN=./build/core/tigris-ml-0.14.1/bin/tigris -DTIGRIS_FAST_ARENA_BYTES=65536 -DTIGRIS_SLOW_ARENA_BYTES=8192"
+          "configure_command": "cmake -S ./cortex-m/deployability-hil -B ./cortex-m/deployability-hil/build/h753_ad_s8_ref -DCMAKE_TOOLCHAIN_FILE=./build/core/tigris_runtime-v0.15.0/cmake/arm-none-eabi.cmake -DTIGRIS_RUNTIME_ROOT=./build/core/tigris_runtime-v0.15.0 -DTIGRIS_CORTEX_M_ROOT=./build/core/tigris_cortex_m-v0.5.0 -DTIGRIS_BOARD=nucleo_h753zi -DBENCH_KERNEL=s8_ref -DBENCH_MODEL=ad -DTIGRIS_PLAN=./cortex-m/deployability-hil/build/plans/ad.tgrs -DTIGRIS_CODEGEN=./build/core/tigris-ml-0.15.0/bin/tigris -DTIGRIS_FAST_ARENA_BYTES=65536 -DTIGRIS_SLOW_ARENA_BYTES=8192"
         },
-        "captured_at_utc": "2026-11-08T06:25:37.599062Z"
+        "captured_at_utc": "2026-11-18T19:44:09.352886Z"
       },
       "h753_ad_tflm.log": {
         "artifacts": {
@@ -49796,16 +49796,16 @@
           "specs": null
         },
         "build": {
-          "configure_command": "cmake -S ./cortex-m/deployability-hil -B ./cortex-m/deployability-hil/build/h753_ad_tflm -DCMAKE_TOOLCHAIN_FILE=./build/core/tigris_runtime-v0.14.1/cmake/arm-none-eabi.cmake -DTIGRIS_RUNTIME_ROOT=./build/core/tigris_runtime-v0.14.1 -DTIGRIS_CORTEX_M_ROOT=./build/core/tigris_cortex_m-v0.3.0 -DTIGRIS_BOARD=nucleo_h753zi -DBENCH_FRAMEWORK=tflm -DTFLM_MODEL=ad -DTFLM_MODEL_DIR=./models/output -DTFLM_ARENA_BYTES=32768"
+          "configure_command": "cmake -S ./cortex-m/deployability-hil -B ./cortex-m/deployability-hil/build/h753_ad_tflm -DCMAKE_TOOLCHAIN_FILE=./build/core/tigris_runtime-v0.15.0/cmake/arm-none-eabi.cmake -DTIGRIS_RUNTIME_ROOT=./build/core/tigris_runtime-v0.15.0 -DTIGRIS_CORTEX_M_ROOT=./build/core/tigris_cortex_m-v0.5.0 -DTIGRIS_BOARD=nucleo_h753zi -DBENCH_FRAMEWORK=tflm -DTFLM_MODEL=ad -DTFLM_MODEL_DIR=./models/output -DTFLM_ARENA_BYTES=32768"
         },
-        "captured_at_utc": "2026-11-08T06:26:05.227900Z"
+        "captured_at_utc": "2026-11-18T19:44:36.585856Z"
       },
       "h753_ds_cnn_cmsis_nn.log": {
         "artifacts": {
           "firmware": {
             "name": "tigris_bench.bin",
-            "sha256": "67510d830ebdf15bfd8e6cc5ea8a216c6a504d85529d269029aee094e98fac9f",
-            "size_bytes": 160824
+            "sha256": "2e51e62aeb2f050cef70abbe4b0f8eecfec42520ca32cfe2080b55a0bc4b163b",
+            "size_bytes": 162968
           },
           "model": {
             "name": "ds_cnn.tgrs",
@@ -49819,16 +49819,16 @@
           "specs": null
         },
         "build": {
-          "configure_command": "cmake -S ./cortex-m/deployability-hil -B ./cortex-m/deployability-hil/build/h753_ds_cnn_cmsis_nn -DCMAKE_TOOLCHAIN_FILE=./build/core/tigris_runtime-v0.14.1/cmake/arm-none-eabi.cmake -DTIGRIS_RUNTIME_ROOT=./build/core/tigris_runtime-v0.14.1 -DTIGRIS_CORTEX_M_ROOT=./build/core/tigris_cortex_m-v0.3.0 -DTIGRIS_BOARD=nucleo_h753zi -DBENCH_KERNEL=cmsis_nn -DBENCH_MODEL=ds_cnn -DTIGRIS_PLAN=./cortex-m/deployability-hil/build/plans/ds_cnn.tgrs -DTIGRIS_CODEGEN=./build/core/tigris-ml-0.14.1/bin/tigris -DTIGRIS_FAST_ARENA_BYTES=65536 -DTIGRIS_SLOW_ARENA_BYTES=8192"
+          "configure_command": "cmake -S ./cortex-m/deployability-hil -B ./cortex-m/deployability-hil/build/h753_ds_cnn_cmsis_nn -DCMAKE_TOOLCHAIN_FILE=./build/core/tigris_runtime-v0.15.0/cmake/arm-none-eabi.cmake -DTIGRIS_RUNTIME_ROOT=./build/core/tigris_runtime-v0.15.0 -DTIGRIS_CORTEX_M_ROOT=./build/core/tigris_cortex_m-v0.5.0 -DTIGRIS_BOARD=nucleo_h753zi -DBENCH_KERNEL=cmsis_nn -DBENCH_MODEL=ds_cnn -DTIGRIS_PLAN=./cortex-m/deployability-hil/build/plans/ds_cnn.tgrs -DTIGRIS_CODEGEN=./build/core/tigris-ml-0.15.0/bin/tigris -DTIGRIS_FAST_ARENA_BYTES=65536 -DTIGRIS_SLOW_ARENA_BYTES=8192"
         },
-        "captured_at_utc": "2026-11-08T06:24:21.693335Z"
+        "captured_at_utc": "2026-11-18T19:42:54.920320Z"
       },
       "h753_ds_cnn_s8_ref.log": {
         "artifacts": {
           "firmware": {
             "name": "tigris_bench.bin",
-            "sha256": "a5ac2af47e0a1daefefda6153bae56b1c546e904e31d6d8ad3f6adb3e604fb48",
-            "size_bytes": 133928
+            "sha256": "8693eb45a646a8d2575b9ba1f3e48db77b351a08acc69266f7716c2e6897c6f1",
+            "size_bytes": 136056
           },
           "model": {
             "name": "ds_cnn.tgrs",
@@ -49842,9 +49842,9 @@
           "specs": null
         },
         "build": {
-          "configure_command": "cmake -S ./cortex-m/deployability-hil -B ./cortex-m/deployability-hil/build/h753_ds_cnn_s8_ref -DCMAKE_TOOLCHAIN_FILE=./build/core/tigris_runtime-v0.14.1/cmake/arm-none-eabi.cmake -DTIGRIS_RUNTIME_ROOT=./build/core/tigris_runtime-v0.14.1 -DTIGRIS_CORTEX_M_ROOT=./build/core/tigris_cortex_m-v0.3.0 -DTIGRIS_BOARD=nucleo_h753zi -DBENCH_KERNEL=s8_ref -DBENCH_MODEL=ds_cnn -DTIGRIS_PLAN=./cortex-m/deployability-hil/build/plans/ds_cnn.tgrs -DTIGRIS_CODEGEN=./build/core/tigris-ml-0.14.1/bin/tigris -DTIGRIS_FAST_ARENA_BYTES=65536 -DTIGRIS_SLOW_ARENA_BYTES=8192"
+          "configure_command": "cmake -S ./cortex-m/deployability-hil -B ./cortex-m/deployability-hil/build/h753_ds_cnn_s8_ref -DCMAKE_TOOLCHAIN_FILE=./build/core/tigris_runtime-v0.15.0/cmake/arm-none-eabi.cmake -DTIGRIS_RUNTIME_ROOT=./build/core/tigris_runtime-v0.15.0 -DTIGRIS_CORTEX_M_ROOT=./build/core/tigris_cortex_m-v0.5.0 -DTIGRIS_BOARD=nucleo_h753zi -DBENCH_KERNEL=s8_ref -DBENCH_MODEL=ds_cnn -DTIGRIS_PLAN=./cortex-m/deployability-hil/build/plans/ds_cnn.tgrs -DTIGRIS_CODEGEN=./build/core/tigris-ml-0.15.0/bin/tigris -DTIGRIS_FAST_ARENA_BYTES=65536 -DTIGRIS_SLOW_ARENA_BYTES=8192"
         },
-        "captured_at_utc": "2026-11-08T06:24:33.947078Z"
+        "captured_at_utc": "2026-11-18T19:43:06.752015Z"
       },
       "h753_ds_cnn_tflm.log": {
         "artifacts": {
@@ -49873,16 +49873,16 @@
           "specs": null
         },
         "build": {
-          "configure_command": "cmake -S ./cortex-m/deployability-hil -B ./cortex-m/deployability-hil/build/h753_ds_cnn_tflm -DCMAKE_TOOLCHAIN_FILE=./build/core/tigris_runtime-v0.14.1/cmake/arm-none-eabi.cmake -DTIGRIS_RUNTIME_ROOT=./build/core/tigris_runtime-v0.14.1 -DTIGRIS_CORTEX_M_ROOT=./build/core/tigris_cortex_m-v0.3.0 -DTIGRIS_BOARD=nucleo_h753zi -DBENCH_FRAMEWORK=tflm -DTFLM_MODEL=ds_cnn -DTFLM_MODEL_DIR=./models/output -DTFLM_ARENA_BYTES=32768"
+          "configure_command": "cmake -S ./cortex-m/deployability-hil -B ./cortex-m/deployability-hil/build/h753_ds_cnn_tflm -DCMAKE_TOOLCHAIN_FILE=./build/core/tigris_runtime-v0.15.0/cmake/arm-none-eabi.cmake -DTIGRIS_RUNTIME_ROOT=./build/core/tigris_runtime-v0.15.0 -DTIGRIS_CORTEX_M_ROOT=./build/core/tigris_cortex_m-v0.5.0 -DTIGRIS_BOARD=nucleo_h753zi -DBENCH_FRAMEWORK=tflm -DTFLM_MODEL=ds_cnn -DTFLM_MODEL_DIR=./models/output -DTFLM_ARENA_BYTES=32768"
         },
-        "captured_at_utc": "2026-11-08T06:24:47.551270Z"
+        "captured_at_utc": "2026-11-18T19:43:19.907847Z"
       },
       "h753_mbv2_cmsis_nn.log": {
         "artifacts": {
           "firmware": {
             "name": "tigris_bench.bin",
-            "sha256": "6047e2f836df7aa491d495a38e4d0e1dc60ca7141d3d8a7f1f993e796a4701ba",
-            "size_bytes": 621836
+            "sha256": "08d0d0d128a5adeafafa9792091f153da9c5fe2b7572c4ca9127316f23a522cd",
+            "size_bytes": 623964
           },
           "model": {
             "name": "mbv2.tgrs",
@@ -49896,9 +49896,9 @@
           "specs": null
         },
         "build": {
-          "configure_command": "cmake -S ./cortex-m/deployability-hil -B ./cortex-m/deployability-hil/build/h753_mbv2_cmsis_nn -DCMAKE_TOOLCHAIN_FILE=./build/core/tigris_runtime-v0.14.1/cmake/arm-none-eabi.cmake -DTIGRIS_RUNTIME_ROOT=./build/core/tigris_runtime-v0.14.1 -DTIGRIS_CORTEX_M_ROOT=./build/core/tigris_cortex_m-v0.3.0 -DTIGRIS_BOARD=nucleo_h753zi -DBENCH_KERNEL=cmsis_nn -DBENCH_MODEL=mbv2 -DTIGRIS_PLAN=./cortex-m/deployability-hil/build/plans/mbv2.tgrs -DTIGRIS_CODEGEN=./build/core/tigris-ml-0.14.1/bin/tigris -DTIGRIS_FAST_ARENA_BYTES=163840 -DTIGRIS_SLOW_ARENA_BYTES=327680"
+          "configure_command": "cmake -S ./cortex-m/deployability-hil -B ./cortex-m/deployability-hil/build/h753_mbv2_cmsis_nn -DCMAKE_TOOLCHAIN_FILE=./build/core/tigris_runtime-v0.15.0/cmake/arm-none-eabi.cmake -DTIGRIS_RUNTIME_ROOT=./build/core/tigris_runtime-v0.15.0 -DTIGRIS_CORTEX_M_ROOT=./build/core/tigris_cortex_m-v0.5.0 -DTIGRIS_BOARD=nucleo_h753zi -DBENCH_KERNEL=cmsis_nn -DBENCH_MODEL=mbv2 -DTIGRIS_PLAN=./cortex-m/deployability-hil/build/plans/mbv2.tgrs -DTIGRIS_CODEGEN=./build/core/tigris-ml-0.15.0/bin/tigris -DTIGRIS_FAST_ARENA_BYTES=163840 -DTIGRIS_SLOW_ARENA_BYTES=327680"
         },
-        "captured_at_utc": "2026-11-08T06:27:25.123358Z"
+        "captured_at_utc": "2026-11-18T19:45:55.915143Z"
       },
       "h753_mbv2_tflm.log": {
         "artifacts": {
@@ -49927,9 +49927,9 @@
           "specs": null
         },
         "build": {
-          "configure_command": "cmake -S ./cortex-m/deployability-hil -B ./cortex-m/deployability-hil/build/h753_mbv2_tflm -DCMAKE_TOOLCHAIN_FILE=./build/core/tigris_runtime-v0.14.1/cmake/arm-none-eabi.cmake -DTIGRIS_RUNTIME_ROOT=./build/core/tigris_runtime-v0.14.1 -DTIGRIS_CORTEX_M_ROOT=./build/core/tigris_cortex_m-v0.3.0 -DTIGRIS_BOARD=nucleo_h753zi -DBENCH_FRAMEWORK=tflm -DTFLM_MODEL=mbv2 -DTFLM_MODEL_DIR=./models/output -DTFLM_ARENA_BYTES=491520"
+          "configure_command": "cmake -S ./cortex-m/deployability-hil -B ./cortex-m/deployability-hil/build/h753_mbv2_tflm -DCMAKE_TOOLCHAIN_FILE=./build/core/tigris_runtime-v0.15.0/cmake/arm-none-eabi.cmake -DTIGRIS_RUNTIME_ROOT=./build/core/tigris_runtime-v0.15.0 -DTIGRIS_CORTEX_M_ROOT=./build/core/tigris_cortex_m-v0.5.0 -DTIGRIS_BOARD=nucleo_h753zi -DBENCH_FRAMEWORK=tflm -DTFLM_MODEL=mbv2 -DTFLM_MODEL_DIR=./models/output -DTFLM_ARENA_BYTES=491520"
         },
-        "captured_at_utc": "2026-11-08T06:28:08.094611Z"
+        "captured_at_utc": "2026-11-18T19:46:38.709717Z"
       },
       "h753_mbv2_tflm_export.log": {
         "artifacts": {
@@ -49958,16 +49958,16 @@
           "specs": null
         },
         "build": {
-          "configure_command": "cmake -S ./cortex-m/deployability-hil -B ./cortex-m/deployability-hil/build/h753_mbv2_tflm_export -DCMAKE_TOOLCHAIN_FILE=./build/core/tigris_runtime-v0.14.1/cmake/arm-none-eabi.cmake -DTIGRIS_RUNTIME_ROOT=./build/core/tigris_runtime-v0.14.1 -DTIGRIS_CORTEX_M_ROOT=./build/core/tigris_cortex_m-v0.3.0 -DTIGRIS_BOARD=nucleo_h753zi -DBENCH_FRAMEWORK=tflm -DTFLM_MODEL=mbv2_export -DTFLM_MODEL_DIR=./cortex-m/deployability-hil/build/plans -DTFLM_ARENA_BYTES=491520"
+          "configure_command": "cmake -S ./cortex-m/deployability-hil -B ./cortex-m/deployability-hil/build/h753_mbv2_tflm_export -DCMAKE_TOOLCHAIN_FILE=./build/core/tigris_runtime-v0.15.0/cmake/arm-none-eabi.cmake -DTIGRIS_RUNTIME_ROOT=./build/core/tigris_runtime-v0.15.0 -DTIGRIS_CORTEX_M_ROOT=./build/core/tigris_cortex_m-v0.5.0 -DTIGRIS_BOARD=nucleo_h753zi -DBENCH_FRAMEWORK=tflm -DTFLM_MODEL=mbv2_export -DTFLM_MODEL_DIR=./cortex-m/deployability-hil/build/plans -DTFLM_ARENA_BYTES=491520"
         },
-        "captured_at_utc": "2026-11-08T06:29:08.758850Z"
+        "captured_at_utc": "2026-11-18T19:47:39.307590Z"
       },
       "h753_ts_cmsis_nn.log": {
         "artifacts": {
           "firmware": {
             "name": "tigris_bench.bin",
-            "sha256": "da27e76e5dfcb28ce535d129a776194977b2773014c7b3f3fa641dce720267ac",
-            "size_bytes": 130072
+            "sha256": "6038b1ff208c93d8380c9d94326c9f520f32bae89c476c40398cf44f3fd67148",
+            "size_bytes": 132216
           },
           "model": {
             "name": "ts.tgrs",
@@ -49981,16 +49981,16 @@
           "specs": null
         },
         "build": {
-          "configure_command": "cmake -S ./cortex-m/deployability-hil -B ./cortex-m/deployability-hil/build/h753_ts_cmsis_nn -DCMAKE_TOOLCHAIN_FILE=./build/core/tigris_runtime-v0.14.1/cmake/arm-none-eabi.cmake -DTIGRIS_RUNTIME_ROOT=./build/core/tigris_runtime-v0.14.1 -DTIGRIS_CORTEX_M_ROOT=./build/core/tigris_cortex_m-v0.3.0 -DTIGRIS_BOARD=nucleo_h753zi -DBENCH_KERNEL=cmsis_nn -DBENCH_MODEL=ts -DTIGRIS_PLAN=./cortex-m/deployability-hil/build/plans/ts.tgrs -DTIGRIS_CODEGEN=./build/core/tigris-ml-0.14.1/bin/tigris -DTIGRIS_FAST_ARENA_BYTES=65536 -DTIGRIS_SLOW_ARENA_BYTES=8192"
+          "configure_command": "cmake -S ./cortex-m/deployability-hil -B ./cortex-m/deployability-hil/build/h753_ts_cmsis_nn -DCMAKE_TOOLCHAIN_FILE=./build/core/tigris_runtime-v0.15.0/cmake/arm-none-eabi.cmake -DTIGRIS_RUNTIME_ROOT=./build/core/tigris_runtime-v0.15.0 -DTIGRIS_CORTEX_M_ROOT=./build/core/tigris_cortex_m-v0.5.0 -DTIGRIS_BOARD=nucleo_h753zi -DBENCH_KERNEL=cmsis_nn -DBENCH_MODEL=ts -DTIGRIS_PLAN=./cortex-m/deployability-hil/build/plans/ts.tgrs -DTIGRIS_CODEGEN=./build/core/tigris-ml-0.15.0/bin/tigris -DTIGRIS_FAST_ARENA_BYTES=65536 -DTIGRIS_SLOW_ARENA_BYTES=8192"
         },
-        "captured_at_utc": "2026-11-08T06:26:14.617627Z"
+        "captured_at_utc": "2026-11-18T19:44:46.443194Z"
       },
       "h753_ts_s8_ref.log": {
         "artifacts": {
           "firmware": {
             "name": "tigris_bench.bin",
-            "sha256": "f7a4d0b0aef033ae8cdd835880133c103556325eb31d144b71361360f0ed3688",
-            "size_bytes": 109192
+            "sha256": "fca474f4c16ca72debdd8406a5aa5d87bab7133f7ea2a46c01369994cfe5dc9c",
+            "size_bytes": 111336
           },
           "model": {
             "name": "ts.tgrs",
@@ -50004,9 +50004,9 @@
           "specs": null
         },
         "build": {
-          "configure_command": "cmake -S ./cortex-m/deployability-hil -B ./cortex-m/deployability-hil/build/h753_ts_s8_ref -DCMAKE_TOOLCHAIN_FILE=./build/core/tigris_runtime-v0.14.1/cmake/arm-none-eabi.cmake -DTIGRIS_RUNTIME_ROOT=./build/core/tigris_runtime-v0.14.1 -DTIGRIS_CORTEX_M_ROOT=./build/core/tigris_cortex_m-v0.3.0 -DTIGRIS_BOARD=nucleo_h753zi -DBENCH_KERNEL=s8_ref -DBENCH_MODEL=ts -DTIGRIS_PLAN=./cortex-m/deployability-hil/build/plans/ts.tgrs -DTIGRIS_CODEGEN=./build/core/tigris-ml-0.14.1/bin/tigris -DTIGRIS_FAST_ARENA_BYTES=65536 -DTIGRIS_SLOW_ARENA_BYTES=8192"
+          "configure_command": "cmake -S ./cortex-m/deployability-hil -B ./cortex-m/deployability-hil/build/h753_ts_s8_ref -DCMAKE_TOOLCHAIN_FILE=./build/core/tigris_runtime-v0.15.0/cmake/arm-none-eabi.cmake -DTIGRIS_RUNTIME_ROOT=./build/core/tigris_runtime-v0.15.0 -DTIGRIS_CORTEX_M_ROOT=./build/core/tigris_cortex_m-v0.5.0 -DTIGRIS_BOARD=nucleo_h753zi -DBENCH_KERNEL=s8_ref -DBENCH_MODEL=ts -DTIGRIS_PLAN=./cortex-m/deployability-hil/build/plans/ts.tgrs -DTIGRIS_CODEGEN=./build/core/tigris-ml-0.15.0/bin/tigris -DTIGRIS_FAST_ARENA_BYTES=65536 -DTIGRIS_SLOW_ARENA_BYTES=8192"
         },
-        "captured_at_utc": "2026-11-08T06:26:23.099325Z"
+        "captured_at_utc": "2026-11-18T19:44:54.485566Z"
       },
       "h753_ts_tflm.log": {
         "artifacts": {
@@ -50035,16 +50035,16 @@
           "specs": null
         },
         "build": {
-          "configure_command": "cmake -S ./cortex-m/deployability-hil -B ./cortex-m/deployability-hil/build/h753_ts_tflm -DCMAKE_TOOLCHAIN_FILE=./build/core/tigris_runtime-v0.14.1/cmake/arm-none-eabi.cmake -DTIGRIS_RUNTIME_ROOT=./build/core/tigris_runtime-v0.14.1 -DTIGRIS_CORTEX_M_ROOT=./build/core/tigris_cortex_m-v0.3.0 -DTIGRIS_BOARD=nucleo_h753zi -DBENCH_FRAMEWORK=tflm -DTFLM_MODEL=ts -DTFLM_MODEL_DIR=./models/output -DTFLM_ARENA_BYTES=32768"
+          "configure_command": "cmake -S ./cortex-m/deployability-hil -B ./cortex-m/deployability-hil/build/h753_ts_tflm -DCMAKE_TOOLCHAIN_FILE=./build/core/tigris_runtime-v0.15.0/cmake/arm-none-eabi.cmake -DTIGRIS_RUNTIME_ROOT=./build/core/tigris_runtime-v0.15.0 -DTIGRIS_CORTEX_M_ROOT=./build/core/tigris_cortex_m-v0.5.0 -DTIGRIS_BOARD=nucleo_h753zi -DBENCH_FRAMEWORK=tflm -DTFLM_MODEL=ts -DTFLM_MODEL_DIR=./models/output -DTFLM_ARENA_BYTES=32768"
         },
-        "captured_at_utc": "2026-11-08T06:26:34.627701Z"
+        "captured_at_utc": "2026-11-18T19:45:05.547915Z"
       },
       "rp2350_ad_cmsis_nn.log": {
         "artifacts": {
           "firmware": {
             "name": "tigris_pico_bench.uf2",
-            "sha256": "5ea27713ef022fa09467b11bc9e1309f34fce8097f4dc8d06c3607582df44396",
-            "size_bytes": 811008
+            "sha256": "a2a0c897cbc7408e90be14243bfa3d6b0d637b19bf46e0b99c5154d9e8dceab3",
+            "size_bytes": 815104
           },
           "model": {
             "name": "ad.tgrs",
@@ -50058,16 +50058,16 @@
           "specs": null
         },
         "build": {
-          "configure_command": "cmake -S ./cortex-m/deployability-hil/boards/pico2_rp2350 -B ./cortex-m/deployability-hil/build/rp2350_ad_cmsis_nn -Dpicotool_DIR=~/pico/picotool/install/lib/cmake/picotool -DBENCH_KERNEL=cmsis_nn -DTIGRIS_PLAN=./cortex-m/deployability-hil/build/plans/ad.tgrs -DBENCH_MODEL=ad -DTIGRIS_CODEGEN=./build/core/tigris-ml-0.14.1/bin/tigris -DTIGRIS_RUNTIME_ROOT=./build/core/tigris_runtime-v0.14.1 -DTIGRIS_CORTEX_M_ROOT=./build/core/tigris_cortex_m-v0.3.0 -DTIGRIS_FAST_ARENA_BYTES=65536 -DTIGRIS_SLOW_ARENA_BYTES=8192"
+          "configure_command": "cmake -S ./cortex-m/deployability-hil/boards/pico2_rp2350 -B ./cortex-m/deployability-hil/build/rp2350_ad_cmsis_nn -Dpicotool_DIR=~/pico/picotool/install/lib/cmake/picotool -DBENCH_KERNEL=cmsis_nn -DTIGRIS_PLAN=./cortex-m/deployability-hil/build/plans/ad.tgrs -DBENCH_MODEL=ad -DTIGRIS_CODEGEN=./build/core/tigris-ml-0.15.0/bin/tigris -DTIGRIS_RUNTIME_ROOT=./build/core/tigris_runtime-v0.15.0 -DTIGRIS_CORTEX_M_ROOT=./build/core/tigris_cortex_m-v0.5.0 -DTIGRIS_FAST_ARENA_BYTES=65536 -DTIGRIS_SLOW_ARENA_BYTES=8192"
         },
-        "captured_at_utc": "2026-11-08T06:32:40.117333Z"
+        "captured_at_utc": "2026-11-18T19:51:07.435534Z"
       },
       "rp2350_ad_s8_ref.log": {
         "artifacts": {
           "firmware": {
             "name": "tigris_pico_bench.uf2",
-            "sha256": "63b12bbc3767b2a9a8e0c69d7d3bc28257949f62935c4ddd0d6a13af4fd361f0",
-            "size_bytes": 785920
+            "sha256": "728bbf4a4f22aa5d95a6cea9e81db480e4e0f95556d40d70a749ea4c5e3088e2",
+            "size_bytes": 790528
           },
           "model": {
             "name": "ad.tgrs",
@@ -50081,16 +50081,16 @@
           "specs": null
         },
         "build": {
-          "configure_command": "cmake -S ./cortex-m/deployability-hil/boards/pico2_rp2350 -B ./cortex-m/deployability-hil/build/rp2350_ad_s8_ref -Dpicotool_DIR=~/pico/picotool/install/lib/cmake/picotool -DBENCH_KERNEL=s8_ref -DTIGRIS_PLAN=./cortex-m/deployability-hil/build/plans/ad.tgrs -DBENCH_MODEL=ad -DTIGRIS_CODEGEN=./build/core/tigris-ml-0.14.1/bin/tigris -DTIGRIS_RUNTIME_ROOT=./build/core/tigris_runtime-v0.14.1 -DTIGRIS_CORTEX_M_ROOT=./build/core/tigris_cortex_m-v0.3.0 -DTIGRIS_FAST_ARENA_BYTES=65536 -DTIGRIS_SLOW_ARENA_BYTES=8192"
+          "configure_command": "cmake -S ./cortex-m/deployability-hil/boards/pico2_rp2350 -B ./cortex-m/deployability-hil/build/rp2350_ad_s8_ref -Dpicotool_DIR=~/pico/picotool/install/lib/cmake/picotool -DBENCH_KERNEL=s8_ref -DTIGRIS_PLAN=./cortex-m/deployability-hil/build/plans/ad.tgrs -DBENCH_MODEL=ad -DTIGRIS_CODEGEN=./build/core/tigris-ml-0.15.0/bin/tigris -DTIGRIS_RUNTIME_ROOT=./build/core/tigris_runtime-v0.15.0 -DTIGRIS_CORTEX_M_ROOT=./build/core/tigris_cortex_m-v0.5.0 -DTIGRIS_FAST_ARENA_BYTES=65536 -DTIGRIS_SLOW_ARENA_BYTES=8192"
         },
-        "captured_at_utc": "2026-11-08T06:32:53.542486Z"
+        "captured_at_utc": "2026-11-18T19:51:20.992392Z"
       },
       "rp2350_ds_cnn_cmsis_nn.log": {
         "artifacts": {
           "firmware": {
             "name": "tigris_pico_bench.uf2",
-            "sha256": "8d100a6e8aded42480c63ffb0134e523f63d012208dbb3bbe423b1fab2ede5f8",
-            "size_bytes": 340992
+            "sha256": "16eb740c4d9ed02835a7f7b273fc081eee5807e0663caed0c676bf6834beb31b",
+            "size_bytes": 345600
           },
           "model": {
             "name": "ds_cnn.tgrs",
@@ -50104,16 +50104,16 @@
           "specs": null
         },
         "build": {
-          "configure_command": "cmake -S ./cortex-m/deployability-hil/boards/pico2_rp2350 -B ./cortex-m/deployability-hil/build/rp2350_ds_cnn_cmsis_nn -Dpicotool_DIR=~/pico/picotool/install/lib/cmake/picotool -DBENCH_KERNEL=cmsis_nn -DTIGRIS_PLAN=./cortex-m/deployability-hil/build/plans/ds_cnn.tgrs -DBENCH_MODEL=ds_cnn -DTIGRIS_CODEGEN=./build/core/tigris-ml-0.14.1/bin/tigris -DTIGRIS_RUNTIME_ROOT=./build/core/tigris_runtime-v0.14.1 -DTIGRIS_CORTEX_M_ROOT=./build/core/tigris_cortex_m-v0.3.0 -DTIGRIS_FAST_ARENA_BYTES=65536 -DTIGRIS_SLOW_ARENA_BYTES=8192"
+          "configure_command": "cmake -S ./cortex-m/deployability-hil/boards/pico2_rp2350 -B ./cortex-m/deployability-hil/build/rp2350_ds_cnn_cmsis_nn -Dpicotool_DIR=~/pico/picotool/install/lib/cmake/picotool -DBENCH_KERNEL=cmsis_nn -DTIGRIS_PLAN=./cortex-m/deployability-hil/build/plans/ds_cnn.tgrs -DBENCH_MODEL=ds_cnn -DTIGRIS_CODEGEN=./build/core/tigris-ml-0.15.0/bin/tigris -DTIGRIS_RUNTIME_ROOT=./build/core/tigris_runtime-v0.15.0 -DTIGRIS_CORTEX_M_ROOT=./build/core/tigris_cortex_m-v0.5.0 -DTIGRIS_FAST_ARENA_BYTES=65536 -DTIGRIS_SLOW_ARENA_BYTES=8192"
         },
-        "captured_at_utc": "2026-11-08T06:32:08.706592Z"
+        "captured_at_utc": "2026-11-18T19:50:35.668853Z"
       },
       "rp2350_ds_cnn_s8_ref.log": {
         "artifacts": {
           "firmware": {
             "name": "tigris_pico_bench.uf2",
-            "sha256": "c6869226f8c420b7321d05f80ab1414da131beb74ff3a225b8598afef93acdad",
-            "size_bytes": 287232
+            "sha256": "691b2d92ab1ec96e95e9af85ad03be543a16650db46c0acaba14ceff008c9322",
+            "size_bytes": 291328
           },
           "model": {
             "name": "ds_cnn.tgrs",
@@ -50127,16 +50127,16 @@
           "specs": null
         },
         "build": {
-          "configure_command": "cmake -S ./cortex-m/deployability-hil/boards/pico2_rp2350 -B ./cortex-m/deployability-hil/build/rp2350_ds_cnn_s8_ref -Dpicotool_DIR=~/pico/picotool/install/lib/cmake/picotool -DBENCH_KERNEL=s8_ref -DTIGRIS_PLAN=./cortex-m/deployability-hil/build/plans/ds_cnn.tgrs -DBENCH_MODEL=ds_cnn -DTIGRIS_CODEGEN=./build/core/tigris-ml-0.14.1/bin/tigris -DTIGRIS_RUNTIME_ROOT=./build/core/tigris_runtime-v0.14.1 -DTIGRIS_CORTEX_M_ROOT=./build/core/tigris_cortex_m-v0.3.0 -DTIGRIS_FAST_ARENA_BYTES=65536 -DTIGRIS_SLOW_ARENA_BYTES=8192"
+          "configure_command": "cmake -S ./cortex-m/deployability-hil/boards/pico2_rp2350 -B ./cortex-m/deployability-hil/build/rp2350_ds_cnn_s8_ref -Dpicotool_DIR=~/pico/picotool/install/lib/cmake/picotool -DBENCH_KERNEL=s8_ref -DTIGRIS_PLAN=./cortex-m/deployability-hil/build/plans/ds_cnn.tgrs -DBENCH_MODEL=ds_cnn -DTIGRIS_CODEGEN=./build/core/tigris-ml-0.15.0/bin/tigris -DTIGRIS_RUNTIME_ROOT=./build/core/tigris_runtime-v0.15.0 -DTIGRIS_CORTEX_M_ROOT=./build/core/tigris_cortex_m-v0.5.0 -DTIGRIS_FAST_ARENA_BYTES=65536 -DTIGRIS_SLOW_ARENA_BYTES=8192"
         },
-        "captured_at_utc": "2026-11-08T06:32:26.239315Z"
+        "captured_at_utc": "2026-11-18T19:50:53.424004Z"
       },
       "rp2350_mbv2_cmsis_nn.log": {
         "artifacts": {
           "firmware": {
             "name": "tigris_pico_bench.uf2",
-            "sha256": "41f19279ed693c5f2fe2012b84294f41adeb191e284ae2c6de441a1cce447ad2",
-            "size_bytes": 1263616
+            "sha256": "b157c4f9501681a41cd05c39e357ab949a3ffb0fa6b6c42adb10729e45f3caf5",
+            "size_bytes": 1267712
           },
           "model": {
             "name": "mbv2.tgrs",
@@ -50150,16 +50150,16 @@
           "specs": null
         },
         "build": {
-          "configure_command": "cmake -S ./cortex-m/deployability-hil/boards/pico2_rp2350 -B ./cortex-m/deployability-hil/build/rp2350_mbv2_cmsis_nn -Dpicotool_DIR=~/pico/picotool/install/lib/cmake/picotool -DBENCH_KERNEL=cmsis_nn -DTIGRIS_PLAN=./cortex-m/deployability-hil/build/plans/mbv2.tgrs -DBENCH_MODEL=mbv2 -DTIGRIS_CODEGEN=./build/core/tigris-ml-0.14.1/bin/tigris -DTIGRIS_RUNTIME_ROOT=./build/core/tigris_runtime-v0.14.1 -DTIGRIS_CORTEX_M_ROOT=./build/core/tigris_cortex_m-v0.3.0 -DTIGRIS_FAST_ARENA_BYTES=163840 -DTIGRIS_SLOW_ARENA_BYTES=327680"
+          "configure_command": "cmake -S ./cortex-m/deployability-hil/boards/pico2_rp2350 -B ./cortex-m/deployability-hil/build/rp2350_mbv2_cmsis_nn -Dpicotool_DIR=~/pico/picotool/install/lib/cmake/picotool -DBENCH_KERNEL=cmsis_nn -DTIGRIS_PLAN=./cortex-m/deployability-hil/build/plans/mbv2.tgrs -DBENCH_MODEL=mbv2 -DTIGRIS_CODEGEN=./build/core/tigris-ml-0.15.0/bin/tigris -DTIGRIS_RUNTIME_ROOT=./build/core/tigris_runtime-v0.15.0 -DTIGRIS_CORTEX_M_ROOT=./build/core/tigris_cortex_m-v0.5.0 -DTIGRIS_FAST_ARENA_BYTES=163840 -DTIGRIS_SLOW_ARENA_BYTES=327680"
         },
-        "captured_at_utc": "2026-11-08T06:34:39.550636Z"
+        "captured_at_utc": "2026-11-18T19:53:07.043184Z"
       },
       "rp2350_ts_cmsis_nn.log": {
         "artifacts": {
           "firmware": {
             "name": "tigris_pico_bench.uf2",
-            "sha256": "ec79e0c2ff32aea9be56cd05687e0e6c6043a4cfb5106690347fe04e9d923fb7",
-            "size_bytes": 279552
+            "sha256": "8d5bd2e2419a87d980ef4e41e50a3cea325a09a233bc3012c8eb125eb4d63595",
+            "size_bytes": 283648
           },
           "model": {
             "name": "ts.tgrs",
@@ -50173,16 +50173,16 @@
           "specs": null
         },
         "build": {
-          "configure_command": "cmake -S ./cortex-m/deployability-hil/boards/pico2_rp2350 -B ./cortex-m/deployability-hil/build/rp2350_ts_cmsis_nn -Dpicotool_DIR=~/pico/picotool/install/lib/cmake/picotool -DBENCH_KERNEL=cmsis_nn -DTIGRIS_PLAN=./cortex-m/deployability-hil/build/plans/ts.tgrs -DBENCH_MODEL=ts -DTIGRIS_CODEGEN=./build/core/tigris-ml-0.14.1/bin/tigris -DTIGRIS_RUNTIME_ROOT=./build/core/tigris_runtime-v0.14.1 -DTIGRIS_CORTEX_M_ROOT=./build/core/tigris_cortex_m-v0.3.0 -DTIGRIS_FAST_ARENA_BYTES=65536 -DTIGRIS_SLOW_ARENA_BYTES=8192"
+          "configure_command": "cmake -S ./cortex-m/deployability-hil/boards/pico2_rp2350 -B ./cortex-m/deployability-hil/build/rp2350_ts_cmsis_nn -Dpicotool_DIR=~/pico/picotool/install/lib/cmake/picotool -DBENCH_KERNEL=cmsis_nn -DTIGRIS_PLAN=./cortex-m/deployability-hil/build/plans/ts.tgrs -DBENCH_MODEL=ts -DTIGRIS_CODEGEN=./build/core/tigris-ml-0.15.0/bin/tigris -DTIGRIS_RUNTIME_ROOT=./build/core/tigris_runtime-v0.15.0 -DTIGRIS_CORTEX_M_ROOT=./build/core/tigris_cortex_m-v0.5.0 -DTIGRIS_FAST_ARENA_BYTES=65536 -DTIGRIS_SLOW_ARENA_BYTES=8192"
         },
-        "captured_at_utc": "2026-11-08T06:33:01.391871Z"
+        "captured_at_utc": "2026-11-18T19:51:28.869648Z"
       },
       "rp2350_ts_s8_ref.log": {
         "artifacts": {
           "firmware": {
             "name": "tigris_pico_bench.uf2",
-            "sha256": "d5ca355995a1328cbfca52f085f1ef9be9be8a55bccbd3392d8db327fac02694",
-            "size_bytes": 237568
+            "sha256": "cd1dce689ea4628385f69dc42bfa599169761060ffbfbccbb639eac19517df46",
+            "size_bytes": 241664
           },
           "model": {
             "name": "ts.tgrs",
@@ -50196,9 +50196,9 @@
           "specs": null
         },
         "build": {
-          "configure_command": "cmake -S ./cortex-m/deployability-hil/boards/pico2_rp2350 -B ./cortex-m/deployability-hil/build/rp2350_ts_s8_ref -Dpicotool_DIR=~/pico/picotool/install/lib/cmake/picotool -DBENCH_KERNEL=s8_ref -DTIGRIS_PLAN=./cortex-m/deployability-hil/build/plans/ts.tgrs -DBENCH_MODEL=ts -DTIGRIS_CODEGEN=./build/core/tigris-ml-0.14.1/bin/tigris -DTIGRIS_RUNTIME_ROOT=./build/core/tigris_runtime-v0.14.1 -DTIGRIS_CORTEX_M_ROOT=./build/core/tigris_cortex_m-v0.3.0 -DTIGRIS_FAST_ARENA_BYTES=65536 -DTIGRIS_SLOW_ARENA_BYTES=8192"
+          "configure_command": "cmake -S ./cortex-m/deployability-hil/boards/pico2_rp2350 -B ./cortex-m/deployability-hil/build/rp2350_ts_s8_ref -Dpicotool_DIR=~/pico/picotool/install/lib/cmake/picotool -DBENCH_KERNEL=s8_ref -DTIGRIS_PLAN=./cortex-m/deployability-hil/build/plans/ts.tgrs -DBENCH_MODEL=ts -DTIGRIS_CODEGEN=./build/core/tigris-ml-0.15.0/bin/tigris -DTIGRIS_RUNTIME_ROOT=./build/core/tigris_runtime-v0.15.0 -DTIGRIS_CORTEX_M_ROOT=./build/core/tigris_cortex_m-v0.5.0 -DTIGRIS_FAST_ARENA_BYTES=65536 -DTIGRIS_SLOW_ARENA_BYTES=8192"
         },
-        "captured_at_utc": "2026-11-08T06:33:08.988773Z"
+        "captured_at_utc": "2026-11-18T19:51:36.481782Z"
       }
     }
   }

@@ -14,7 +14,7 @@ dependencies:
       type: idf
     version: 5.4.0
   raws-labs/tigris-runtime:
-    component_hash: 17cf7cd50944545ca98b6234f053752c6897ac23c501d8e043179fea46a78d7e
+    component_hash: 01724ad4d9202939bf2ff8d08d10402ba462d0b228b247ffef44d460e63dbe5f
     dependencies:
     - name: espressif/esp-nn
       registry_url: https://components.espressif.com
@@ -30,9 +30,9 @@ dependencies:
     - esp32
     - esp32s3
     - esp32c3
-    version: 0.11.0
+    version: 0.15.0
 direct_dependencies:
 - raws-labs/tigris-runtime
-manifest_hash: 49a8dd7e4779041f9f70fdfd16232350a91e1cb4062c369265ef9cc3d995262c
+manifest_hash: 9131a22908309e46195c757ebc080bc1438ee28fe570220e84772072a454f021
 target: esp32s3
 version: 2.0.0

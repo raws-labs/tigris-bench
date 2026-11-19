@@ -18,7 +18,7 @@ compiles its plan from the TFLite file TFLM runs. SRAM is the measured peak from
 | Model | TFLite Micro | TiGrIS |
 |---|---|---|
 | **MobileNetV2** (alpha 0.35, 224x224) | **OOM**, `AllocateTensors` -> `ARENA_TOO_SMALL` | **runs**, tiled to 307 KB SRAM, 0.37 s |
-| DS-CNN (keyword spotting) | 22.7 KB SRAM, 12.8 ms | 16.4 KB, 11.2 ms |
+| DS-CNN (keyword spotting) | 22.7 KB SRAM, 12.8 ms | 16.4 KB, 11.1 ms |
 | Anomaly detection | 15.8 KB SRAM, 1.2 ms | 1.0 KB, 1.2 ms |
 | Time-series forecast | 3.0 KB SRAM, 0.3 ms | 1.5 KB, 0.3 ms |
 
@@ -32,8 +32,8 @@ pinned releases; each page plays back the board's serial output and lists the fi
 
 - [![Run on SiliconRig](https://siliconrig.dev/badge/run-on-siliconrig.svg)](https://siliconrig.dev/record/rec_56ae7e9325b750ac2282d359)
   TFLite Micro: `AllocateTensors` fails, `ARENA_TOO_SMALL`
-- [![Run on SiliconRig](https://siliconrig.dev/badge/run-on-siliconrig.svg)](https://siliconrig.dev/record/rec_ff531061789e6e985b174de6)
-  TiGrIS: 374.95 ms median over 30 runs, 307023 B SRAM peak
+- [![Run on SiliconRig](https://siliconrig.dev/badge/run-on-siliconrig.svg)](https://siliconrig.dev/record/rec_b91a83d0da9b4080be23b379)
+  TiGrIS: 374.62 ms median over 30 runs, 307023 B SRAM peak
 
 ### ESP32-S3: latency (how fast, with acceleration?)
 
@@ -41,10 +41,20 @@ ESP32-S3, INT8. TiGrIS dispatches to ESP-NN; TFLM uses its optimized kernels.
 
 | Model | TFLite Micro | TiGrIS (ESP-NN) | TiGrIS (portable ref) |
 |---|---|---|---|
-| DS-CNN | 23.3 ms | **20.3 ms** | 565 ms |
+| DS-CNN | 23.3 ms | **21.0 ms** | 535 ms |
 
-The ESP-NN path is **28x faster** than TiGrIS's own portable reference kernel, and 1.15x faster
+The ESP-NN path is **25x faster** than TiGrIS's own portable reference kernel, and 1.11x faster
 than TFLM on DS-CNN.
+
+The three DS-CNN cells, recorded on an ESP32-S3 with the images behind this table; each page
+plays back the board's serial output and lists the firmware hash:
+
+- [![Run on SiliconRig](https://siliconrig.dev/badge/run-on-siliconrig.svg)](https://siliconrig.dev/record/rec_ed72e50dd34627e4a36b1d38)
+  TFLite Micro: 23.31 ms mean over 10 runs
+- [![Run on SiliconRig](https://siliconrig.dev/badge/run-on-siliconrig.svg)](https://siliconrig.dev/record/rec_b8a16a02789ad7e3e9c545c2)
+  TiGrIS (ESP-NN): 21.02 ms mean over 10 runs
+- [![Run on SiliconRig](https://siliconrig.dev/badge/run-on-siliconrig.svg)](https://siliconrig.dev/record/rec_9047b005e94312530a871e36)
+  TiGrIS (portable reference): 535.11 ms mean over 10 runs
 
 ### Emulated Cortex-M55: capability (functional)
 
