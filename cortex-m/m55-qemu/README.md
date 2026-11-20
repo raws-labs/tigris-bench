@@ -6,12 +6,11 @@ checksum + on-chip SRAM usage over ARM semihosting. Weights (the `.tgrs` plan)
 are loaded into DDR at `0x60000000` via QEMU `-device loader`, modelling
 external XIP flash; activations are tiled into on-chip SRAM.
 
-Two demonstrations, both verified bit-exact against a host reference:
+Verified bit-exact against a host reference:
 
 | Model | What it shows | On-chip SRAM |
 |-------|---------------|--------------|
 | **ResNet-50** backbone @224 | A 25M-param model runs on an MCU | 508 KB fast working set (slow tier in DDR) |
-| **MobileNetV2-0.35** @224 (full model) | Clean SRAM-only feasibility barrier | **127 KB total** (fast+slow both on-chip), tiled 5.8x from the 735 KB naive peak |
 
 Output checksums for specific runs are in `results/provenance.json`, next to the
 sha256 of the plan that produced each one. A checksum only means something
@@ -19,20 +18,10 @@ against that exact plan: these plans are gitignored build artifacts, rebuilt
 from models whose heads are freshly initialized, so regenerating one changes
 the checksum while leaving the memory profile identical.
 
-The MobileNetV2-0.35 run is the interesting one: its whole working set tiles into
-127 KB of on-chip SRAM, whereas a non-tiling runtime (TFLM) needs the full
-735 KB arena contiguous and OOMs on the chip's SRAM. The bench already measures
-that OOM on real hardware (NUCLEO-H753ZI: `AllocateTensors` -> `ARENA_TOO_SMALL`).
-
 ## Honest caveats
 
 - **No latency numbers.** QEMU's Cortex-M55 is functional, not cycle-accurate.
   These runs prove *correctness, tiling, and memory placement*, not speed.
-- **The barrier needs a chain-friendly model.** MobileNetV2-0.35's large tensors
-  co-tile into line-buffered chains, so the slow tier stays below the naive peak.
-  Full-width / big residual CNNs (ResNet-50, VGG-16) keep their large feature
-  maps cross-stage, so they need a multi-MB slow tier (external memory) and give
-  an *efficiency* story (small fast-SRAM footprint), not a feasibility barrier.
 - **Kernel is `s8_ref`** (portable reference). No CMSIS-NN / Helium here.
 
 ## Layout

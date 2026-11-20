@@ -64,7 +64,6 @@ cycle-accurate**, so these are correctness + memory-fit results, not latency.
 | Model | Result |
 |---|---|
 | ResNet-50 (25 M params) | runs, 508 KB fast-SRAM working set, bit-exact vs host |
-| MobileNetV2-0.35 | runs SRAM-only in 127 KB (tiled 5.8x from a 735 KB peak), bit-exact |
 
 ## Reproduce
 
