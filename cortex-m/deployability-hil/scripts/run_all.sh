@@ -7,7 +7,7 @@
 # .uf2 via picotool) and the serial console.
 #
 # Usage:   ./run_all.sh [board ...]                 # default: h753 f446 rp2350
-#   env:   BENCH_MODELS="ds_cnn ad ts mbv2"         # subset of models
+#   env:   BENCH_MODELS="ds_cnn ad ts mbv2 st_mbv2" # subset of models
 #          BENCH_CONFIGS="cmsis_nn s8_ref tflm tflm_export"  # subset of configs
 #          SRIG_API_KEY=...                         # required (rig auth)
 #          TIGRIS_ALLOW_UNPINNED_CORE=1             # start off the pinned core
@@ -87,7 +87,7 @@ if [ "$#" -eq 0 ] \
     CANONICAL_RUN=1
 fi
 BOARDS=("$@"); [ "${#BOARDS[@]}" -eq 0 ] && BOARDS=(h753 f446 rp2350)
-read -r -a MODELS  <<< "${BENCH_MODELS:-ds_cnn ad ts mbv2}"
+read -r -a MODELS  <<< "${BENCH_MODELS:-ds_cnn ad ts mbv2 st_mbv2}"
 read -r -a CONFIGS <<< "${BENCH_CONFIGS:-cmsis_nn s8_ref tflm tflm_export}"
 
 declare -A RIG=( [h753]=stm32-h753 [f446]=stm32-f446 [rp2350]=rp2350 )
@@ -120,19 +120,22 @@ command_string() { printf -v REPLY '%q ' "$@"; REPLY="${REPLY% }"; }
 
 build_cell() {   # board model config
     local board=$1 model=$2 cfg=$3
+    # The two MobileNetV2 models: untrained mbv2 and the trained st_mbv2.
+    local large=0; [[ "$model" = *mbv2 ]] && large=1
     # Combinations that don't exist:
     [ "$board" = rp2350 ] && [[ "$cfg" = tflm* ]] && return 0                    # no prebuilt M33 TFLM lib
-    [ "$model" = mbv2 ] && [ "$cfg" = s8_ref ] && return 0                       # mbv2 reference is impractically slow
-    [ "$model" = mbv2 ] && [[ "$cfg" = tflm* ]] && [ "$board" != h753 ] && return 0 # OOM demo only needs the 512 KB board
-    [ "$cfg" = tflm_export ] && [ "$model" != mbv2 ] && return 0                 # export rewrites only mbv2
+    [ "$large" = 1 ] && [ "$cfg" = s8_ref ] && return 0                          # MobileNetV2 reference is impractically slow
+    [ "$large" = 1 ] && [[ "$cfg" = tflm* ]] && [ "$board" != h753 ] && return 0 # OOM demo only needs the 512 KB board
+    [ "$cfg" = tflm_export ] && [ "$large" = 0 ] && return 0                     # export rewrites only MobileNetV2
+    [ "$model" = st_mbv2 ] && [ "$board" != h753 ] && return 0                   # the trained model runs on the H753 only
 
     local bd="$HERE/build/${board}_${model}_${cfg}"
-    local to=180; [ "$cfg" = s8_ref ] && to=300; [ "$model" = mbv2 ] && to=600
+    local to=180; [ "$cfg" = s8_ref ] && to=300; [ "$large" = 1 ] && to=600
     # The 32 KiB plan budget excludes backend scratch. Keep enough physical
     # backing for the budget plus the exact CMSIS-NN reservation computed by
     # the runtime; reported RAM uses measured high-water, not this capacity.
     local plan="$PLAN_DIR/${model}.tgrs" fast=65536 slow=8192
-    [ "$model" = mbv2 ] && fast=163840 && slow=327680
+    [ "$large" = 1 ] && fast=163840 && slow=327680
 
     if [ "$board" = rp2350 ]; then
         local -a configure=(cmake -S "$HERE/boards/pico2_rp2350" -B "$bd"
@@ -155,8 +158,8 @@ build_cell() {   # board model config
                   -DTIGRIS_CORTEX_M_ROOT="$TIGRIS_CORTEX_M_ROOT"
                   -DTIGRIS_BOARD="${TB[$board]}")
     if [[ "$cfg" = tflm* ]]; then
-        # ~480 KB for mbv2: most of the H753 SRAM; the stock model still OOMs.
-        local arena=32768; [ "$model" = mbv2 ] && arena=491520
+        # ~480 KB for MobileNetV2: most of the H753 SRAM; the stock model still OOMs.
+        local arena=32768; [ "$large" = 1 ] && arena=491520
         local tflm_model="$model" tflm_dir="$MODELS_DIR"
         [ "$cfg" = tflm_export ] && tflm_model="${model}_export" && tflm_dir="$PLAN_DIR"
         local -a configure=(cmake "${common[@]}" -DBENCH_FRAMEWORK=tflm
