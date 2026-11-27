@@ -22,10 +22,11 @@ PLAN_SPECS = {
     "ad": ("ad_i8.tflite", "2K"),
     "ts": ("ts_i8.tflite", "2K"),
     "mbv2": ("mbv2_a35_r224_i8.tflite", "128K"),
+    "st_mbv2": ("st_mbv2_a35_r224_i8.tflite", "48K"),
 }
 # `tigris export` writes no model for ds_cnn, ad and ts: no rewrite lowers
 # their TFLM arena.
-EXPORT_MODELS = ("mbv2",)
+EXPORT_MODELS = ("mbv2", "st_mbv2")
 
 
 def write_c_header(model: pathlib.Path, header: pathlib.Path, symbol: str) -> None:
