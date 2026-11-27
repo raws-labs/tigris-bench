@@ -306,11 +306,16 @@ def _artifact_size(
 ) -> int | None:
     log_file = cell.get("log_file")
     try:
-        value = summary["provenance"]["cells"][log_file]["artifacts"][kind][
-            "size_bytes"]
+        artifact = summary["provenance"]["cells"][log_file]["artifacts"][kind]
+        value = artifact["size_bytes"]
     except (KeyError, TypeError):
         return None
-    return value if isinstance(value, int) and not isinstance(value, bool) else None
+    if not isinstance(value, int) or isinstance(value, bool):
+        return None
+    # A UF2 file carries each 256 B of flash in a 512 B block: count flash bytes.
+    if str(artifact.get("name", "")).endswith(".uf2"):
+        return value // 2
+    return value
 
 
 def _performance_metrics(
