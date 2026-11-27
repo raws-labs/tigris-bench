@@ -589,12 +589,13 @@ def expected_readme_result_rows(
                 f"| {label} | {_latency(cmsis)} ms | {_latency(s8)} ms | "
                 f"{_ram(cmsis)} KB |")
 
-        for board, label, tflm in (
-            ("nucleo_h753zi", "H753ZI (512 KB)", "OOM at AllocateTensors"),
-            ("pico2_rp2350", "RP2350 (520 KB)", "n/a (no M33 lib)"),
+        for board, model, label, tflm in (
+            ("nucleo_h753zi", "mbv2", "H753ZI (512 KB)", "OOM at AllocateTensors"),
+            ("pico2_rp2350", "mbv2", "RP2350 (520 KB)", "n/a (no M33 lib)"),
+            ("nucleo_h753zi", "st_mbv2", "H753ZI (512 KB)", "OOM at AllocateTensors"),
         ):
             cell = _result_cell(
-                document, board, "mbv2",
+                document, board, model,
                 "tigris", "cmsis_nn")
             seconds = cell["latency_median_ms"] / 1000
             rows.append(

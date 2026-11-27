@@ -60,25 +60,25 @@ int8 weights plus biases, measured from the committed plans.
 
 | Framework | Kernel | Latency | Cycles | RAM (work. set) | Flash (firmware) |
 |---|---|---|---|---|---|
-| TiGrIS | cmsis_nn | 11.14 ms | 5.35 M | 16.0 KB | 159 KB |
+| TiGrIS | cmsis_nn | 11.15 ms | 5.35 M | 16.0 KB | 160 KB |
 | TFLM | cmsis_nn | 12.84 ms | 6.16 M | 22.2 KB | 187 KB |
-| TiGrIS | s8_ref | 43.63 ms | 20.94 M | 15.9 KB | 133 KB |
+| TiGrIS | s8_ref | 43.63 ms | 20.94 M | 15.9 KB | 134 KB |
 
 **Anomaly detection:**
 
 | Framework | Kernel | Latency | Cycles | RAM (work. set) | Flash (firmware) |
 |---|---|---|---|---|---|
-| TiGrIS | cmsis_nn | 1.22 ms | 585 K | 0.9 KB | 389 KB |
+| TiGrIS | cmsis_nn | 1.22 ms | 585 K | 0.9 KB | 390 KB |
 | TFLM | cmsis_nn | 1.16 ms | 559 K | 15.5 KB | 428 KB |
-| TiGrIS | s8_ref | 2.74 ms | 1.31 M | 0.9 KB | 377 KB |
+| TiGrIS | s8_ref | 2.74 ms | 1.31 M | 0.9 KB | 378 KB |
 
 **Timeseries:**
 
 | Framework | Kernel | Latency | Cycles | RAM (work. set) | Flash (firmware) |
 |---|---|---|---|---|---|
-| TiGrIS | cmsis_nn | 0.321 ms | 154 K | 1.5 KB | 129 KB |
+| TiGrIS | cmsis_nn | 0.321 ms | 154 K | 1.5 KB | 130 KB |
 | TFLM | cmsis_nn | 0.347 ms | 167 K | 2.9 KB | 156 KB |
-| TiGrIS | s8_ref | 0.926 ms | 445 K | 1.1 KB | 109 KB |
+| TiGrIS | s8_ref | 0.927 ms | 445 K | 1.1 KB | 110 KB |
 
 - Output is bit-exact device-to-device: every (model, framework, kernel) cell
   emits the identical INT8 vector (max abs diff 0) on the constant input and on
@@ -128,8 +128,8 @@ bit-exact output across boards.
 
 | Board (SRAM) | TiGrIS (tiled) | TFLM (no tiling) |
 |---|---|---|
-| H753ZI (512 KB) | runs, 0.37 s, 299.8 KB | OOM at AllocateTensors |
-| RP2350 (520 KB) | runs, 1.81 s, 299.8 KB | n/a (no M33 lib) |
+| H753ZI (512 KB) | runs, 0.38 s, 299.8 KB | OOM at AllocateTensors |
+| RP2350 (520 KB) | runs, 1.83 s, 299.8 KB | n/a (no M33 lib) |
 | F446RE (128 KB) | does not fit | does not fit |
 
 - On the H753, TFLM given a 480 KB arena (491,520 B of the 512 KB AXI SRAM)
@@ -150,14 +150,37 @@ bit-exact output across boards.
 - RP2350 is ~4.8x slower than the H753 on this model (XIP-bound: 413 KB of
   weights streamed from QSPI flash each inference, plus the lower clock).
 
+## Trained MobileNetV2 (ImageNet)
+
+The same architecture with trained weights: the ImageNet MobileNetV2 (alpha
+0.35, 224x224, INT8, 1000 classes) from STMicroelectronics' STM32 model zoo,
+with a uint8 input and a float32 softmax output. Its 1654 KB of weights and
+biases are mostly the 1000-class classifier; its naive activation peak is the
+same 735 KB. TiGrIS tiles it to a 219.4 KB working set (45.9 KB fast +
+171.5 KB slow-pool spill + 2.0 KB scratch/runtime metadata; 35 of its 41 stages
+tiled, 30 of them in chains). It is measured on the H753 only.
+
+| Board (SRAM) | TiGrIS (tiled) | TFLM (no tiling) |
+|---|---|---|
+| H753ZI (512 KB) | runs, 0.38 s, 219.4 KB | OOM at AllocateTensors |
+
+- Stock TFLM with the same 480 KB arena fails `AllocateTensors` with
+  `ARENA_TOO_SMALL`.
+- Rewritten by `tigris export`, the model runs on stock TFLM on the H753:
+  `arena_used` is 413.9 KB, and the 1000 float32 scores are byte-identical to
+  TiGrIS for all 9 inputs (`h753_st_mbv2_tflm_export`).
+- The TiGrIS firmware fills 1856 KB of the 2 MB flash.
+
 ## Reproduce
 
 `SRIG_API_KEY=... ./scripts/run_all.sh` builds every cell, flashes and captures
 on the SiliconRig lab, aggregates, and runs the parity gate. Raw serial logs land
 in `results/raw/` (gitignored); the tracked artifact is `results/summary.json`,
 which carries each cell's numbers, `OUTPUT_I8` and `OUTPUT_I8_SEEDED` vectors,
-and deduplicated execution provenance. See `BUILD.md` for the build knobs and a
-locally-attached-board (no-rig) path.
+and deduplicated execution provenance. Both harnesses feed and print the bytes
+of each model's declared input and output types, so for the trained
+MobileNetV2 the vectors hold the bytes of its float32 scores. See `BUILD.md`
+for the build knobs and a locally-attached-board (no-rig) path.
 
 `results/provenance.json` binds that summary and its collector/validator to
 SHA-256 digests and records the paths and hashes of all source captures. The
