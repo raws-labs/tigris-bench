@@ -231,6 +231,19 @@ class PerformanceRegressionContractTest(unittest.TestCase):
         self.assertTrue(
             any("firmware artifact" in error for error in errors), errors)
 
+    def test_uf2_firmware_growth_counts_flash_bytes(self) -> None:
+        for blocks, rejected in ((5, False), (9, True)):
+            current = copy.deepcopy(self.cortex)
+            artifact = current["provenance"]["cells"][
+                "rp2350_ts_s8_ref.log"]["artifacts"]["firmware"]
+            self.assertTrue(artifact["name"].endswith(".uf2"))
+            artifact["size_bytes"] += blocks * 512
+            _, errors = compare_performance_summaries(
+                current, self.cortex, "cortex-m")
+            self.assertEqual(
+                any("firmware artifact" in error for error in errors),
+                rejected, errors)
+
     def test_success_to_failure_is_rejected(self) -> None:
         current = copy.deepcopy(self.esp)
         self.cell(current, "tigris_i8_espnn.log")["status"] = "FAILED"

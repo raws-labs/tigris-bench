@@ -130,6 +130,27 @@
     },
     {
       "board": "nucleo_h753zi",
+      "model": "st_mbv2",
+      "framework": "tigris",
+      "kernel": "cmsis_nn",
+      "expected_status": "ok"
+    },
+    {
+      "board": "nucleo_h753zi",
+      "model": "st_mbv2",
+      "framework": "tflm",
+      "kernel": "cmsis_nn",
+      "expected_status": "ARENA_TOO_SMALL"
+    },
+    {
+      "board": "nucleo_h753zi",
+      "model": "st_mbv2_export",
+      "framework": "tflm",
+      "kernel": "cmsis_nn",
+      "expected_status": "ok"
+    },
+    {
+      "board": "nucleo_h753zi",
       "model": "ts",
       "framework": "tigris",
       "kernel": "cmsis_nn",

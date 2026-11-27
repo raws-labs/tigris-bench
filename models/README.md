@@ -54,6 +54,25 @@ Built by `prepare_mobilenetv2.py` from Keras `applications.MobileNetV2`.
 | `mbv2_a35_r224_i8.tflite` | TFLite | int8 | Full integer quantization; the model both frameworks run on Cortex-M |
 | `mbv2_tflite_i8.h` | C array | int8 | `mbv2_a35_r224_i8.tflite` for the TFLM harness |
 
+## Trained MobileNetV2 0.35 (ImageNet)
+
+Fetched by `prepare_st_mbv2.py` from STMicroelectronics' STM32 model zoo at
+release tag v4.1.0 and checked by SHA-256. Apache-2.0; the model zoo credits
+the weights to Google LLC.
+
+- **Input**: [1, 224, 224, 3], NHWC uint8 (scale 1/127.5, zero point 127)
+- **Output**: [1, 1000], float32 softmax over the ImageNet classes
+- **Architecture**: MobileNetV2 backbone at alpha 0.35 (35 CONV_2D,
+  17 DEPTHWISE_CONV_2D, 10 inverted-residual ADD, 4 PAD), global average
+  pool, FC(1000), SOFTMAX, with QUANTIZE and DEQUANTIZE at the ends
+- **Weights**: 1,694,248 B of weights and biases, trained on ImageNet
+- **Largest activation**: 1x113x113x48 int8, 612,912 B
+
+| File | Format | dtype | Notes |
+|------|--------|-------|-------|
+| `st_mbv2_a35_r224_i8.tflite` | TFLite | uint8 / float32 I/O, int8 inside | The model both frameworks run on the H753 |
+| `st_mbv2_tflite_i8.h` | C array | as above | `st_mbv2_a35_r224_i8.tflite` for the TFLM harness |
+
 ## Regeneration
 
 ```bash
@@ -61,4 +80,5 @@ pip install -r ../requirements.txt
 pip install tigris-ml
 python prepare.py
 python prepare_mobilenetv2.py   # downloads the ImageNet backbone weights once
+python prepare_st_mbv2.py       # downloads the trained MobileNetV2 once
 ```

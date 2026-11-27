@@ -8,10 +8,11 @@
  *
  * PARITY: TiGrIS compiles its plan from this exact .tflite, so both frameworks
  * execute the same INT8 weights through CMSIS-NN and the OUTPUT_I8 vectors are
- * directly comparable device-to-device. Both also fill the input with int8
- * value 1, then with the same seeded bytes (parity_input.h), so the comparison
- * is well-defined. A model rewritten by `tigris export` runs here unchanged and
- * must give the same output.
+ * directly comparable device-to-device. Both fill the input bytes of the
+ * model's declared type with 1, then with the same seeded bytes
+ * (parity_input.h), and print the output bytes of its declared type, so the
+ * comparison is well-defined. A model rewritten by `tigris export` runs here
+ * unchanged and must give the same output.
  */
 
 #include <cstdint>
@@ -150,7 +151,7 @@ int main(void)
 
     printf("\nWarmup (%d runs)...\n", WARMUP_RUNS);
     for (int i = 0; i < WARMUP_RUNS; i++) {
-        memset(input->data.int8, 1, input->bytes);  /* int8 = 1, as TiGrIS */
+        memset(input->data.int8, 1, input->bytes);  /* byte 1, as TiGrIS */
         uint32_t c0 = platform_cycles();
         TfLiteStatus st = interpreter.Invoke();
         uint32_t c1 = platform_cycles();

@@ -2,9 +2,14 @@
  * TiGrIS Cortex-M Deployability Benchmark
  *
  * Loads an INT8 .tgrs plan embedded in flash, runs warmup + N timed
- * inference runs timed with the DWT cycle counter, prints the INT8 output for
+ * inference runs timed with the DWT cycle counter, prints the output for
  * parity checking, emits a machine-parseable result line, then prints the
  * outputs for the seeded parity inputs (parity_input.h).
+ *
+ * Inputs and outputs are the bytes of the dtype the model declares, as in the
+ * TFLM harness: a uint8 model input is converted to the plan's int8 storage,
+ * and outputs are read back through tigris_output_read(), so a float32 output
+ * prints its float bytes. For an int8 model both are the plan's own bytes.
  *
  * Board-independent: all hardware access goes through platform.h, implemented
  * per board under boards/<board>/.
@@ -33,6 +38,7 @@
 #include "tigris_loader.h"
 #include "tigris_mem.h"
 #include "tigris_executor.h"
+#include "tigris_iface.h"
 #include "tigris_kernels_s8.h"
 #if defined(BENCH_KERNEL_CMSIS_NN)
 #include "tigris_kernels_cmsis_nn.h"
@@ -67,12 +73,17 @@ extern const unsigned int  g_tigris_plan_len;
 #ifndef BENCH_MAX_TENSORS
 #define BENCH_MAX_TENSORS 256
 #endif
+#ifndef BENCH_OUTPUT_BYTES
+#define BENCH_OUTPUT_BYTES 4096u   /* largest model output, in its declared dtype */
+#endif
 
 static uint8_t s_fast_arena[TIGRIS_FAST_ARENA_BYTES] __attribute__((aligned(16)));
 static uint8_t s_slow_arena[TIGRIS_SLOW_ARENA_BYTES] __attribute__((aligned(16)));
 static void   *s_tensor_ptrs[BENCH_MAX_TENSORS];
 static uint8_t s_executor_workspace[
     TIGRIS_CODEGEN_EXECUTOR_WORKSPACE_BYTES];
+static uint8_t s_output[BENCH_OUTPUT_BYTES] __attribute__((aligned(16)));
+static const tigris_plan_t *s_plan;
 
 static const char *kernel_name(void)
 {
@@ -113,22 +124,36 @@ static float cycles_to_ms(uint32_t cycles)
     return (float)((double)cycles * 1000.0 / (double)platform_cpu_hz());
 }
 
+/* The bytes just written are the declared input; the plan stores a uint8
+ * input as int8 (value - 128). main() refuses any other dtype pairing. */
+static void to_plan_storage(void *data, uint32_t size_bytes,
+                            uint16_t tensor_index)
+{
+    const tigris_tensor_t *t = &s_plan->tensors[tensor_index];
+    if (tigris_tensor_declared_dtype(t) == t->dtype)
+        return;
+    const uint8_t *u = (const uint8_t *)data;
+    int8_t *q = (int8_t *)data;
+    for (uint32_t i = 0; i < size_bytes; i++)
+        q[i] = (int8_t)((int32_t)u[i] - 128);
+}
+
 /* Model inputs are benchmark data, not a codegen policy.  The generated core
  * allocates them and calls this hook on every warmup/timed reset. */
 static void fill_benchmark_input(void *data, uint32_t size_bytes,
                                  uint16_t tensor_index, void *user_ctx)
 {
-    (void)tensor_index;
     (void)user_ctx;
     memset(data, 1, size_bytes);  /* matches prepare.py's reference input */
+    to_plan_storage(data, size_bytes, tensor_index);
 }
 
 /* Parity inputs: the next bytes of the stream whose state is user_ctx. */
 static void fill_parity_input(void *data, uint32_t size_bytes,
                               uint16_t tensor_index, void *user_ctx)
 {
-    (void)tensor_index;
     parity_fill((uint8_t *)data, size_bytes, (uint32_t *)user_ctx);
+    to_plan_storage(data, size_bytes, tensor_index);
 }
 
 /* Run one inference. Re-inits the arena state, refills inputs with fill,
@@ -171,33 +196,21 @@ static uint32_t run_once(tigris_plan_t *plan, tigris_mem_t *mem,
     return c1 - c0;
 }
 
-/* Print every model output as one "<label>: <int8 values...>" line. */
+/* Print every model output, in the dtype the model declares, as one
+ * "<label>: <signed bytes...>" line. */
 static void print_outputs(const tigris_plan_t *plan, const tigris_mem_t *mem,
                           const char *label)
 {
-    uint16_t n_out = plan->header->num_model_outputs;
-    uint16_t fallback_out;
-    const uint16_t *out_list;
-    if (n_out > 0) {
-        out_list = plan->model_outputs;
-    } else {
-        /* Stale plans built before the num_model_outputs compiler fix report 0
-         * outputs; fall back to the last op's first output (as the ESP harness
-         * does). For DS-CNN that is the 12-class tensor. */
-        const tigris_op_t *last = &plan->ops[plan->header->num_ops - 1];
-        fallback_out = tigris_op_outputs(plan, last)[0];
-        out_list = &fallback_out;
-        n_out = 1;
-    }
-    for (uint16_t i = 0; i < n_out; i++) {
-        uint16_t tidx = out_list[i];
-        const int8_t *out = (const int8_t *)mem->tensor_ptrs[tidx];
-        if (!out)
+    for (uint16_t i = 0; i < plan->header->num_model_outputs; i++) {
+        uint16_t tidx = plan->model_outputs[i];
+        uint32_t n = tigris_iface_bytes(plan, tidx);
+        if (tigris_output_read(plan, mem, tidx, s_output, n) != TIGRIS_OK) {
+            printf("  %s: read failed\n", label);
             continue;
-        uint32_t n = plan->tensors[tidx].size_bytes;
+        }
         printf("  %s:", label);
         for (uint32_t j = 0; j < n; j++)
-            printf(" %d", (int)out[j]);
+            printf(" %d", (int)(int8_t)s_output[j]);
         printf("\n");
     }
 }
@@ -290,6 +303,30 @@ int main(void)
         emit_failed(model_name, "NOT_INT8");
         platform_halt();
     }
+    for (uint8_t i = 0; i < plan.header->num_model_inputs; i++) {
+        const tigris_tensor_t *t = &plan.tensors[plan.model_inputs[i]];
+        uint8_t declared = tigris_tensor_declared_dtype(t);
+        if (declared != t->dtype && declared != TIGRIS_DTYPE_UINT8) {
+            printf("error: model input %u declares dtype %u\n", i, declared);
+            emit_failed(model_name, "INPUT_DTYPE");
+            platform_halt();
+        }
+    }
+    for (uint8_t i = 0; i < plan.header->num_model_outputs; i++) {
+        uint32_t n = tigris_iface_bytes(&plan, plan.model_outputs[i]);
+        if (n > BENCH_OUTPUT_BYTES) {
+            printf("error: output %u is %lu B > BENCH_OUTPUT_BYTES %u\n",
+                   i, (unsigned long)n, BENCH_OUTPUT_BYTES);
+            emit_failed(model_name, "OUTPUT_TOO_LARGE");
+            platform_halt();
+        }
+    }
+    if (plan.header->num_model_outputs == 0) {
+        printf("error: the plan names no model output\n");
+        emit_failed(model_name, "NO_OUTPUT");
+        platform_halt();
+    }
+    s_plan = &plan;
     if (plan.header->num_tensors > BENCH_MAX_TENSORS) {
         printf("error: num_tensors %u > BENCH_MAX_TENSORS %u\n",
                plan.header->num_tensors, BENCH_MAX_TENSORS);

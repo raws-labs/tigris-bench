@@ -306,11 +306,16 @@ def _artifact_size(
 ) -> int | None:
     log_file = cell.get("log_file")
     try:
-        value = summary["provenance"]["cells"][log_file]["artifacts"][kind][
-            "size_bytes"]
+        artifact = summary["provenance"]["cells"][log_file]["artifacts"][kind]
+        value = artifact["size_bytes"]
     except (KeyError, TypeError):
         return None
-    return value if isinstance(value, int) and not isinstance(value, bool) else None
+    if not isinstance(value, int) or isinstance(value, bool):
+        return None
+    # A UF2 file carries each 256 B of flash in a 512 B block: count flash bytes.
+    if str(artifact.get("name", "")).endswith(".uf2"):
+        return value // 2
+    return value
 
 
 def _performance_metrics(
@@ -589,12 +594,13 @@ def expected_readme_result_rows(
                 f"| {label} | {_latency(cmsis)} ms | {_latency(s8)} ms | "
                 f"{_ram(cmsis)} KB |")
 
-        for board, label, tflm in (
-            ("nucleo_h753zi", "H753ZI (512 KB)", "OOM at AllocateTensors"),
-            ("pico2_rp2350", "RP2350 (520 KB)", "n/a (no M33 lib)"),
+        for board, model, label, tflm in (
+            ("nucleo_h753zi", "mbv2", "H753ZI (512 KB)", "OOM at AllocateTensors"),
+            ("pico2_rp2350", "mbv2", "RP2350 (520 KB)", "n/a (no M33 lib)"),
+            ("nucleo_h753zi", "st_mbv2", "H753ZI (512 KB)", "OOM at AllocateTensors"),
         ):
             cell = _result_cell(
-                document, board, "mbv2",
+                document, board, model,
                 "tigris", "cmsis_nn")
             seconds = cell["latency_median_ms"] / 1000
             rows.append(
